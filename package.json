@@ -1,0 +1,19 @@
+{
+  "name": "ignis-bot",
+  "version": "1.0.0",
+  "description": "\"discord bot\"",
+  "main": "bot.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "\"Grzegorz Mikołajczyk\"",
+  "license": "ISC",
+  "dependencies": {
+    "colors": "^1.3.3",
+    "discord.js": "^11.4.2",
+    "fs": "0.0.1-security",
+    "opusscript": "0.0.6",
+    "tracer": "^0.9.8",
+    "ytdl-core": "^0.29.1"
+  }
+}
