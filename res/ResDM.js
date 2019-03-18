@@ -1,9 +1,9 @@
 class ResDM {
-    constructor(client, msg) {
+    constructor(client, msg, commands) {
         if(!client || !msg){
             throw new Error("not enough parameters")
         }
-        console.log("recieved command " + msg.content + " from " + msg.author.tag + " on priv");
+        console.log("recieved command ".blue + msg.content.reverse + " from ".blue + msg.author.tag.reverse);
 
         if (msg.content.toLowerCase() == "!ping") {
             console.log("Pong!".rainbow);
@@ -19,7 +19,7 @@ class ResDM {
 
         if (msg.content == "!help") {
             console.log("sent help");
-            help(msg, ["help", "dev"])
+            commands.help(msg)
         }
     }
 }

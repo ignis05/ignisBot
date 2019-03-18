@@ -18,6 +18,7 @@ var logger = require('tracer').colorConsole();
 
 // #region importing classes
 const ResDM = require("./res/ResDM.js")
+const ResText = require("./res/ResText.js")
 // #endregion importing classes
 
 client.on('ready', () => {
@@ -39,7 +40,7 @@ client.on('message', msg => {
     if (!msg.guild && msg.channel.id != "551445397411856398") return //ignore priv msg
 
     if (msg.channel.id == "551445397411856398") { //dont ignore priv msg's from me
-        new ResDM(client, msg)
+        new ResDM(client, msg, commands)
         return
     }
 
@@ -102,41 +103,48 @@ client.on('message', msg => {
         command.shift()
         command = command.join("")
         console.log("recieved command ".blue + command.reverse + " from ".blue + msg.author.tag.reverse);
-        command = command.split(" ")
+        command = command.split(" ")[0]
 
-        switch (command[0]) {
-            case "ping":
-                console.log("Pong!".rainbow);
-                msg.reply("Pong!")
-                break;
-            case "perms":
-                permsSet(msg, command)
-                break;
-            case "reload":
-                reload(msg, command)
-                break;
-            case "purge":
-                purge(msg, command)
-                break;
-            case "blacklist":
-                blacklist(msg, command)
-                break;
-            case "voice":
-                voice(msg, command)
-                break;
-            case "autoVoice": case "autovoice":
-                autoVoice(msg, command)
-                break;
-            case "setPrefix": case "setprefix": case "prefix":
-                setPrefix(msg, command)
-                break;
-            case "help":
-                help(msg, command)
-                break;
-            default:
-                //msg.channel.send("Command unknown.\nType \`help\` for help")
-                console.log("Command unknown".yellow);
+        if (commands[command]) {
+            commands[command](msg)
         }
+        else {
+            console.log("Command unknown".yellow);
+        }
+
+        // switch (command[0]) {
+        //     case "ping":
+        //         console.log("Pong!".rainbow);
+        //         msg.reply("Pong!")
+        //         break;
+        //     case "perms":
+        //         permsSet(msg, command)
+        //         break;
+        //     case "reload":
+        //         reload(msg, command)
+        //         break;
+        //     case "purge":
+        //         purge(msg, command)
+        //         break;
+        //     case "blacklist":
+        //         blacklist(msg, command)
+        //         break;
+        //     case "voice":
+        //         voice(msg, command)
+        //         break;
+        //     case "autoVoice": case "autovoice":
+        //         autoVoice(msg, command)
+        //         break;
+        //     case "setPrefix": case "setprefix": case "prefix":
+        //         setPrefix(msg, command)
+        //         break;
+        //     case "help":
+        //         help(msg, command)
+        //         break;
+        //     default:
+        //         //msg.channel.send("Command unknown.\nType \`help\` for help")
+        //         console.log("Command unknown".yellow);
+        // }
     }
 });
 
@@ -204,7 +212,8 @@ function makeID(length) {
 //#endregion
 
 //#region commands
-function help(msg, command) {
+var commands = {};
+new ResText(commands, "help", function (msg) {
     var helpDB = [
         {
             cmd: "help",
@@ -262,7 +271,7 @@ function help(msg, command) {
     for (let cmd of helpDB) {
         desc += `\n **${cmd.cmd}**\n     - ${cmd.desc}\n`
     }
-    if (command[1] == "debug" || command[1] == "dev") {
+    if (msg.content.split(" ")[1] == "debug" || msg.content.split(" ")[1] == "dev") {
         desc += "\n\n__**debug commands:**__"
         for (let cmd of specialHelpDB) {
             desc += `\n **${cmd.cmd}**\n     - ${cmd.desc}\n`
@@ -274,7 +283,8 @@ function help(msg, command) {
         .setColor(0xFF0000)
         .setDescription(desc);
     msg.channel.send(embed);
-}
+})
+
 function permsSet(msg, command) {
     if (!checkPerms(msg.author.id, "admin", msg.guild.id)) {
         msg.reply("You dont have permission to use this command!")
