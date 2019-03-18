@@ -15,6 +15,11 @@ colors.setTheme({
 var config = require("./data/config.json")
 var logger = require('tracer').colorConsole();
 
+
+// #region importing classes
+const ResDM = require("./res/ResDM.js")
+// #endregion importing classes
+
 client.on('ready', () => {
     client.user.setActivity("anthropromorphized minors", { type: 'WATCHING' })
     console.log("I'm alive!".rainbow);
@@ -33,25 +38,8 @@ client.on('message', msg => {
     if (msg.author.bot) return //ignore bots and self
     if (!msg.guild && msg.channel.id != "551445397411856398") return //ignore priv msg
 
-    if (msg.channel.id == "551445397411856398") { //dont ignore priv msgs from me
-        console.log("recieved command ".blue + msg.content.reverse + " from ".blue + msg.author.tag.reverse + " on priv");
-
-        if (msg.content.toLowerCase() == "!ping") {
-            console.log("Pong!".rainbow);
-            msg.reply("Pong!")
-        }
-
-        if(msg.content == "!invite") {
-            console.log("sending invite link".rainbow);
-            client.generateInvite(['ADMINISTRATOR'])
-                .then(link => msg.channel.send(`Generated bot invite link: ${link}`))
-                .catch(console.error);
-        }
-
-        if(msg.content == "!help"){
-            console.log("sent help");
-            help(msg, ["help","dev"])
-        }
+    if (msg.channel.id == "551445397411856398") { //dont ignore priv msg's from me
+        new ResDM(client, msg)
         return
     }
 
