@@ -388,11 +388,21 @@ new ResText(commands, "purge", (msg, recursion) => {
         console.log("success".green);
         msg.channel.send(`Deleted ${x} messages.`).then(msg => msg.delete(config[msg.guild.id].tempMsgTime));
     }).catch(err => {
-        if (!recursion) {
-            msg.channel.send(`Some messages might be older than 14 days.\nCalculating valid purge.\nThis might take a moment...`)
-            x++
+        if(err.code == 50034){
+            if (!recursion) {
+                msg.channel.send(`Some messages might be older than 14 days.\nCalculating valid purge.\nThis might take a moment...`)
+                x++
+            }
+            if(x>0){
+                commands.purge(msg, x - 1)
+            }
+            else {
+                msg.channel.send(`Purge failed. No valid messages`)
+            }
         }
-        commands.purge(msg, x - 1)
+        else {
+            msg.channel.send(`Purge failed. Permissions might be insufficient`)
+        }
     })
 })
 
