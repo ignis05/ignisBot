@@ -13,6 +13,7 @@ colors.setTheme({
     redRev: ["black", "bgRed"]
 });
 var config = require("./data/config.json")
+var display = require("./data/display.json")
 var logger = require('tracer').colorConsole();
 
 
@@ -22,9 +23,12 @@ const ResText = require("./res/ResText.js")
 // #endregion importing classes
 
 client.on('ready', () => {
-    client.user.setActivity("anthropromorphized minors", { type: 'WATCHING' })
+    client.user.setActivity(display.message, { type: display.type })
     console.log("I'm alive!".rainbow);
     console.log("Logged in as " + client.user.tag.green);
+    client.fetchUser("226032144856776704").then(ignis => {
+        ignis.send("I'm alive!")
+    })
 });
 
 client.on('guildCreate', (guild) => {
