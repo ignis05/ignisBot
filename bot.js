@@ -213,7 +213,7 @@ function makeID(length) {
 
 //#region commands
 var commands = {};
-new ResText(commands, "help", function (msg) {
+new ResText(commands, "help", msg => {
     var helpDB = [
         {
             cmd: "help",
@@ -285,7 +285,8 @@ new ResText(commands, "help", function (msg) {
     msg.channel.send(embed);
 })
 
-function permsSet(msg, command) {
+new ResText(commands, "perms", msg => {
+    var command = msg.content.split(" ")
     if (!checkPerms(msg.author.id, "admin", msg.guild.id)) {
         msg.reply("You dont have permission to use this command!")
         return;
@@ -362,16 +363,11 @@ function permsSet(msg, command) {
             saveConfig(msg.channel, "success!")
             break;
     }
-}
-function reload(msg, command) {
-    if (!checkPerms(msg.author.id, "ignis", msg.guild.id)) {
-        msg.reply("You dont have permission to use this command!")
-        return;
-    }
-    config = JSON.parse(fs.readFileSync('./data/config.json', 'utf8'));
-    msg.reply("Reloaded config file")
-}
-function purge(msg, command) {
+})
+
+new ResText(commands, "purge", (msg, recursion) => {
+    var command = msg.content.split(" ")
+    if (recursion) command[1] = `${recursion}`
     if (!checkPerms(msg.author.id, "purge", msg.guild.id)) {
         msg.reply("You dont have permission to use this command!")
         return;
@@ -387,7 +383,22 @@ function purge(msg, command) {
     msg.channel.bulkDelete(x + 1).then(() => {
         console.log("success".green);
         msg.channel.send(`Deleted ${x} messages.`).then(msg => msg.delete(config[msg.guild.id].tempMsgTime));
-    });
+    }).catch(err => {
+        if (!recursion) {
+            msg.channel.send(`Some messages might be older than 14 days.\nCalculating valid purge.\nThis might take a moment...`)
+            x++
+        }
+        commands.purge(msg, x - 1)
+    })
+})
+
+function reload(msg, command) {
+    if (!checkPerms(msg.author.id, "ignis", msg.guild.id)) {
+        msg.reply("You dont have permission to use this command!")
+        return;
+    }
+    config = JSON.parse(fs.readFileSync('./data/config.json', 'utf8'));
+    msg.reply("Reloaded config file")
 }
 function blacklist(msg, command) {
     if (!checkPerms(msg.author.id, "admin", msg.guild.id)) {
