@@ -34,7 +34,7 @@ client.on('message', msg => {
     if (!msg.guild && msg.channel.id != "551445397411856398") return //ignore priv msg
 
     if (msg.channel.id == "551445397411856398") { //dont ignore priv msgs from me
-        console.log("recieved command ".blue + command.reverse + " from ".blue + msg.author.tag.reverse + " on priv");
+        console.log("recieved command ".blue + msg.content.reverse + " from ".blue + msg.author.tag.reverse + " on priv");
 
         if (msg.content.toLowerCase() == "!ping") {
             console.log("Pong!".rainbow);
