@@ -19,6 +19,9 @@ client.on('ready', () => {
     client.user.setActivity("anthropromorphized minors", { type: 'WATCHING' })
     console.log("I'm alive!".rainbow);
     console.log("Logged in as " + client.user.tag.green);
+    client.fetchUser("226032144856776704").then(ignis => {
+        ignis.send("I'm alive!")
+    })
 });
 
 client.on('guildCreate', (guild) => {
@@ -41,16 +44,16 @@ client.on('message', msg => {
             msg.reply("Pong!")
         }
 
-        if(msg.content == "!invite") {
+        if (msg.content == "!invite") {
             console.log("sending invite link".rainbow);
             client.generateInvite(['ADMINISTRATOR'])
                 .then(link => msg.channel.send(`Generated bot invite link: ${link}`))
                 .catch(console.error);
         }
 
-        if(msg.content == "!help"){
+        if (msg.content == "!help") {
             console.log("sent help");
-            help(msg, ["help","dev"])
+            help(msg, ["help", "dev"])
         }
         return
     }
