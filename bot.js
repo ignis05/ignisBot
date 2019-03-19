@@ -1,6 +1,5 @@
 const Discord = require('discord.js');
 const client = new Discord.Client();
-var token = require("./data/token.json").token
 var fs = require('fs');
 const ytdl = require('ytdl-core');
 var colors = require("colors");
@@ -12,9 +11,18 @@ colors.setTheme({
     greenRev: ["black", "bgGreen"],
     redRev: ["black", "bgRed"]
 });
+var logger = require('tracer').colorConsole();
+
+// #region importing settings files
+var token = require("./data/token.json").token
 var config = require("./data/config.json")
 var display = require("./data/display.json")
-var logger = require('tracer').colorConsole();
+// #endregion
+
+// #region importing classes
+const ResDM = require("./res/ResDM.js")
+const ResText = require("./res/ResText.js")
+// #endregion importing classes
 
 client.on('ready', () => {
     client.user.setActivity(display.message, { type: display.type })
@@ -37,29 +45,12 @@ client.on('message', msg => {
     if (msg.author.bot) return //ignore bots and self
     if (!msg.guild && msg.channel.id != "551445397411856398") return //ignore priv msg
 
-    if (msg.channel.id == "551445397411856398") { //dont ignore priv msgs from me
-        console.log("recieved command ".blue + msg.content.reverse + " from ".blue + msg.author.tag.reverse + " on priv");
-
-        if (msg.content.toLowerCase() == "!ping") {
-            console.log("Pong!".rainbow);
-            msg.reply("Pong!")
-        }
-
-        if (msg.content == "!invite") {
-            console.log("sending invite link".rainbow);
-            client.generateInvite(['ADMINISTRATOR'])
-                .then(link => msg.channel.send(`Generated bot invite link: ${link}`))
-                .catch(console.error);
-        }
-
-        if (msg.content == "!help") {
-            console.log("sent help");
-            help(msg, ["help", "dev"])
-        }
+    if (msg.channel.id == "551445397411856398") { //dont ignore priv msg's from me
+        new ResDM(client, msg, commands)
         return
     }
 
-    //#region absolute commands
+    // #region absolute commands
     if (msg.content == "!guild enable" && checkPerms(msg.author.id, "ignis")) {
         console.log("enabling bot for guild: ".green + msg.guild.id.greenRev);
         config[msg.guild.id] = {
@@ -103,7 +94,7 @@ client.on('message', msg => {
         msg.channel.send(embed);
         return
     }
-    //#endregion
+    // #endregion
 
     if (!config[msg.guild.id]) { //check guilds
         logger.warn("attempt to use bot on disabled guild")
@@ -118,40 +109,14 @@ client.on('message', msg => {
         command.shift()
         command = command.join("")
         console.log("recieved command ".blue + command.reverse + " from ".blue + msg.author.tag.reverse);
-        command = command.split(" ")
+        command = command.split(" ")[0].toLowerCase()
 
-        switch (command[0]) {
-            case "ping":
-                console.log("Pong!".rainbow);
-                msg.reply("Pong!")
-                break;
-            case "perms":
-                permsSet(msg, command)
-                break;
-            case "reload":
-                reload(msg, command)
-                break;
-            case "purge":
-                purge(msg, command)
-                break;
-            case "blacklist":
-                blacklist(msg, command)
-                break;
-            case "voice":
-                voice(msg, command)
-                break;
-            case "autoVoice": case "autovoice":
-                autoVoice(msg, command)
-                break;
-            case "setPrefix": case "setprefix": case "prefix":
-                setPrefix(msg, command)
-                break;
-            case "help":
-                help(msg, command)
-                break;
-            default:
-                //msg.channel.send("Command unknown.\nType \`help\` for help")
-                console.log("Command unknown".yellow);
+        if (commands[command]) {
+            commands[command](msg)
+        }
+        else {
+            console.log("Command unknown".yellow);
+            msg.channel.send("Command unknown.\nType \`help\` for help")
         }
     }
 });
@@ -175,7 +140,7 @@ client.on("voiceStateUpdate", (oldMember, newMember) => {
     }
 })
 
-//#region helpers
+// #region helpers
 
 function checkPerms(uid, perm, guildID) { //return true if user has permisssion
     if (perm == "ignis") {
@@ -217,10 +182,16 @@ function makeID(length) {
     return text;
 }
 
-//#endregion
+// #endregion
 
-//#region commands
-function help(msg, command) {
+// #region commands
+var commands = {};
+new ResText(commands, "ping", msg => {
+    console.log("Pong!".rainbow);
+    msg.reply("Pong!")
+})
+
+new ResText(commands, "help", msg => {
     var helpDB = [
         {
             cmd: "help",
@@ -278,7 +249,7 @@ function help(msg, command) {
     for (let cmd of helpDB) {
         desc += `\n **${cmd.cmd}**\n     - ${cmd.desc}\n`
     }
-    if (command[1] == "debug" || command[1] == "dev") {
+    if (msg.content.split(" ")[1] == "debug" || msg.content.split(" ")[1] == "dev") {
         desc += "\n\n__**debug commands:**__"
         for (let cmd of specialHelpDB) {
             desc += `\n **${cmd.cmd}**\n     - ${cmd.desc}\n`
@@ -290,8 +261,10 @@ function help(msg, command) {
         .setColor(0xFF0000)
         .setDescription(desc);
     msg.channel.send(embed);
-}
-function permsSet(msg, command) {
+})
+
+new ResText(commands, "perms", msg => {
+    var command = msg.content.split(" ")
     if (!checkPerms(msg.author.id, "admin", msg.guild.id)) {
         msg.reply("You dont have permission to use this command!")
         return;
@@ -368,16 +341,11 @@ function permsSet(msg, command) {
             saveConfig(msg.channel, "success!")
             break;
     }
-}
-function reload(msg, command) {
-    if (!checkPerms(msg.author.id, "ignis", msg.guild.id)) {
-        msg.reply("You dont have permission to use this command!")
-        return;
-    }
-    config = JSON.parse(fs.readFileSync('./data/config.json', 'utf8'));
-    msg.reply("Reloaded config file")
-}
-function purge(msg, command) {
+})
+
+new ResText(commands, "purge", (msg, recursion) => {
+    var command = msg.content.split(" ")
+    if (recursion) command[1] = `${recursion}`
     if (!checkPerms(msg.author.id, "purge", msg.guild.id)) {
         msg.reply("You dont have permission to use this command!")
         return;
@@ -390,12 +358,40 @@ function purge(msg, command) {
         x = (parseInt(command[1]) < 100 ? parseInt(command[1]) : 100)
     }
     console.log(`attempting to purge ${x} messages`);
-    msg.channel.bulkDelete(x + 1).then(() => {
-        console.log("success".green);
-        msg.channel.send(`Deleted ${x} messages.`).then(msg => msg.delete(config[msg.guild.id].tempMsgTime));
-    });
-}
-function blacklist(msg, command) {
+    msg.channel.bulkDelete(x + 1)
+        .then(() => {
+            console.log("success".green);
+            msg.channel.send(`Deleted ${x} messages.`).then(msg => msg.delete(config[msg.guild.id].tempMsgTime));
+        })
+        .catch(err => {
+            if (err.code == 50034) {
+                if (!recursion) {
+                    msg.channel.send(`Some messages might be older than 14 days.\nCalculating valid purge.\nThis might take a moment...`)
+                    x++
+                }
+                if (x > 0) {
+                    commands.purge(msg, x - 1)
+                }
+                else {
+                    msg.channel.send(`Purge failed. No valid messages`)
+                }
+            }
+            else {
+                msg.channel.send(`Purge failed. Permissions might be insufficient`)
+            }
+        })
+})
+
+new ResText(commands, "reload", msg => {
+    if (!checkPerms(msg.author.id, "ignis", msg.guild.id)) {
+        msg.reply("You dont have permission to use this command!")
+        return;
+    }
+    config = JSON.parse(fs.readFileSync('./data/config.json', 'utf8'));
+    msg.reply("Reloaded config file")
+})
+
+new ResText(commands, "blacklist", msg => {
     if (!checkPerms(msg.author.id, "admin", msg.guild.id)) {
         msg.reply("You dont have permission to use this command!")
         return;
@@ -409,8 +405,10 @@ function blacklist(msg, command) {
         config[msg.guild.id].bannedChannels.push(msg.channel.id)
         saveConfig(msg.channel, "Channel added to blacklist")
     }
-}
-function voice(msg, command) {
+})
+
+new ResText(commands, "voice", msg => {
+    var command = msg.content.split(" ")
     if (!checkPerms(msg.author.id, "voice", msg.guild.id)) {
         msg.reply("You dont have permission to use this command!")
         return;
@@ -474,8 +472,10 @@ function voice(msg, command) {
     else {
         msg.reply('You need to join a voice channel first!');
     }
-}
-function autoVoice(msg, command) {
+})
+
+new ResText(commands, "autovoice", msg => {
+    var command = msg.content.split(" ")
     if (!checkPerms(msg.author.id, "admin", msg.guild.id)) {
         msg.reply("You dont have permission to use this command!")
         return;
@@ -503,7 +503,25 @@ function autoVoice(msg, command) {
         msg.channel.send("autovoice disabled")
     }
     saveConfig()
-}
+})
+
+new ResText(commands, "setprefix", msg => {
+    var command = msg.content.split(" ")
+    if (!checkPerms(msg.author.id, "admin", msg.guild.id)) {
+        msg.reply("You dont have permission to use this command!")
+        return;
+    }
+    if (command[1].length == 1) {
+        config[msg.guild.id].prefix = command[1]
+        saveConfig(msg.channel, `Chnaged prefix to: \`${command[1]}\``)
+    }
+    else {
+        msg.channel.send("Invalid character")
+    }
+})
+// #endregion
+
+// #region voice functions
 function checkVoiceChannels(guild) {
     var voiceChannels = guild.channels.filter(channel => channel.type == "voice" && channel.parentID == config[guild.id].autoVoice).array()
     var tab = []
@@ -557,26 +575,8 @@ function checkVoiceChannels(guild) {
         }
     }
 }
-function setPrefix(msg, command) {
-    if (!checkPerms(msg.author.id, "admin", msg.guild.id)) {
-        msg.reply("You dont have permission to use this command!")
-        return;
-    }
-    if (command[1].length == 1) {
-        config[msg.guild.id].prefix = command[1]
-        saveConfig(msg.channel, `Chnaged prefix to: \`${command[1]}\``)
-    }
-    else {
-        msg.channel.send("Invalid character")
-    }
-}
-//#endregion
+// #endregion
+
+
+
 client.login(token);
-
-
-/* todo:
-    -autorole
-
-    -logs msg
-    -logs voice
-*/
