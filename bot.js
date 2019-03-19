@@ -1,6 +1,5 @@
 const Discord = require('discord.js');
 const client = new Discord.Client();
-var token = require("./data/token.json").token
 var fs = require('fs');
 const ytdl = require('ytdl-core');
 var colors = require("colors");
@@ -12,10 +11,13 @@ colors.setTheme({
     greenRev: ["black", "bgGreen"],
     redRev: ["black", "bgRed"]
 });
-var config = require("./data/config.json")
-var display = require("./data/display.json")
 var logger = require('tracer').colorConsole();
 
+// #region importing settings files
+var token = require("./data/token.json").token
+var config = require("./data/config.json")
+var display = require("./data/display.json")
+// #endregion
 
 // #region importing classes
 const ResDM = require("./res/ResDM.js")
@@ -48,7 +50,7 @@ client.on('message', msg => {
         return
     }
 
-    //#region absolute commands
+    // #region absolute commands
     if (msg.content == "!guild enable" && checkPerms(msg.author.id, "ignis")) {
         console.log("enabling bot for guild: ".green + msg.guild.id.greenRev);
         config[msg.guild.id] = {
@@ -92,7 +94,7 @@ client.on('message', msg => {
         msg.channel.send(embed);
         return
     }
-    //#endregion
+    // #endregion
 
     if (!config[msg.guild.id]) { //check guilds
         logger.warn("attempt to use bot on disabled guild")
@@ -138,7 +140,7 @@ client.on("voiceStateUpdate", (oldMember, newMember) => {
     }
 })
 
-//#region helpers
+// #region helpers
 
 function checkPerms(uid, perm, guildID) { //return true if user has permisssion
     if (perm == "ignis") {
@@ -180,9 +182,9 @@ function makeID(length) {
     return text;
 }
 
-//#endregion
+// #endregion
 
-//#region commands
+// #region commands
 var commands = {};
 new ResText(commands, "ping", msg => {
     console.log("Pong!".rainbow);
@@ -517,7 +519,7 @@ new ResText(commands, "setprefix", msg => {
         msg.channel.send("Invalid character")
     }
 })
-//#endregion
+// #endregion
 
 // #region voice functions
 function checkVoiceChannels(guild) {
@@ -578,9 +580,3 @@ function checkVoiceChannels(guild) {
 
 
 client.login(token);
-/* todo:
-    -autorole
-
-    -logs msg
-    -logs voice
-*/
