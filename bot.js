@@ -107,48 +107,15 @@ client.on('message', msg => {
         command.shift()
         command = command.join("")
         console.log("recieved command ".blue + command.reverse + " from ".blue + msg.author.tag.reverse);
-        command = command.split(" ")[0]
+        command = command.split(" ")[0].toLowerCase()
 
         if (commands[command]) {
             commands[command](msg)
         }
         else {
             console.log("Command unknown".yellow);
+            msg.channel.send("Command unknown.\nType \`help\` for help")
         }
-
-        // switch (command[0]) {
-        //     case "ping":
-        //         console.log("Pong!".rainbow);
-        //         msg.reply("Pong!")
-        //         break;
-        //     case "perms":
-        //         permsSet(msg, command)
-        //         break;
-        //     case "reload":
-        //         reload(msg, command)
-        //         break;
-        //     case "purge":
-        //         purge(msg, command)
-        //         break;
-        //     case "blacklist":
-        //         blacklist(msg, command)
-        //         break;
-        //     case "voice":
-        //         voice(msg, command)
-        //         break;
-        //     case "autoVoice": case "autovoice":
-        //         autoVoice(msg, command)
-        //         break;
-        //     case "setPrefix": case "setprefix": case "prefix":
-        //         setPrefix(msg, command)
-        //         break;
-        //     case "help":
-        //         help(msg, command)
-        //         break;
-        //     default:
-        //         //msg.channel.send("Command unknown.\nType \`help\` for help")
-        //         console.log("Command unknown".yellow);
-        // }
     }
 });
 
@@ -217,6 +184,11 @@ function makeID(length) {
 
 //#region commands
 var commands = {};
+new ResText(commands, "ping", msg => {
+    console.log("Pong!".rainbow);
+    msg.reply("Pong!")
+})
+
 new ResText(commands, "help", msg => {
     var helpDB = [
         {
@@ -384,37 +356,40 @@ new ResText(commands, "purge", (msg, recursion) => {
         x = (parseInt(command[1]) < 100 ? parseInt(command[1]) : 100)
     }
     console.log(`attempting to purge ${x} messages`);
-    msg.channel.bulkDelete(x + 1).then(() => {
-        console.log("success".green);
-        msg.channel.send(`Deleted ${x} messages.`).then(msg => msg.delete(config[msg.guild.id].tempMsgTime));
-    }).catch(err => {
-        if(err.code == 50034){
-            if (!recursion) {
-                msg.channel.send(`Some messages might be older than 14 days.\nCalculating valid purge.\nThis might take a moment...`)
-                x++
-            }
-            if(x>0){
-                commands.purge(msg, x - 1)
+    msg.channel.bulkDelete(x + 1)
+        .then(() => {
+            console.log("success".green);
+            msg.channel.send(`Deleted ${x} messages.`).then(msg => msg.delete(config[msg.guild.id].tempMsgTime));
+        })
+        .catch(err => {
+            if (err.code == 50034) {
+                if (!recursion) {
+                    msg.channel.send(`Some messages might be older than 14 days.\nCalculating valid purge.\nThis might take a moment...`)
+                    x++
+                }
+                if (x > 0) {
+                    commands.purge(msg, x - 1)
+                }
+                else {
+                    msg.channel.send(`Purge failed. No valid messages`)
+                }
             }
             else {
-                msg.channel.send(`Purge failed. No valid messages`)
+                msg.channel.send(`Purge failed. Permissions might be insufficient`)
             }
-        }
-        else {
-            msg.channel.send(`Purge failed. Permissions might be insufficient`)
-        }
-    })
+        })
 })
 
-function reload(msg, command) {
+new ResText(commands, "reload", msg => {
     if (!checkPerms(msg.author.id, "ignis", msg.guild.id)) {
         msg.reply("You dont have permission to use this command!")
         return;
     }
     config = JSON.parse(fs.readFileSync('./data/config.json', 'utf8'));
     msg.reply("Reloaded config file")
-}
-function blacklist(msg, command) {
+})
+
+new ResText(commands, "blacklist", msg => {
     if (!checkPerms(msg.author.id, "admin", msg.guild.id)) {
         msg.reply("You dont have permission to use this command!")
         return;
@@ -428,8 +403,10 @@ function blacklist(msg, command) {
         config[msg.guild.id].bannedChannels.push(msg.channel.id)
         saveConfig(msg.channel, "Channel added to blacklist")
     }
-}
-function voice(msg, command) {
+})
+
+new ResText(commands, "voice", msg => {
+    var command = msg.content.split(" ")
     if (!checkPerms(msg.author.id, "voice", msg.guild.id)) {
         msg.reply("You dont have permission to use this command!")
         return;
@@ -493,8 +470,10 @@ function voice(msg, command) {
     else {
         msg.reply('You need to join a voice channel first!');
     }
-}
-function autoVoice(msg, command) {
+})
+
+new ResText(commands, "autovoice", msg => {
+    var command = msg.content.split(" ")
     if (!checkPerms(msg.author.id, "admin", msg.guild.id)) {
         msg.reply("You dont have permission to use this command!")
         return;
@@ -522,7 +501,25 @@ function autoVoice(msg, command) {
         msg.channel.send("autovoice disabled")
     }
     saveConfig()
-}
+})
+
+new ResText(commands, "setprefix", msg => {
+    var command = msg.content.split(" ")
+    if (!checkPerms(msg.author.id, "admin", msg.guild.id)) {
+        msg.reply("You dont have permission to use this command!")
+        return;
+    }
+    if (command[1].length == 1) {
+        config[msg.guild.id].prefix = command[1]
+        saveConfig(msg.channel, `Chnaged prefix to: \`${command[1]}\``)
+    }
+    else {
+        msg.channel.send("Invalid character")
+    }
+})
+//#endregion
+
+// #region voice functions
 function checkVoiceChannels(guild) {
     var voiceChannels = guild.channels.filter(channel => channel.type == "voice" && channel.parentID == config[guild.id].autoVoice).array()
     var tab = []
@@ -576,23 +573,11 @@ function checkVoiceChannels(guild) {
         }
     }
 }
-function setPrefix(msg, command) {
-    if (!checkPerms(msg.author.id, "admin", msg.guild.id)) {
-        msg.reply("You dont have permission to use this command!")
-        return;
-    }
-    if (command[1].length == 1) {
-        config[msg.guild.id].prefix = command[1]
-        saveConfig(msg.channel, `Chnaged prefix to: \`${command[1]}\``)
-    }
-    else {
-        msg.channel.send("Invalid character")
-    }
-}
-//#endregion
+// #endregion
+
+
+
 client.login(token);
-
-
 /* todo:
     -autorole
 
