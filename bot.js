@@ -94,7 +94,7 @@ client.on('message', msg => {
         msg.channel.send(embed);
         return
     }
-    // #endregion
+    // #endregion absolute commands
 
     if (!config[msg.guild.id]) { //check guilds
         logger.warn("attempt to use bot on disabled guild")
@@ -524,23 +524,17 @@ new ResText(commands, "setprefix", msg => {
 // #region voice functions
 function checkVoiceChannels(guild) {
     var voiceChannels = guild.channels.filter(channel => channel.type == "voice" && channel.parentID == config[guild.id].autoVoice).array()
-    var tab = []
-    var emptycount = 0
-    for (let i in voiceChannels) {
-        if (voiceChannels[i].members.firstKey()) {
-            tab.push("filled")
-        }
-        else {
-            tab.push("empty")
-            emptycount++
-        }
-    }
+    // var tab = []
+    //var emptycount = 0
+
+    var emptycount = voiceChannels.filter(channel => channel.members.firstKey() == undefined).length
+    console.log(emptycount);
     if (emptycount == 0) {
-        //console.log("there are no empty channels");
-        guild.createChannel((tab.length + 1).toString(), 'voice', null, "autovoice activity")
+        console.log("there are no empty channels");
+        guild.createChannel((voiceChannels.length + 1).toString(), 'voice', null, "autovoice activity")
             .then(channel => {
                 channel.setParent(config[guild.id].autoVoice)
-                //console.log("channel added");
+                console.log("channel added");
             })
             .catch(err => {
                 console.log("channel create fail".red);
@@ -549,16 +543,17 @@ function checkVoiceChannels(guild) {
             });
     }
     else if (emptycount > 1) {
-        //console.log("there are to many empty channels")
-        var left = false
-        for (let i in voiceChannels) {
-            if (voiceChannels[i].members.firstKey()) {
-                // console.log("filled")
+        console.log("there are to many empty channels")
+        var left = false // skips first mathing empty channel
+        voiceChannels.forEach(channel => {
+            console.log(channel.name);
+            if (channel.members.firstKey()) {
+                console.log("filled")
             }
             else {
-                // console.log("empty")
-                if (left) {
-                    voiceChannels[i].delete("autovoice activity")
+                console.log("empty")
+                if (left) { // if one empty is left can delete channels
+                    channel.delete("autovoice activity")
                         .then(channel => {
 
                         })
@@ -568,12 +563,61 @@ function checkVoiceChannels(guild) {
                             channels[0].send("unable to delete voice channel - permissions might be insufficient").then(msg => msg.delete(config[msg.guild.id].tempMsgTime))
                         });
                 }
-                else {
+                else { // else saves this one
                     left = true
                 }
             }
-        }
+        })
     }
+
+    // for (let i in voiceChannels) {
+    //     if (voiceChannels[i].members.firstKey()) {
+    //         tab.push("filled")
+    //     }
+    //     else {
+    //         tab.push("empty")
+    //         emptycount++
+    //     }
+    // }
+    // if (emptycount == 0) {
+    //     //console.log("there are no empty channels");
+    //     guild.createChannel((tab.length + 1).toString(), 'voice', null, "autovoice activity")
+    //         .then(channel => {
+    //             channel.setParent(config[guild.id].autoVoice)
+    //             //console.log("channel added");
+    //         })
+    //         .catch(err => {
+    //             console.log("channel create fail".red);
+    //             var channels = guild.channels.filter(a => a.type == "text").array()
+    //             channels[0].send("unable to create voice channel - permissions might be insufficient").then(msg => msg.delete(config[msg.guild.id].tempMsgTime))
+    //         });
+    // }
+    // else if (emptycount > 1) {
+    //     //console.log("there are to many empty channels")
+    //     var left = false
+    //     for (let i in voiceChannels) {
+    //         if (voiceChannels[i].members.firstKey()) {
+    //             // console.log("filled")
+    //         }
+    //         else {
+    //             // console.log("empty")
+    //             if (left) {
+    //                 voiceChannels[i].delete("autovoice activity")
+    //                     .then(channel => {
+
+    //                     })
+    //                     .catch(err => {
+    //                         console.log("channel delete fail".red);
+    //                         var channels = guild.channels.filter(a => a.type == "text").array()
+    //                         channels[0].send("unable to delete voice channel - permissions might be insufficient").then(msg => msg.delete(config[msg.guild.id].tempMsgTime))
+    //                     });
+    //             }
+    //             else {
+    //                 left = true
+    //             }
+    //         }
+    //     }
+    // }
 }
 // #endregion
 
