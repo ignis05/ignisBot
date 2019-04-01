@@ -22,7 +22,8 @@
         }
       ]
     },
-    "autoVoice": "467313439413501986"
+    "autoVoice": "467313439413501986",
+    "autoVoiceFirstChannel": 0
   },
   "183212495501131776": {
     "prefix": "!",
@@ -43,6 +44,7 @@
         }
       ]
     },
-    "autoVoice": "364484753426219009"
+    "autoVoice": "364484753426219009",
+    "autoVoiceFirstChannel": 0
   }
 }

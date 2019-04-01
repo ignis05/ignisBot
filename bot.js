@@ -62,7 +62,8 @@ client.on('message', msg => {
                 purge: [],
                 voice: []
             },
-            autoVoice: false
+            autoVoice: false,
+            autoVoiceFirstChannel: 0
         }
         saveConfig(msg.channel, "guild enabled")
         return
@@ -220,6 +221,10 @@ new ResText(commands, "help", msg => {
         {
             cmd: "autovoice [category id]",
             desc: "enables auto managment of voice channels in given category (if no id given disables it)",
+        },
+        {
+            cmd: "autovoicefirst <int>",
+            desc: "changes iteration start point for autovoice channels",
         },
         {
             cmd: "setprefix <char>",
@@ -505,6 +510,24 @@ new ResText(commands, "autovoice", msg => {
     saveConfig()
 })
 
+new ResText(commands, "autovoicefirst", msg => {
+    if (!checkPerms(msg.author.id, "admin", msg.guild.id)) {
+        msg.reply("You dont have permission to use this command!")
+        return;
+    }
+
+    let nr = parseInt(msg.content.split(" ")[1])
+    if (!isNaN(nr)) {
+        config[msg.guild.id].autoVoiceFirstChannel = nr
+        saveConfig(msg.channel, `First autovoice channel set to ${nr}`)
+        var voiceChannels = msg.guild.channels.filter(channel => channel.type == "voice" && channel.parentID == config[msg.guild.id].autoVoice).array()
+        voiceChannels.forEach((channel, iterator) => { channel.setName((iterator + config[msg.guild.id].autoVoiceFirstChannel).toString()) })
+    }
+    else {
+        msg.reply("Given value is NaN")
+    }
+})
+
 new ResText(commands, "setprefix", msg => {
     var command = msg.content.split(" ")
     if (!checkPerms(msg.author.id, "admin", msg.guild.id)) {
@@ -531,7 +554,7 @@ function checkVoiceChannels(guild) {
     // console.log(emptycount);
     if (emptycount == 0) {
         // console.log("there are no empty channels");
-        guild.createChannel((voiceChannels.length).toString(), 'voice', null, "autovoice activity")
+        guild.createChannel((voiceChannels.length + config[guild.id].autoVoiceFirstChannel).toString(), 'voice', null, "autovoice activity")
             .then(channel => {
                 channel.setParent(config[guild.id].autoVoice)
                 // console.log("channel added");
@@ -550,7 +573,7 @@ function checkVoiceChannels(guild) {
             // console.log(channel.name);
             if (channel.members.firstKey()) {
                 // console.log("filled")
-                channel.setName(iterator.toString())
+                channel.setName((iterator + config[guild.id].autoVoiceFirstChannel).toString())
                 iterator++
             }
             else {
@@ -567,66 +590,12 @@ function checkVoiceChannels(guild) {
                 }
                 else { // else saves this one
                     left = true
-                    channel.setName(iterator.toString())
+                    channel.setName((iterator + config[guild.id].autoVoiceFirstChannel).toString())
                     iterator++
                 }
             }
         })
-        // setTimeout(() => {
-        //     var voiceChannels = guild.channels.filter(channel => channel.type == "voice" && channel.parentID == config[guild.id].autoVoice).array()
-        //     voiceChannels.forEach((channel, iterator) => channel.setName(iterator.toString()))
-        // }, 1000)
     }
-
-
-    // for (let i in voiceChannels) {
-    //     if (voiceChannels[i].members.firstKey()) {
-    //         tab.push("filled")
-    //     }
-    //     else {
-    //         tab.push("empty")
-    //         emptycount++
-    //     }
-    // }
-    // if (emptycount == 0) {
-    //     //console.log("there are no empty channels");
-    //     guild.createChannel((tab.length + 1).toString(), 'voice', null, "autovoice activity")
-    //         .then(channel => {
-    //             channel.setParent(config[guild.id].autoVoice)
-    //             //console.log("channel added");
-    //         })
-    //         .catch(err => {
-    //             console.log("channel create fail".red);
-    //             var channels = guild.channels.filter(a => a.type == "text").array()
-    //             channels[0].send("unable to create voice channel - permissions might be insufficient").then(msg => msg.delete(config[msg.guild.id].tempMsgTime))
-    //         });
-    // }
-    // else if (emptycount > 1) {
-    //     //console.log("there are to many empty channels")
-    //     var left = false
-    //     for (let i in voiceChannels) {
-    //         if (voiceChannels[i].members.firstKey()) {
-    //             // console.log("filled")
-    //         }
-    //         else {
-    //             // console.log("empty")
-    //             if (left) {
-    //                 voiceChannels[i].delete("autovoice activity")
-    //                     .then(channel => {
-
-    //                     })
-    //                     .catch(err => {
-    //                         console.log("channel delete fail".red);
-    //                         var channels = guild.channels.filter(a => a.type == "text").array()
-    //                         channels[0].send("unable to delete voice channel - permissions might be insufficient").then(msg => msg.delete(config[msg.guild.id].tempMsgTime))
-    //                     });
-    //             }
-    //             else {
-    //                 left = true
-    //             }
-    //         }
-    //     }
-    // }
 }
 // #endregion
 
