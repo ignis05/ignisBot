@@ -528,47 +528,56 @@ function checkVoiceChannels(guild) {
     //var emptycount = 0
 
     var emptycount = voiceChannels.filter(channel => channel.members.firstKey() == undefined).length
-    console.log(emptycount);
+    // console.log(emptycount);
     if (emptycount == 0) {
-        console.log("there are no empty channels");
-        guild.createChannel((voiceChannels.length + 1).toString(), 'voice', null, "autovoice activity")
+        // console.log("there are no empty channels");
+        guild.createChannel((voiceChannels.length).toString(), 'voice', null, "autovoice activity")
             .then(channel => {
                 channel.setParent(config[guild.id].autoVoice)
-                console.log("channel added");
+                // console.log("channel added");
             })
             .catch(err => {
-                console.log("channel create fail".red);
+                // console.log("channel create fail".red);
                 var channels = guild.channels.filter(a => a.type == "text").array()
                 channels[0].send("unable to create voice channel - permissions might be insufficient").then(msg => msg.delete(config[msg.guild.id].tempMsgTime))
             });
     }
     else if (emptycount > 1) {
-        console.log("there are to many empty channels")
+        // console.log("there are to many empty channels")
         var left = false // skips first mathing empty channel
+        let iterator = 0
         voiceChannels.forEach(channel => {
-            console.log(channel.name);
+            // console.log(channel.name);
             if (channel.members.firstKey()) {
-                console.log("filled")
+                // console.log("filled")
+                channel.setName(iterator.toString())
+                iterator++
             }
             else {
-                console.log("empty")
+                // console.log("empty")
                 if (left) { // if one empty is left can delete channels
                     channel.delete("autovoice activity")
                         .then(channel => {
-
                         })
                         .catch(err => {
-                            console.log("channel delete fail".red);
+                            console.log("channel delete fail");
                             var channels = guild.channels.filter(a => a.type == "text").array()
                             channels[0].send("unable to delete voice channel - permissions might be insufficient").then(msg => msg.delete(config[msg.guild.id].tempMsgTime))
                         });
                 }
                 else { // else saves this one
                     left = true
+                    channel.setName(iterator.toString())
+                    iterator++
                 }
             }
         })
+        // setTimeout(() => {
+        //     var voiceChannels = guild.channels.filter(channel => channel.type == "voice" && channel.parentID == config[guild.id].autoVoice).array()
+        //     voiceChannels.forEach((channel, iterator) => channel.setName(iterator.toString()))
+        // }, 1000)
     }
+
 
     // for (let i in voiceChannels) {
     //     if (voiceChannels[i].members.firstKey()) {
