@@ -17,6 +17,7 @@ token.json file in /data folder:<br>
     - bot owner in display.json
     - rename display.json
     - retry after failed login
+    - create default json files with catch
     - autorole
     - logs msg
     - logs voice
