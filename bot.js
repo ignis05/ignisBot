@@ -14,9 +14,43 @@ colors.setTheme({
 var logger = require('tracer').colorConsole();
 
 // #region importing settings files
-var token = require("./data/token.json").token
-var config = require("./data/config.json")
-var display = require("./data/display.json")
+var config
+var token
+var display
+// token V
+try {
+    token = require("./data/token.json").token
+}
+catch (err) {
+    let tokenPlaceholder = {
+        token: "bot_token_here"
+    }
+    fs.writeFileSync("./data/token.json", JSON.stringify(tokenPlaceholder, null, 2))
+    throw new Error("you need to specify bot token in ./data/token.json")
+}
+// token ^
+try {
+    config = require("./data/config.json")
+}
+catch (err) {
+    fs.writeFile("./data/config.json", JSON.stringify({}, null, 2), (err) => {
+        config = require("./data/config.json")
+    })
+}
+// display V
+try {
+    display = require("./data/display.json")
+}
+catch (err) {
+    let displayPlaceholder = {
+        "message": "Debug version is currently running. Bot might not function properly (or at all)",
+        "type": "PLAYING"
+    }
+    fs.writeFile("./data/display.json", JSON.stringify(displayPlaceholder, null, 2), (err) => {
+        display = require("./data/display.json")
+    })
+}
+// display ^
 // #endregion
 
 // #region importing classes
