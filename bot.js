@@ -633,6 +633,6 @@ function checkVoiceChannels(guild) {
 }
 // #endregion
 
-
+client.on('error', console.error);
 
 client.login(token);
