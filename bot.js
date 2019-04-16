@@ -677,7 +677,7 @@ function checkVoiceChannels(guild) {
 // #region interval
 var interval = setInterval(() => {
     let date = new Date()
-    console.log(date.getHours(), date.getMinutes());
+//    console.log(date.getHours(), date.getMinutes());
     if (date.getHours() == 21 && date.getMinutes() == 37) {
         for (let guildId of Object.keys(config)) {
             if (config[guildId].jp2Channel) {
