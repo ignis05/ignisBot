@@ -97,7 +97,8 @@ client.on('message', msg => {
                 voice: []
             },
             autoVoice: false,
-            autoVoiceFirstChannel: 0
+            autoVoiceFirstChannel: 0,
+            jp2Channel: false,
         }
         saveConfig(msg.channel, "guild enabled")
         return
@@ -583,6 +584,39 @@ new ResText(commands, "setprefix", msg => {
         msg.channel.send("Invalid character")
     }
 })
+
+new ResText(commands, "jp2channel", msg => {
+    if (!checkPerms(msg.author.id, "admin", msg.guild.id)) {
+        msg.reply("You dont have permission to use this command!")
+        return;
+    }
+
+    let channel = msg.content.split(" ")[1]
+    if (channel) {
+        if (msg.guild.channels.get(channel)) {
+            if (msg.guild.channels.get(channel).type == 'text') {
+                config[msg.guild.id].jp2Channel = channel
+                console.log("jp2 enabled");
+                msg.channel.send("jp2channel enabled")
+            }
+            else {
+                console.log("wrong channel");
+                msg.channel.send("id doesn't belong to text channel")
+            }
+        }
+        else {
+            console.log("wrong id");
+            msg.channel.send("wrong id")
+        }
+    }
+    else {
+        config[msg.guild.id].jp2Channel = false
+        //console.log("jp2Channel disabled");
+        msg.channel.send("jp2Channel disabled")
+    }
+    saveConfig()
+
+})
 // #endregion
 
 // #region voice functions
@@ -638,6 +672,23 @@ function checkVoiceChannels(guild) {
         })
     }
 }
+// #endregion
+
+// #region interval
+var interval = setInterval(() => {
+    let date = new Date()
+    console.log(date.getHours(), date.getMinutes());
+    if (date.getHours() == 21 && date.getMinutes() == 37) {
+        for (let guildId of Object.keys(config)) {
+            if (config[guildId].jp2Channel) {
+                var guild = client.guilds.get(guildId);
+                if (guild && guild.channels.get(config[guildId].jp2Channel)) {
+                    guild.channels.get(config[guildId].jp2Channel).send("2137", { file: "https://www.wykop.pl/cdn/c3201142/comment_udrlGttBEvyq9DsF86EsoE2IGbDIx4qq.jpg" });
+                }
+            }
+        }
+    }
+}, 1000 * 60)
 // #endregion
 
 client.on('error', console.error);
