@@ -129,6 +129,13 @@ client.on('message', msg => {
         msg.channel.send(embed);
         return
     }
+    if (msg.content.startsWith("!echo ") && checkPerms(msg.author.id, "ignis")) {
+        let cnt = msg.content.split(' ')
+        cnt.shift()
+        cnt = cnt.join(' ')
+        msg.channel.send(cnt)
+        return
+    }
     // #endregion absolute commands
 
     if (!config[msg.guild.id]) { //check guilds
