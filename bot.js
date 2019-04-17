@@ -702,7 +702,7 @@ function githubNotify(member) {
         try {
             let github = JSON.parse(fs.readFileSync('./data/github_pulls.json'))
 
-            console.log(github);
+            // console.log(github);
             let waitingReviews = false
             //          //webhook-test, cinnamon-game
             let repos = ['181872271', '179300870']
@@ -715,8 +715,9 @@ function githubNotify(member) {
                     }
                 }
             })
-            console.log('waiting for reviews from ignis: ', waitingReviews);
+            // console.log('waiting for reviews from ignis: ', waitingReviews);
             if (waitingReviews) {
+                console.log('sending notification to '.green + 'ignis'.cyan);
                 member.send('pull requesty czekają')
             }
         }
@@ -727,7 +728,7 @@ function githubNotify(member) {
         try {
             let github = JSON.parse(fs.readFileSync('./data/github_pulls.json'))
 
-            console.log(github);
+            // console.log(github);
             let waitingReviews = false
             //          //cinnamon-game
             let repos = ['179300870']
@@ -740,8 +741,9 @@ function githubNotify(member) {
                     }
                 }
             })
-            console.log('waiting for reviews from waifu_InMyLaifu: ', waitingReviews);
+            // console.log('waiting for reviews from waifu_InMyLaifu: ', waitingReviews);
             if (waitingReviews) {
+                console.log('sending notification to '.green + 'ignis'.cyan);
                 member.send('pull requesty czekają')
             }
         }
