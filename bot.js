@@ -165,20 +165,25 @@ client.on('message', msg => {
 });
 
 client.on("voiceStateUpdate", (oldMember, newMember) => {
-    if (!config[newMember.guild.id].autoVoice) return
-
     if (oldMember.voiceChannelID && newMember.voiceChannelID) {
         if (oldMember.voiceChannelID != newMember.voiceChannelID) {
             //console.log("change");
+
+            if (!config[newMember.guild.id].autoVoice) return
             checkVoiceChannels(newMember.voiceChannel.guild)
         }
     }
     else if (newMember.voiceChannelID) {
         //console.log("join");
+        githubNotify(newMember)
+
+        if (!config[newMember.guild.id].autoVoice) return
         checkVoiceChannels(newMember.voiceChannel.guild)
     }
     else if (oldMember.voiceChannelID) {
         //console.log("leave");
+
+        if (!config[newMember.guild.id].autoVoice) return
         checkVoiceChannels(oldMember.voiceChannel.guild)
     }
 })
@@ -677,7 +682,7 @@ function checkVoiceChannels(guild) {
 // #region interval
 var interval = setInterval(() => {
     let date = new Date()
-//    console.log(date.getHours(), date.getMinutes());
+    //    console.log(date.getHours(), date.getMinutes());
     if (date.getHours() == 21 && date.getMinutes() == 37) {
         for (let guildId of Object.keys(config)) {
             if (config[guildId].jp2Channel) {
@@ -690,6 +695,60 @@ var interval = setInterval(() => {
     }
 }, 1000 * 60)
 // #endregion
+
+// #region github notifier
+function githubNotify(member) {
+    if (member.id == '226032144856776704') {// ignis
+        try {
+            let github = JSON.parse(fs.readFileSync('./data/github_pulls.json'))
+
+            console.log(github);
+            let waitingReviews = false
+            //          //webhook-test, cinnamon-game
+            let repos = ['181872271', '179300870']
+            repos.forEach(repo => {
+                if (github[repo]) {
+                    console.log(github[repo]);
+                    let tabs = Object.values(github[repo])
+                    if (tabs.find(tab => tab.includes('ignis05'))) {
+                        waitingReviews = true
+                    }
+                }
+            })
+            console.log('waiting for reviews from ignis: ', waitingReviews);
+            if (waitingReviews) {
+                member.send('pull requesty czekają')
+            }
+        }
+        catch (err) { }
+    }
+
+    if (member.id == '302475226036305931') {// waifu_InMyLaifu
+        try {
+            let github = JSON.parse(fs.readFileSync('./data/github_pulls.json'))
+
+            console.log(github);
+            let waitingReviews = false
+            //          //cinnamon-game
+            let repos = ['179300870']
+            repos.forEach(repo => {
+                if (github[repo]) {
+                    console.log(github[repo]);
+                    let tabs = Object.values(github[repo])
+                    if (tabs.find(tab => tab.includes('koroshiG'))) {
+                        waitingReviews = true
+                    }
+                }
+            })
+            console.log('waiting for reviews from waifu_InMyLaifu: ', waitingReviews);
+            if (waitingReviews) {
+                member.send('pull requesty czekają')
+            }
+        }
+        catch (err) { }
+    }
+}
+// #endregion github notifier
 
 client.on('error', console.error);
 
