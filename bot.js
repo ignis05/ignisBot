@@ -11,7 +11,6 @@ colors.setTheme({
     greenRev: ["black", "bgGreen"],
     redRev: ["black", "bgRed"]
 });
-var logger = require('tracer').colorConsole();
 
 // #region importing settings files
 var config
@@ -140,7 +139,7 @@ client.on('message', msg => {
     // #endregion absolute commands
 
     if (!config[msg.guild.id]) { //check guilds
-        logger.warn("attempt to use bot on disabled guild")
+        console.log("attempt to use bot on disabled guild")
         msg.reply("Bot activity is disabled on this guild, use `guild enable`")
         return
     }
