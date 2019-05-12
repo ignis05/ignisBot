@@ -742,7 +742,7 @@ function githubNotify(member) {
             })
             // console.log('waiting for reviews from waifu_InMyLaifu: ', waitingReviews);
             if (waitingReviews) {
-                console.log('sending notification to '.green + 'ignis'.cyan);
+                console.log('sending notification to '.green + 'waifu_InMyLaifu'.cyan);
                 member.send('pull requesty czekają')
             }
         }
