@@ -174,7 +174,7 @@ client.on("voiceStateUpdate", (oldMember, newMember) => {
     }
     else if (newMember.voiceChannelID) {
         //console.log("join");
-        githubNotify(newMember)
+        // githubNotify(newMember)
 
         if (!config[newMember.guild.id].autoVoice) return
         checkVoiceChannels(newMember.voiceChannel.guild)
@@ -696,59 +696,59 @@ var interval = setInterval(() => {
 // #endregion
 
 // #region github notifier
-function githubNotify(member) {
-    if (member.id == '226032144856776704') {// ignis
-        try {
-            let github = JSON.parse(fs.readFileSync('./data/github_pulls.json'))
+// function githubNotify(member) {
+//     if (member.id == '226032144856776704') {// ignis
+//         try {
+//             let github = JSON.parse(fs.readFileSync('./data/github_pulls.json'))
 
-            // console.log(github);
-            let waitingReviews = false
-            //          //webhook-test, cinnamon-game
-            let repos = ['181872271', '179300870']
-            repos.forEach(repo => {
-                if (github[repo]) {
-                    console.log(github[repo]);
-                    let tabs = Object.values(github[repo])
-                    if (tabs.find(tab => tab.includes('ignis05'))) {
-                        waitingReviews = true
-                    }
-                }
-            })
-            // console.log('waiting for reviews from ignis: ', waitingReviews);
-            if (waitingReviews) {
-                console.log('sending notification to '.green + 'ignis'.cyan);
-                member.send('pull requesty czekają')
-            }
-        }
-        catch (err) { }
-    }
+//             // console.log(github);
+//             let waitingReviews = false
+//             //          //webhook-test, cinnamon-game
+//             let repos = ['181872271', '179300870']
+//             repos.forEach(repo => {
+//                 if (github[repo]) {
+//                     console.log(github[repo]);
+//                     let tabs = Object.values(github[repo])
+//                     if (tabs.find(tab => tab.includes('ignis05'))) {
+//                         waitingReviews = true
+//                     }
+//                 }
+//             })
+//             // console.log('waiting for reviews from ignis: ', waitingReviews);
+//             if (waitingReviews) {
+//                 console.log('sending notification to '.green + 'ignis'.cyan);
+//                 member.send('pull requesty czekają')
+//             }
+//         }
+//         catch (err) { }
+//     }
 
-    if (member.id == '302475226036305931') {// waifu_InMyLaifu
-        try {
-            let github = JSON.parse(fs.readFileSync('./data/github_pulls.json'))
+//     if (member.id == '302475226036305931') {// waifu_InMyLaifu
+//         try {
+//             let github = JSON.parse(fs.readFileSync('./data/github_pulls.json'))
 
-            // console.log(github);
-            let waitingReviews = false
-            //          //cinnamon-game
-            let repos = ['179300870']
-            repos.forEach(repo => {
-                if (github[repo]) {
-                    console.log(github[repo]);
-                    let tabs = Object.values(github[repo])
-                    if (tabs.find(tab => tab.includes('koroshiG'))) {
-                        waitingReviews = true
-                    }
-                }
-            })
-            // console.log('waiting for reviews from waifu_InMyLaifu: ', waitingReviews);
-            if (waitingReviews) {
-                console.log('sending notification to '.green + 'waifu_InMyLaifu'.cyan);
-                member.send('pull requesty czekają')
-            }
-        }
-        catch (err) { }
-    }
-}
+//             // console.log(github);
+//             let waitingReviews = false
+//             //          //cinnamon-game
+//             let repos = ['179300870']
+//             repos.forEach(repo => {
+//                 if (github[repo]) {
+//                     console.log(github[repo]);
+//                     let tabs = Object.values(github[repo])
+//                     if (tabs.find(tab => tab.includes('koroshiG'))) {
+//                         waitingReviews = true
+//                     }
+//                 }
+//             })
+//             // console.log('waiting for reviews from waifu_InMyLaifu: ', waitingReviews);
+//             if (waitingReviews) {
+//                 console.log('sending notification to '.green + 'waifu_InMyLaifu'.cyan);
+//                 member.send('pull requesty czekają')
+//             }
+//         }
+//         catch (err) { }
+//     }
+// }
 // #endregion github notifier
 
 client.on('error', console.error);
