@@ -136,6 +136,17 @@ client.on('message', msg => {
         msg.channel.send(cnt)
         return
     }
+    if (msg.content.toLowerCase().startsWith("!setnickname ") && checkPerms(msg.author.id, "ignis")) {
+        let cnt = msg.content.split(' ')
+        cnt.shift()
+        cnt = cnt.join(' ')
+        msg.guild.me.setNickname(cnt).then(() => {
+            msg.reply('Done!')
+        }).catch(() => {
+            msg.channel.send('Error - permissions might be insufficient')
+        })
+        return
+    }
     // #endregion absolute commands
 
     if (!config[msg.guild.id]) { //check guilds
