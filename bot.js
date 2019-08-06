@@ -232,14 +232,6 @@ function saveConfig(channel, reply) { //   saveConfig(msg.channel, "success!")
         }
     })
 }
-function makeID(length) {
-    var text = "";
-    var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    for (var i = 0; i < length; i++)
-        text += possible.charAt(Math.floor(Math.random() * possible.length));
-    return text;
-}
-
 // #endregion
 
 // #region commands
@@ -304,6 +296,14 @@ new ResText(commands, "help", msg => {
         {
             cmd: "checkperms",
             desc: "displays bot's permissions on current guild",
+        },
+        {
+            cmd: "echo",
+            desc: "bot responds with sending whole message that was after !echo command",
+        },
+        {
+            cmd: "!setnickname [nickname]",
+            desc: "sets bot's local nickname on server",
         },
     ]
 
