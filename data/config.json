@@ -24,7 +24,11 @@
     },
     "autoVoice": "467313439413501986",
     "autoVoiceFirstChannel": 0,
-    "jp2Channel": false
+    "jp2Channel": false,
+    "random": {
+      "min": 1,
+      "max": 10
+    }
   },
   "183212495501131776": {
     "prefix": "!",
@@ -47,6 +51,10 @@
     },
     "autoVoice": "364484753426219009",
     "autoVoiceFirstChannel": 2137,
-    "jp2Channel": false
+    "jp2Channel": false,
+    "random": {
+      "min": 1,
+      "max": 10
+    }
   }
 }
