@@ -644,11 +644,7 @@ function checkVoiceChannels(guild) {
     // console.log(emptycount);
     if (emptycount == 0) {
         // console.log("there are no empty channels");
-        guild.createChannel((voiceChannels.length + config[guild.id].autoVoiceFirstChannel).toString(), 'voice', null, "autovoice activity")
-            .then(channel => {
-                channel.setParent(config[guild.id].autoVoice)
-                // console.log("channel added");
-            })
+        guild.createChannel((voiceChannels.length + config[guild.id].autoVoiceFirstChannel).toString(), {type:'voice', parent:config[guild.id].autoVoice, reason:'autovoice activity'})
             .catch(err => {
                 // console.log("channel create fail".red);
                 var channels = guild.channels.filter(a => a.type == "text").array()
