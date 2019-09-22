@@ -46,33 +46,34 @@ let groups = fs
 	.filter(dirent => dirent.isDirectory())
 	.map(dirent => dirent.name)
 
+console.log('Loading commands from files:'.accent)
 for (let group of groups) {
 	commands[group] = []
 	let files = fs
 		.readdirSync(`./commands/${group}`, { withFileTypes: true })
 		.filter(dirent => dirent.isFile())
 		.map(dirent => dirent.name)
+	console.log(`${group}:`.reverse)
 	for (let filename of files) {
 		try {
 			let temp = require(`./commands/${group}/${filename}`)
 			// validate module.exports
 			if (!temp.name || typeof temp.run != 'function') throw 'wrong arguments'
+			if (!Object.keys(temp).every(el => ['name', 'aliases', 'run'].includes(el))) {
+				console.log(`${temp.name} - loaded, but has some invalid properties`.warn)
+			} else {
+				console.log(`${temp.name} - loaded`.green)
+			}
 
 			// set default properties
 			if (!temp.aliases) temp.aliases = []
 
 			commands[group].push(temp)
 		} catch (err) {
-			console.log(`commands file : ${group}/${filename} is invalid`.error)
+			console.log(`${filename} - not loaded, file is invalid`.error)
 			console.log(err)
 		}
 	}
-}
-// log:
-console.log('Loading commands from files:'.accent)
-for (let g of groups) {
-	console.log(`${g}:`.success)
-	console.log(commands[g].map(cmd => cmd.name))
 }
 // #endregion importing commands
 
@@ -210,128 +211,21 @@ client.on('voiceStateUpdate', (oldMember, newMember) => {
 		if (oldMember.voiceChannelID != newMember.voiceChannelID) {
 			// change
 			if (!config[newMember.guild.id].autoVoice) return
-			checkVoiceChannels(newMember.voiceChannel.guild)
+			autovoiceActivity(newMember.voiceChannel.guild)
 		}
 	} else if (newMember.voiceChannelID) {
 		//join
 		if (!config[newMember.guild.id].autoVoice) return
-		checkVoiceChannels(newMember.voiceChannel.guild)
+		autovoiceActivity(newMember.voiceChannel.guild)
 	} else if (oldMember.voiceChannelID) {
 		//leave
 		if (!config[newMember.guild.id].autoVoice) return
-		checkVoiceChannels(oldMember.voiceChannel.guild)
+		autovoiceActivity(oldMember.voiceChannel.guild)
 	}
 })
-
-// #region commands
-
-new ResText(commands, 'help', msg => {
-	var helpDB = [
-		{
-			cmd: 'help',
-			desc: 'displays this message',
-		},
-		{
-			cmd: 'ping',
-			desc: 'replies with pong',
-		},
-		{
-			cmd: 'perms <list / add / del> <mention> <permission>',
-			desc: '<list> displays permissions, <add / del> changes permission for mentioned user',
-		},
-		{
-			cmd: 'purge [x]',
-			desc: 'deletes x messages from channel (5 by default)',
-		},
-		{
-			cmd: 'blacklist',
-			desc: 'adds / removes current channel from blacklist',
-		},
-		{
-			cmd: 'voice <name / url>',
-			desc: 'plays sound from predefined source or youtube url',
-		},
-		{
-			cmd: 'autovoice [category id]',
-			desc: 'enables auto managment of voice channels in given category (if no id given disables it)',
-		},
-		{
-			cmd: 'autovoicefirst <int>',
-			desc: 'changes iteration start point for autovoice channels',
-		},
-		{
-			cmd: 'setprefix <char>',
-			desc: 'changes prefix for this guild',
-		},
-	]
-	var specialHelpDB = [
-		{
-			cmd: 'reload',
-			desc: 'reloads config.json file',
-		},
-		{
-			cmd: 'guild <enable / disable>',
-			desc: 'enables / disables bot activity on current guild',
-		},
-		{
-			cmd: 'invite',
-			desc: 'generates invite',
-		},
-		{
-			cmd: 'checkperms',
-			desc: "displays bot's permissions on current guild",
-		},
-		{
-			cmd: 'echo',
-			desc: 'bot responds with sending whole message that was after !echo command',
-		},
-		{
-			cmd: '!setnickname [nickname]',
-			desc: "sets bot's local nickname on server",
-		},
-	]
-
-	var desc = `"<required variable>", [optional variable]\n`
-	for (let cmd of helpDB) {
-		desc += `\n **${cmd.cmd}**\n     - ${cmd.desc}\n`
-	}
-	if (msg.content.split(' ')[1] == 'debug' || msg.content.split(' ')[1] == 'dev') {
-		desc += '\n\n__**debug commands:**__'
-		for (let cmd of specialHelpDB) {
-			desc += `\n **${cmd.cmd}**\n     - ${cmd.desc}\n`
-		}
-	}
-
-	const embed = new Discord.RichEmbed()
-		.setTitle('Commands list:')
-		.setColor(0xff0000)
-		.setDescription(desc)
-	msg.channel.send(embed)
-})
-
-new ResText(commands, 'setrandom', msg => {
-	let msg_arr = msg.content.split(' ')
-	if (msg_arr.length < 3 || isNaN(msg_arr[1]) || isNaN(msg_arr[2])) {
-		msg.reply('Wrong arguments')
-		return
-	}
-	let min = parseInt(msg_arr[1])
-	let max = parseInt(msg_arr[2])
-	config[msg.guild.id].random = { min: min, max: max }
-	saveConfig()
-	msg.channel.send(`Random number generator was set to: <${min}, ${max}>`)
-})
-
-new ResText(commands, 'random', msg => {
-	let min = config[msg.guild.id].random.min
-	let max = config[msg.guild.id].random.max
-	let rand = Math.floor(Math.random() * (max + 1 - min)) + min
-	msg.channel.send(`Your random number <${min}, ${max}>:\n${rand}`)
-})
-// #endregion
 
 // #region voice functions
-function checkVoiceChannels(guild) {
+function autovoiceActivity(guild) {
 	var voiceChannels = guild.channels.filter(channel => channel.type == 'voice' && channel.parentID == config[guild.id].autoVoice).array()
 	// var tab = []
 	//var emptycount = 0
@@ -386,81 +280,6 @@ function checkVoiceChannels(guild) {
 	}
 }
 // #endregion
-
-// #region interval
-var interval = setInterval(() => {
-	let date = new Date()
-	//    console.log(date.getHours(), date.getMinutes());
-	if (date.getHours() == 21 && date.getMinutes() == 37) {
-		for (let guildId of Object.keys(config)) {
-			if (config[guildId].jp2Channel) {
-				var guild = client.guilds.get(guildId)
-				if (guild && guild.channels.get(config[guildId].jp2Channel)) {
-					guild.channels.get(config[guildId].jp2Channel).send('2137', {
-						file: 'https://www.wykop.pl/cdn/c3201142/comment_udrlGttBEvyq9DsF86EsoE2IGbDIx4qq.jpg',
-					})
-				}
-			}
-		}
-	}
-}, 1000 * 60)
-// #endregion
-
-// #region github notifier
-// function githubNotify(member) {
-//     if (member.id == '226032144856776704') {// ignis
-//         try {
-//             let github = JSON.parse(fs.readFileSync('./data/github_pulls.json'))
-
-//             // console.log(github);
-//             let waitingReviews = false
-//             //          //webhook-test, cinnamon-game
-//             let repos = ['181872271', '179300870']
-//             repos.forEach(repo => {
-//                 if (github[repo]) {
-//                     console.log(github[repo]);
-//                     let tabs = Object.values(github[repo])
-//                     if (tabs.find(tab => tab.includes('ignis05'))) {
-//                         waitingReviews = true
-//                     }
-//                 }
-//             })
-//             // console.log('waiting for reviews from ignis: ', waitingReviews);
-//             if (waitingReviews) {
-//                 console.log('sending notification to '.green + 'ignis'.cyan);
-//                 member.send('pull requesty czekają')
-//             }
-//         }
-//         catch (err) { }
-//     }
-
-//     if (member.id == '302475226036305931') {// waifu_InMyLaifu
-//         try {
-//             let github = JSON.parse(fs.readFileSync('./data/github_pulls.json'))
-
-//             // console.log(github);
-//             let waitingReviews = false
-//             //          //cinnamon-game
-//             let repos = ['179300870']
-//             repos.forEach(repo => {
-//                 if (github[repo]) {
-//                     console.log(github[repo]);
-//                     let tabs = Object.values(github[repo])
-//                     if (tabs.find(tab => tab.includes('koroshiG'))) {
-//                         waitingReviews = true
-//                     }
-//                 }
-//             })
-//             // console.log('waiting for reviews from waifu_InMyLaifu: ', waitingReviews);
-//             if (waitingReviews) {
-//                 console.log('sending notification to '.green + 'waifu_InMyLaifu'.cyan);
-//                 member.send('pull requesty czekają')
-//             }
-//         }
-//         catch (err) { }
-//     }
-// }
-// #endregion github notifier
 
 client.on('error', console.error)
 
