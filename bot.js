@@ -69,6 +69,9 @@ for (let cmd of multi_cmds) {
 			} else {
 				console.log(`${group}/${temp.name} - loaded`.green)
 			}
+			if (!commands[group]) {
+				commands[group] = []
+			}
 			commands[group].push(temp)
 		}
 	} catch (err) {
