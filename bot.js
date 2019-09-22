@@ -41,28 +41,56 @@ try {
 const { checkPerms, saveConfig } = require('./res/Helpers.js')
 
 // #region importing commands
+console.log('Loading commands from files:'.accent)
 let groups = fs
 	.readdirSync('./commands/', { withFileTypes: true })
 	.filter(dirent => dirent.isDirectory())
 	.map(dirent => dirent.name)
 
-console.log('Loading commands from files:'.accent)
 for (let group of groups) {
 	commands[group] = []
+}
+
+let multi_cmds = fs
+	.readdirSync('./commands/', { withFileTypes: true })
+	.filter(dirent => dirent.isFile())
+	.map(dirent => dirent.name)
+for (let cmd of multi_cmds) {
+	try {
+		let temp = require(`./commands/${cmd}`)
+		// validate module.exports
+		if (!temp.name || typeof temp.run != 'function' || temp.categories.length < 1) throw 'wrong arguments'
+		// set default properties
+		if (!temp.aliases) temp.aliases = []
+
+		for (let group of temp.categories) {
+			if (!Object.keys(temp).every(el => ['name', 'aliases', 'run', 'categories'].includes(el))) {
+				console.log(`${group}/${temp.name} - loaded, but has some invalid properties`.warn)
+			} else {
+				console.log(`${group}/${temp.name} - loaded`.green)
+			}
+			commands[group].push(temp)
+		}
+	} catch (err) {
+		console.log(`${cmd} - not loaded, file is invalid`.error)
+		console.log(err)
+	}
+}
+
+for (let group of groups) {
 	let files = fs
 		.readdirSync(`./commands/${group}`, { withFileTypes: true })
 		.filter(dirent => dirent.isFile())
 		.map(dirent => dirent.name)
-	console.log(`${group}:`.reverse)
 	for (let filename of files) {
 		try {
 			let temp = require(`./commands/${group}/${filename}`)
 			// validate module.exports
 			if (!temp.name || typeof temp.run != 'function') throw 'wrong arguments'
 			if (!Object.keys(temp).every(el => ['name', 'aliases', 'run'].includes(el))) {
-				console.log(`${temp.name} - loaded, but has some invalid properties`.warn)
+				console.log(`${group}/${temp.name} - loaded, but has some invalid properties`.warn)
 			} else {
-				console.log(`${temp.name} - loaded`.green)
+				console.log(`${group}/${temp.name} - loaded`.green)
 			}
 
 			// set default properties
@@ -76,11 +104,6 @@ for (let group of groups) {
 	}
 }
 // #endregion importing commands
-
-// #region importing classes
-const ResDM = require('./res/ResDM.js')
-const ResText = require('./res/ResText.js')
-// #endregion importing classes
 
 client.on('ready', () => {
 	client.user.setActivity('anthropomorphized minors', { type: 'WATCHING' })
@@ -100,12 +123,23 @@ client.on('guildCreate', guild => {
 })
 
 client.on('message', msg => {
-	if (msg.author.bot) return //ignore bots
-	if (!msg.guild && msg.channel.id != '551445397411856398') return //ignore priv msgs
+	//ignore bots
+	if (msg.author.bot) return
 
-	//dont ignore priv msgs from me
-	if (msg.channel.id == '551445397411856398') {
-		new ResDM(client, msg, commands)
+	//priv msgs
+	if (!msg.guild) {
+		console.log('recieved command '.blue + msg.content.reverse + ' from '.blue + msg.author.tag.reverse)
+		let cont = msg.content.toLowerCase()
+		// strip prefixes
+		cont = cont.replace(/\W*/, '')
+		let command = cont.split(' ')[0]
+		let cmd = commands.dm.find(cmd => cmd.name == command || cmd.aliases.includes(command))
+		if (cmd) {
+			cmd.run(msg)
+		} else {
+			console.log('Command unknown'.yellow)
+			msg.channel.send('Command unknown.\nType `help` for help')
+		}
 		return
 	}
 
