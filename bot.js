@@ -16,8 +16,6 @@ const commands = {}
 var config
 var token
 
-const { checkPerms, getUserFromId, saveConfig } = require('./res/Helpers.js')
-
 // #region importing settings files
 // token V
 try {
@@ -39,13 +37,15 @@ try {
 }
 // #endregion
 
+const { checkPerms, saveConfig } = require('./res/Helpers.js')
+
 // #region importing commands
 let groups = fs
 	.readdirSync('./commands/', { withFileTypes: true })
 	.filter(dirent => dirent.isDirectory())
 	.map(dirent => dirent.name)
 
-console.log('Loading commands from files:'.greenRev)
+console.log('Loading commands from files:'.magenta)
 for (let group of groups) {
 	commands[group] = []
 	let files = fs

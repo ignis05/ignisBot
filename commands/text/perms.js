@@ -59,7 +59,6 @@ module.exports = {
 			case 'del':
 			case 'remove':
 			case 'delete':
-				console.log('here'.rainbow)
 				var uID = command[2].slice(2, -1)
 				var perms = command.slice(3)
 				if (!perms) break
