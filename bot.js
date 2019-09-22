@@ -147,71 +147,18 @@ client.on('message', msg => {
 	}
 
 	// #region absolute commands
-	if (msg.content == '!guild enable' && checkPerms(msg.author.id, 'ignis')) {
-		console.log('enabling bot for guild: '.green + msg.guild.id.greenRev)
-		config[msg.guild.id] = {
-			prefix: '!',
-			tempMsgTime: '5000',
-			bannedChannels: [],
-			perms: {
-				admin: [],
-				purge: [],
-			},
-			autoVoice: false,
-			autoVoiceFirstChannel: 0,
-			random: { min: 1, max: 10 },
+	if (checkPerms(msg.author.id, 'ignis') && msg.content.charAt(0) == '!') {
+		var command = msg.content.split('')
+		command.shift()
+		command = command.join('')
+		command = command.split(' ')[0].toLowerCase()
+
+		let cmd = commands.absolute.find(cmd => cmd.name == command || cmd.aliases.includes(command))
+		if (cmd) {
+			console.log('recieved absolute command '.accent + command.reverse + ' from '.blue + msg.author.tag.reverse)
+			cmd.run(msg)
+			return
 		}
-		saveConfig(msg.channel, 'guild enabled')
-		return
-	}
-	if (msg.content == '!guild disable' && checkPerms(msg.author.id, 'ignis')) {
-		console.log('disabling bot for guild: '.red + msg.guild.id.redRev)
-		delete config[msg.guild.id]
-		saveConfig(msg.channel, 'guild disabled')
-		return
-	}
-	if (msg.content == '!invite' && checkPerms(msg.author.id, 'ignis')) {
-		console.log('sending invite link'.rainbow)
-		client
-			.generateInvite(['ADMINISTRATOR'])
-			.then(link => msg.channel.send(`Generated bot invite link: ${link}`))
-			.catch(console.error)
-		return
-	}
-	if (msg.content == '!checkperms' && checkPerms(msg.author.id, 'ignis')) {
-		var perms = msg.guild.me.permissions.toArray()
-		console.log(perms)
-		var desc = ''
-		for (let i in perms) {
-			desc += `\n- ${perms[i]}`
-		}
-		const embed = new Discord.RichEmbed()
-			.setTitle('My permissions on this guild are:')
-			.setColor(0xff0000)
-			.setDescription(desc)
-		msg.channel.send(embed)
-		return
-	}
-	if (msg.content.startsWith('!echo ') && checkPerms(msg.author.id, 'ignis')) {
-		let cnt = msg.content.split(' ')
-		cnt.shift()
-		cnt = cnt.join(' ')
-		msg.channel.send(cnt)
-		return
-	}
-	if (msg.content.toLowerCase().startsWith('!setnickname ') && checkPerms(msg.author.id, 'ignis')) {
-		let cnt = msg.content.split(' ')
-		cnt.shift()
-		cnt = cnt.join(' ')
-		msg.guild.me
-			.setNickname(cnt)
-			.then(() => {
-				msg.reply('Done!')
-			})
-			.catch(() => {
-				msg.channel.send('Error - permissions might be insufficient')
-			})
-		return
 	}
 	// #endregion absolute commands
 
