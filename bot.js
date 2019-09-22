@@ -16,6 +16,8 @@ const commands = {}
 var config
 var token
 
+const { checkPerms, getUserFromId, saveConfig } = require('./res/Helpers.js')
+
 // #region importing settings files
 // token V
 try {
@@ -59,8 +61,9 @@ for (let group of groups) {
 			if (!temp.aliases) temp.aliases = []
 
 			commands[group].push(temp)
-		} catch {
+		} catch (err) {
 			console.log(`commands file : ${group}/${filename} is invalid`.error)
+			console.log(err)
 		}
 	}
 }
@@ -213,42 +216,6 @@ client.on('voiceStateUpdate', (oldMember, newMember) => {
 		checkVoiceChannels(oldMember.voiceChannel.guild)
 	}
 })
-
-// #region helpers
-
-function checkPerms(uid, perm, guildID) {
-	//return true if user has permisssion
-	if (perm == 'ignis') {
-		return uid == 226032144856776704
-	}
-
-	let user = config[guildID].perms[perm].find(o => o.id == uid) //if specified perms
-
-	if (config[guildID].perms.admin.find(o => o.id == uid)) user = true //overwrite for admins
-	if (uid == 226032144856776704) user = true //overwrite for ignis
-
-	if (user) {
-		console.log('permission granted'.green)
-		return true
-	} else {
-		console.log('permission denied'.red)
-		return false
-	}
-}
-function getUserFromId(uID, msg) {
-	return msg.guild.members.get(uID).user
-}
-function saveConfig(channel, reply) {
-	//   saveConfig(msg.channel, "success!")
-	fs.writeFile('./data/config.json', JSON.stringify(config, null, 2), err => {
-		if (err) console.log(err)
-		console.log('modified config.json'.green)
-		if (reply) {
-			channel.send(reply)
-		}
-	})
-}
-// #endregion
 
 // #region commands
 
@@ -420,43 +387,6 @@ new ResText(commands, 'perms', msg => {
 			saveConfig(msg.channel, 'success!')
 			break
 	}
-})
-
-new ResText(commands, 'purge', (msg, recursion) => {
-	var command = msg.content.split(' ')
-	if (recursion) command[1] = `${recursion}`
-	if (!checkPerms(msg.author.id, 'purge', msg.guild.id)) {
-		msg.reply('You dont have permission to use this command!')
-		return
-	}
-	var x
-	if (command[1] == undefined) {
-		x = 5
-	} else {
-		x = parseInt(command[1]) < 100 ? parseInt(command[1]) : 100
-	}
-	console.log(`attempting to purge ${x} messages`)
-	msg.channel
-		.bulkDelete(x + 1)
-		.then(() => {
-			console.log('success'.green)
-			msg.channel.send(`Deleted ${x} messages.`).then(msg => msg.delete(config[msg.guild.id].tempMsgTime))
-		})
-		.catch(err => {
-			if (err.code == 50034) {
-				if (!recursion) {
-					msg.channel.send(`Some messages might be older than 14 days.\nCalculating valid purge.\nThis might take a moment...`)
-					x++
-				}
-				if (x > 0) {
-					commands.purge(msg, x - 1)
-				} else {
-					msg.channel.send(`Purge failed. No valid messages`)
-				}
-			} else {
-				msg.channel.send(`Purge failed. Permissions might be insufficient`)
-			}
-		})
 })
 
 new ResText(commands, 'reload', msg => {
