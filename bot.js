@@ -44,7 +44,8 @@ let groups = fs
 	.readdirSync('./commands/', { withFileTypes: true })
 	.filter(dirent => dirent.isDirectory())
 	.map(dirent => dirent.name)
-console.log('groups:', groups)
+
+console.log('Loading commands from files:'.greenRev)
 for (let group of groups) {
 	commands[group] = []
 	let files = fs
@@ -301,92 +302,6 @@ new ResText(commands, 'help', msg => {
 		.setColor(0xff0000)
 		.setDescription(desc)
 	msg.channel.send(embed)
-})
-
-new ResText(commands, 'perms', msg => {
-	var command = msg.content.split(' ')
-	if (!checkPerms(msg.author.id, 'admin', msg.guild.id)) {
-		msg.reply('You dont have permission to use this command!')
-		return
-	}
-	switch (command[1]) {
-		case 'list':
-			var list = ''
-			for (var i in config[msg.guild.id].perms) {
-				list += `\n__${i}:__`
-				for (var j in config[msg.guild.id].perms[i]) {
-					list += `\n - ${config[msg.guild.id].perms[i][j].name}`
-				}
-			}
-			var embed = new Discord.RichEmbed()
-				.setTitle('Permissions list:')
-				.setColor(0xff0000)
-				.setDescription(list)
-			msg.channel.send(embed)
-			break
-		case 'add':
-			var uID = msg.mentions.users.firstKey()
-			console.log(uID)
-			var perms = command.slice(3)
-			if (!perms) break
-			console.log(`user: ${uID}, perms: `, perms)
-
-			for (var i in perms) {
-				if (perms[i] == 'admin') {
-					//if someone tires to give admin perm -- extra check if me
-					if (!checkPerms(msg.author.id, 'ignis', msg.guild.id)) {
-						continue
-					}
-				}
-				if (!Object.keys(config[msg.guild.id].perms).includes(perms[i])) {
-					console.log('invalid perm'.yellow)
-					msg.reply(`${perms[i]} is invalid perm!`)
-					continue
-				}
-				if (!checkPerms(uID, perms[i], msg.guild.id)) {
-					config[msg.guild.id].perms[perms[i]].push({
-						name: getUserFromId(uID, msg).username,
-						id: uID,
-					})
-					saveConfig(msg.channel, 'success!')
-				}
-			}
-			break
-		case 'del':
-		case 'remove':
-		case 'delete':
-			console.log('here'.rainbow)
-			var uID = command[2].slice(2, -1)
-			var perms = command.slice(3)
-			if (!perms) break
-			console.log(`user: ${uID}, perms: `, perms)
-
-			for (var i in perms) {
-				if (perms[i] == 'admin') {
-					//if someone tires to give admin perm -- extra check if me
-					if (!checkPerms(msg.author.id, 'ignis', msg.guild.id)) {
-						continue
-					}
-				}
-				if (!Object.keys(config[msg.guild.id].perms).includes(perms[i])) {
-					console.log('invalid perm'.yellow)
-					msg.reply(`${perms[i]} is invalid perm!`)
-					continue
-				}
-
-				if (checkPerms(uID, perms[i], msg.guild.id)) {
-					for (let z in config[msg.guild.id].perms[perms[i]]) {
-						if (config[msg.guild.id].perms[perms[i]][z].id == uID) {
-							config[msg.guild.id].perms[perms[i]].splice(z, 1)
-							break
-						}
-					}
-					console.log(config[msg.guild.id])
-				}
-			}
-			saveConfig(msg.channel, 'success!')
-			break
-	}
 })
 
 new ResText(commands, 'reload', msg => {
