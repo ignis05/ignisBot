@@ -1,8 +1,9 @@
+const path = require('path')
 const Discord = require('discord.js')
 const client = new Discord.Client()
-var fs = require('fs')
+const fs = require('fs')
 const ytdl = require('ytdl-core')
-var colors = require('colors')
+const colors = require('colors')
 colors.setTheme({
 	reverse: ['black', 'bgWhite'],
 	success: ['green'],
@@ -11,11 +12,11 @@ colors.setTheme({
 	greenRev: ['black', 'bgGreen'],
 	redRev: ['black', 'bgRed'],
 })
-
-// #region importing settings files
+const commands = {}
 var config
 var token
-var display
+
+// #region importing settings files
 // token V
 try {
 	token = require('./data/token.json').token
@@ -23,11 +24,8 @@ try {
 	let tokenPlaceholder = {
 		token: 'bot_token_here',
 	}
-	fs.writeFileSync(
-		'./data/token.json',
-		JSON.stringify(tokenPlaceholder, null, 2)
-	)
-	throw new Error('you need to specify bot token in ./data/token.json')
+	fs.writeFileSync('./data/token.json', JSON.stringify(tokenPlaceholder, null, 2))
+	throw new Error('Token not found: You need to add bot token in ./data/token.json')
 }
 // token ^
 try {
@@ -37,25 +35,37 @@ try {
 		config = require('./data/config.json')
 	})
 }
-// display V
-try {
-	display = require('./data/display.json')
-} catch (err) {
-	let displayPlaceholder = {
-		message:
-			'Debug version is currently running. Bot might not function properly (or at all)',
-		type: 'PLAYING',
-	}
-	fs.writeFile(
-		'./data/display.json',
-		JSON.stringify(displayPlaceholder, null, 2),
-		err => {
-			display = require('./data/display.json')
-		}
-	)
-}
-// display ^
 // #endregion
+
+// #region importing commands
+let groups = fs
+	.readdirSync('./commands/', { withFileTypes: true })
+	.filter(dirent => dirent.isDirectory())
+	.map(dirent => dirent.name)
+console.log('groups:', groups)
+for (let group of groups) {
+	commands[group] = []
+	let files = fs
+		.readdirSync(`./commands/${group}`, { withFileTypes: true })
+		.filter(dirent => dirent.isFile())
+		.map(dirent => dirent.name)
+	for (let filename of files) {
+		try {
+			let temp = require(`./commands/${group}/${filename}`)
+			// validate module.exports
+			if (!temp.name || typeof temp.run != 'function') throw 'wrong arguments'
+
+			// set default properties
+			if (!temp.aliases) temp.aliases = []
+
+			commands[group].push(temp)
+		} catch {
+			console.log(`commands file : ${group}/${filename} is invalid`.error)
+		}
+	}
+}
+console.log(commands)
+// #endregion importing commands
 
 // #region importing classes
 const ResDM = require('./res/ResDM.js')
@@ -63,7 +73,7 @@ const ResText = require('./res/ResText.js')
 // #endregion importing classes
 
 client.on('ready', () => {
-	client.user.setActivity(display.message, { type: display.type })
+	client.user.setActivity('anthropomorphized minors', { type: 'WATCHING' })
 	console.log("I'm alive!".rainbow)
 	console.log('Logged in as ' + client.user.tag.green)
 	client.fetchUser('226032144856776704').then(ignis => {
@@ -74,8 +84,8 @@ client.on('ready', () => {
 client.on('guildCreate', guild => {
 	if (guild.available) {
 		console.log(`Joined guild ${guild.name} (${guild.id})`.rainbow)
-		var channels = guild.channels.filter(a => a.type == 'text').array()
-		channels[0].send('!')
+		const defaultChannel = guild.channels.find(channel => channel.permissionsFor(guild.me).has('SEND_MESSAGES'))
+		defaultChannel.send('!')
 	}
 })
 
@@ -144,10 +154,7 @@ client.on('message', msg => {
 		msg.channel.send(cnt)
 		return
 	}
-	if (
-		msg.content.toLowerCase().startsWith('!setnickname ') &&
-		checkPerms(msg.author.id, 'ignis')
-	) {
+	if (msg.content.toLowerCase().startsWith('!setnickname ') && checkPerms(msg.author.id, 'ignis')) {
 		let cnt = msg.content.split(' ')
 		cnt.shift()
 		cnt = cnt.join(' ')
@@ -170,26 +177,18 @@ client.on('message', msg => {
 		return
 	}
 
-	if (
-		config[msg.guild.id].bannedChannels.includes(msg.channel.id) &&
-		!checkPerms(msg.author.id, 'admin', msg.guild.id)
-	)
-		return //checks channels
+	if (config[msg.guild.id].bannedChannels.includes(msg.channel.id) && !checkPerms(msg.author.id, 'admin', msg.guild.id)) return //checks channels
 
 	if (msg.content.charAt(0) == config[msg.guild.id].prefix) {
 		var command = msg.content.split('')
 		command.shift()
 		command = command.join('')
-		console.log(
-			'recieved command '.blue +
-				command.reverse +
-				' from '.blue +
-				msg.author.tag.reverse
-		)
+		console.log('recieved command '.blue + command.reverse + ' from '.blue + msg.author.tag.reverse)
 		command = command.split(' ')[0].toLowerCase()
 
-		if (commands[command]) {
-			commands[command](msg)
+		let cmd = commands.text.find(cmd => cmd.name == command || cmd.aliases.includes(command))
+		if (cmd) {
+			cmd.run(msg)
 		} else {
 			console.log('Command unknown'.yellow)
 			msg.channel.send('Command unknown.\nType `help` for help')
@@ -200,20 +199,16 @@ client.on('message', msg => {
 client.on('voiceStateUpdate', (oldMember, newMember) => {
 	if (oldMember.voiceChannelID && newMember.voiceChannelID) {
 		if (oldMember.voiceChannelID != newMember.voiceChannelID) {
-			//console.log("change");
-
+			// change
 			if (!config[newMember.guild.id].autoVoice) return
 			checkVoiceChannels(newMember.voiceChannel.guild)
 		}
 	} else if (newMember.voiceChannelID) {
-		//console.log("join");
-		// githubNotify(newMember)
-
+		//join
 		if (!config[newMember.guild.id].autoVoice) return
 		checkVoiceChannels(newMember.voiceChannel.guild)
 	} else if (oldMember.voiceChannelID) {
-		//console.log("leave");
-
+		//leave
 		if (!config[newMember.guild.id].autoVoice) return
 		checkVoiceChannels(oldMember.voiceChannel.guild)
 	}
@@ -256,11 +251,6 @@ function saveConfig(channel, reply) {
 // #endregion
 
 // #region commands
-var commands = {}
-new ResText(commands, 'ping', msg => {
-	console.log('Pong!'.rainbow)
-	msg.reply('Pong!')
-})
 
 new ResText(commands, 'help', msg => {
 	var helpDB = [
@@ -274,8 +264,7 @@ new ResText(commands, 'help', msg => {
 		},
 		{
 			cmd: 'perms <list / add / del> <mention> <permission>',
-			desc:
-				'<list> displays permissions, <add / del> changes permission for mentioned user',
+			desc: '<list> displays permissions, <add / del> changes permission for mentioned user',
 		},
 		{
 			cmd: 'purge [x]',
@@ -291,8 +280,7 @@ new ResText(commands, 'help', msg => {
 		},
 		{
 			cmd: 'autovoice [category id]',
-			desc:
-				'enables auto managment of voice channels in given category (if no id given disables it)',
+			desc: 'enables auto managment of voice channels in given category (if no id given disables it)',
 		},
 		{
 			cmd: 'autovoicefirst <int>',
@@ -322,8 +310,7 @@ new ResText(commands, 'help', msg => {
 		},
 		{
 			cmd: 'echo',
-			desc:
-				'bot responds with sending whole message that was after !echo command',
+			desc: 'bot responds with sending whole message that was after !echo command',
 		},
 		{
 			cmd: '!setnickname [nickname]',
@@ -335,10 +322,7 @@ new ResText(commands, 'help', msg => {
 	for (let cmd of helpDB) {
 		desc += `\n **${cmd.cmd}**\n     - ${cmd.desc}\n`
 	}
-	if (
-		msg.content.split(' ')[1] == 'debug' ||
-		msg.content.split(' ')[1] == 'dev'
-	) {
+	if (msg.content.split(' ')[1] == 'debug' || msg.content.split(' ')[1] == 'dev') {
 		desc += '\n\n__**debug commands:**__'
 		for (let cmd of specialHelpDB) {
 			desc += `\n **${cmd.cmd}**\n     - ${cmd.desc}\n`
@@ -456,16 +440,12 @@ new ResText(commands, 'purge', (msg, recursion) => {
 		.bulkDelete(x + 1)
 		.then(() => {
 			console.log('success'.green)
-			msg.channel
-				.send(`Deleted ${x} messages.`)
-				.then(msg => msg.delete(config[msg.guild.id].tempMsgTime))
+			msg.channel.send(`Deleted ${x} messages.`).then(msg => msg.delete(config[msg.guild.id].tempMsgTime))
 		})
 		.catch(err => {
 			if (err.code == 50034) {
 				if (!recursion) {
-					msg.channel.send(
-						`Some messages might be older than 14 days.\nCalculating valid purge.\nThis might take a moment...`
-					)
+					msg.channel.send(`Some messages might be older than 14 days.\nCalculating valid purge.\nThis might take a moment...`)
 					x++
 				}
 				if (x > 0) {
@@ -582,9 +562,7 @@ new ResText(commands, 'autovoice', msg => {
 			if (msg.guild.channels.get(command[1]).type == 'category') {
 				config[msg.guild.id].autoVoice = command[1]
 				console.log('autovoice enabled')
-				msg.channel.send(
-					"autovoice enabled - make sure that bot has 'manage channels' permission"
-				)
+				msg.channel.send("autovoice enabled - make sure that bot has 'manage channels' permission")
 			} else {
 				console.log('wrong channel')
 				msg.channel.send("id doesn't belong to category")
@@ -611,17 +589,9 @@ new ResText(commands, 'autovoicefirst', msg => {
 	if (!isNaN(nr)) {
 		config[msg.guild.id].autoVoiceFirstChannel = nr
 		saveConfig(msg.channel, `First autovoice channel set to ${nr}`)
-		var voiceChannels = msg.guild.channels
-			.filter(
-				channel =>
-					channel.type == 'voice' &&
-					channel.parentID == config[msg.guild.id].autoVoice
-			)
-			.array()
+		var voiceChannels = msg.guild.channels.filter(channel => channel.type == 'voice' && channel.parentID == config[msg.guild.id].autoVoice).array()
 		voiceChannels.forEach((channel, iterator) => {
-			channel.setName(
-				(iterator + config[msg.guild.id].autoVoiceFirstChannel).toString()
-			)
+			channel.setName((iterator + config[msg.guild.id].autoVoiceFirstChannel).toString())
 		})
 	} else {
 		msg.reply('Given value is NaN')
@@ -640,35 +610,6 @@ new ResText(commands, 'setprefix', msg => {
 	} else {
 		msg.channel.send('Invalid character')
 	}
-})
-
-new ResText(commands, 'jp2channel', msg => {
-	if (!checkPerms(msg.author.id, 'admin', msg.guild.id)) {
-		msg.reply('You dont have permission to use this command!')
-		return
-	}
-
-	let channel = msg.content.split(' ')[1]
-	if (channel) {
-		if (msg.guild.channels.get(channel)) {
-			if (msg.guild.channels.get(channel).type == 'text') {
-				config[msg.guild.id].jp2Channel = channel
-				console.log('jp2 enabled')
-				msg.channel.send('jp2channel enabled')
-			} else {
-				console.log('wrong channel')
-				msg.channel.send("id doesn't belong to text channel")
-			}
-		} else {
-			console.log('wrong id')
-			msg.channel.send('wrong id')
-		}
-	} else {
-		config[msg.guild.id].jp2Channel = false
-		//console.log("jp2Channel disabled");
-		msg.channel.send('jp2Channel disabled')
-	}
-	saveConfig()
 })
 
 new ResText(commands, 'setrandom', msg => {
@@ -694,41 +635,24 @@ new ResText(commands, 'random', msg => {
 
 // #region voice functions
 function checkVoiceChannels(guild) {
-	var voiceChannels = guild.channels
-		.filter(
-			channel =>
-				channel.type == 'voice' &&
-				channel.parentID == config[guild.id].autoVoice
-		)
-		.array()
+	var voiceChannels = guild.channels.filter(channel => channel.type == 'voice' && channel.parentID == config[guild.id].autoVoice).array()
 	// var tab = []
 	//var emptycount = 0
 
-	var emptycount = voiceChannels.filter(
-		channel => channel.members.firstKey() == undefined
-	).length
+	var emptycount = voiceChannels.filter(channel => channel.members.firstKey() == undefined).length
 	// console.log(emptycount);
 	if (emptycount == 0) {
 		// console.log("there are no empty channels");
 		guild
-			.createChannel(
-				(
-					voiceChannels.length + config[guild.id].autoVoiceFirstChannel
-				).toString(),
-				{
-					type: 'voice',
-					parent: config[guild.id].autoVoice,
-					reason: 'autovoice activity',
-				}
-			)
+			.createChannel((voiceChannels.length + config[guild.id].autoVoiceFirstChannel).toString(), {
+				type: 'voice',
+				parent: config[guild.id].autoVoice,
+				reason: 'autovoice activity',
+			})
 			.catch(err => {
 				// console.log("channel create fail".red);
 				var channels = guild.channels.filter(a => a.type == 'text').array()
-				channels[0]
-					.send(
-						'unable to create voice channel - permissions might be insufficient'
-					)
-					.then(msg => msg.delete(config[msg.guild.id].tempMsgTime))
+				channels[0].send('unable to create voice channel - permissions might be insufficient').then(msg => msg.delete(config[msg.guild.id].tempMsgTime))
 			})
 	} else if (emptycount > 1) {
 		// console.log("there are to many empty channels")
@@ -738,9 +662,7 @@ function checkVoiceChannels(guild) {
 			// console.log(channel.name);
 			if (channel.members.firstKey()) {
 				// console.log("filled")
-				channel.setName(
-					(iterator + config[guild.id].autoVoiceFirstChannel).toString()
-				)
+				channel.setName((iterator + config[guild.id].autoVoiceFirstChannel).toString())
 				iterator++
 			} else {
 				// console.log("empty")
@@ -751,23 +673,15 @@ function checkVoiceChannels(guild) {
 						.then(channel => {})
 						.catch(err => {
 							console.log('channel delete fail')
-							var channels = guild.channels
-								.filter(a => a.type == 'text')
-								.array()
+							var channels = guild.channels.filter(a => a.type == 'text').array()
 							channels[0]
-								.send(
-									'unable to delete voice channel - permissions might be insufficient'
-								)
-								.then(msg =>
-									msg.delete(config[msg.guild.id].tempMsgTime)
-								)
+								.send('unable to delete voice channel - permissions might be insufficient')
+								.then(msg => msg.delete(config[msg.guild.id].tempMsgTime))
 						})
 				} else {
 					// else saves this one
 					left = true
-					channel.setName(
-						(iterator + config[guild.id].autoVoiceFirstChannel).toString()
-					)
+					channel.setName((iterator + config[guild.id].autoVoiceFirstChannel).toString())
 					iterator++
 				}
 			}
@@ -786,8 +700,7 @@ var interval = setInterval(() => {
 				var guild = client.guilds.get(guildId)
 				if (guild && guild.channels.get(config[guildId].jp2Channel)) {
 					guild.channels.get(config[guildId].jp2Channel).send('2137', {
-						file:
-							'https://www.wykop.pl/cdn/c3201142/comment_udrlGttBEvyq9DsF86EsoE2IGbDIx4qq.jpg',
+						file: 'https://www.wykop.pl/cdn/c3201142/comment_udrlGttBEvyq9DsF86EsoE2IGbDIx4qq.jpg',
 					})
 				}
 			}
