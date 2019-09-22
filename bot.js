@@ -13,7 +13,6 @@ colors.setTheme({
 	redRev: ['black', 'bgRed'],
 	accent: ['magenta'],
 })
-const commands = {}
 var config
 var token
 
@@ -38,74 +37,10 @@ try {
 }
 // #endregion
 
-const { checkPerms, saveConfig } = require('./res/Helpers.js')
+const { fetchCommands, checkPerms, saveConfig } = require('./res/Helpers.js')
 
 // #region importing commands
-console.log('Loading commands from files:'.accent)
-let groups = fs
-	.readdirSync('./commands/', { withFileTypes: true })
-	.filter(dirent => dirent.isDirectory())
-	.map(dirent => dirent.name)
-
-for (let group of groups) {
-	commands[group] = []
-}
-
-let multi_cmds = fs
-	.readdirSync('./commands/', { withFileTypes: true })
-	.filter(dirent => dirent.isFile())
-	.map(dirent => dirent.name)
-for (let cmd of multi_cmds) {
-	try {
-		let temp = require(`./commands/${cmd}`)
-		// validate module.exports
-		if (!temp.name || typeof temp.run != 'function' || temp.categories.length < 1) throw 'wrong arguments'
-		// set default properties
-		if (!temp.aliases) temp.aliases = []
-
-		for (let group of temp.categories) {
-			if (!Object.keys(temp).every(el => ['name', 'aliases', 'run', 'categories'].includes(el))) {
-				console.log(`${group}/${temp.name} - loaded, but has some invalid properties`.warn)
-			} else {
-				console.log(`${group}/${temp.name} - loaded`.green)
-			}
-			if (!commands[group]) {
-				commands[group] = []
-			}
-			commands[group].push(temp)
-		}
-	} catch (err) {
-		console.log(`${cmd} - not loaded, file is invalid`.error)
-		console.log(err)
-	}
-}
-
-for (let group of groups) {
-	let files = fs
-		.readdirSync(`./commands/${group}`, { withFileTypes: true })
-		.filter(dirent => dirent.isFile())
-		.map(dirent => dirent.name)
-	for (let filename of files) {
-		try {
-			let temp = require(`./commands/${group}/${filename}`)
-			// validate module.exports
-			if (!temp.name || typeof temp.run != 'function') throw 'wrong arguments'
-			if (!Object.keys(temp).every(el => ['name', 'aliases', 'run'].includes(el))) {
-				console.log(`${group}/${temp.name} - loaded, but has some invalid properties`.warn)
-			} else {
-				console.log(`${group}/${temp.name} - loaded`.green)
-			}
-
-			// set default properties
-			if (!temp.aliases) temp.aliases = []
-
-			commands[group].push(temp)
-		} catch (err) {
-			console.log(`${filename} - not loaded, file is invalid`.error)
-			console.log(err)
-		}
-	}
-}
+const commands = fetchCommands()
 // #endregion importing commands
 
 client.on('ready', () => {
