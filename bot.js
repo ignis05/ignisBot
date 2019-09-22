@@ -11,6 +11,7 @@ colors.setTheme({
 	error: ['red', 'underline'],
 	greenRev: ['black', 'bgGreen'],
 	redRev: ['black', 'bgRed'],
+	accent: ['magenta'],
 })
 const commands = {}
 var config
@@ -45,7 +46,6 @@ let groups = fs
 	.filter(dirent => dirent.isDirectory())
 	.map(dirent => dirent.name)
 
-console.log('Loading commands from files:'.magenta)
 for (let group of groups) {
 	commands[group] = []
 	let files = fs
@@ -68,7 +68,12 @@ for (let group of groups) {
 		}
 	}
 }
-console.log(commands)
+// log:
+console.log('Loading commands from files:'.accent)
+for (let g of groups) {
+	console.log(`${g}:`.success)
+	console.log(commands[g].map(cmd => cmd.name))
+}
 // #endregion importing commands
 
 // #region importing classes
@@ -94,11 +99,11 @@ client.on('guildCreate', guild => {
 })
 
 client.on('message', msg => {
-	if (msg.author.bot) return //ignore bots and self
-	if (!msg.guild && msg.channel.id != '551445397411856398') return //ignore priv msg
+	if (msg.author.bot) return //ignore bots
+	if (!msg.guild && msg.channel.id != '551445397411856398') return //ignore priv msgs
 
+	//dont ignore priv msgs from me
 	if (msg.channel.id == '551445397411856398') {
-		//dont ignore priv msg's from me
 		new ResDM(client, msg, commands)
 		return
 	}
@@ -113,11 +118,9 @@ client.on('message', msg => {
 			perms: {
 				admin: [],
 				purge: [],
-				voice: [],
 			},
 			autoVoice: false,
 			autoVoiceFirstChannel: 0,
-			jp2Channel: false,
 			random: { min: 1, max: 10 },
 		}
 		saveConfig(msg.channel, 'guild enabled')
@@ -174,15 +177,17 @@ client.on('message', msg => {
 	}
 	// #endregion absolute commands
 
+	// if bot is not enabled on this guild
 	if (!config[msg.guild.id]) {
-		//check guilds
 		console.log('attempt to use bot on disabled guild')
 		msg.reply('Bot activity is disabled on this guild, use `guild enable`')
 		return
 	}
 
-	if (config[msg.guild.id].bannedChannels.includes(msg.channel.id) && !checkPerms(msg.author.id, 'admin', msg.guild.id)) return //checks channels
+	// blacklist check (with override for admins)
+	if (config[msg.guild.id].bannedChannels.includes(msg.channel.id) && !checkPerms(msg.author.id, 'admin', msg.guild.id)) return
 
+	// validate prefix and trigger function
 	if (msg.content.charAt(0) == config[msg.guild.id].prefix) {
 		var command = msg.content.split('')
 		command.shift()
@@ -302,159 +307,6 @@ new ResText(commands, 'help', msg => {
 		.setColor(0xff0000)
 		.setDescription(desc)
 	msg.channel.send(embed)
-})
-
-new ResText(commands, 'reload', msg => {
-	if (!checkPerms(msg.author.id, 'ignis', msg.guild.id)) {
-		msg.reply('You dont have permission to use this command!')
-		return
-	}
-	config = JSON.parse(fs.readFileSync('./data/config.json', 'utf8'))
-	msg.reply('Reloaded config file')
-})
-
-new ResText(commands, 'blacklist', msg => {
-	if (!checkPerms(msg.author.id, 'admin', msg.guild.id)) {
-		msg.reply('You dont have permission to use this command!')
-		return
-	}
-	if (config[msg.guild.id].bannedChannels.includes(msg.channel.id)) {
-		var i = config[msg.guild.id].bannedChannels.indexOf(msg.channel.id)
-		config[msg.guild.id].bannedChannels.splice(i, 1)
-		saveConfig(msg.channel, 'Channel removed from blacklist')
-	} else {
-		config[msg.guild.id].bannedChannels.push(msg.channel.id)
-		saveConfig(msg.channel, 'Channel added to blacklist')
-	}
-})
-
-new ResText(commands, 'voice', msg => {
-	var command = msg.content.split(' ')
-	if (!checkPerms(msg.author.id, 'voice', msg.guild.id)) {
-		msg.reply('You dont have permission to use this command!')
-		return
-	} /* 
-    if (!permissions.has('CONNECT')) {
-        return msg.channel.send('I cannot connect to your voice channel, make sure I have the proper permissions!');
-    }
-    if (!permissions.has('SPEAK')) {
-        return msg.channel.send('I cannot speak in this voice channel, make sure I have the proper permissions!');
-    } */
-	if (msg.member.voiceChannel) {
-		msg.member.voiceChannel
-			.join()
-			.then(connection => {
-				msg.channel.send('Joined voice channel')
-				console.log('joined channel')
-				var url = ''
-				switch (command[1]) {
-					case 'jp2':
-						url = 'https://www.youtube.com/watch?v=hLuw6cep3JI'
-						break
-					case 'earrape':
-						url = 'https://www.youtube.com/watch?v=MOvDrom0rjc'
-						break
-					case 'bruh':
-						url = 'https://www.youtube.com/watch?v=2ZIpFytCSVc'
-						break
-					case 'begone':
-						url = 'https://www.youtube.com/watch?v=R-k3rF_-Hgo'
-						break
-					case 'fortnite':
-						url = 'https://www.youtube.com/watch?v=KNSiliBUsrU'
-						break
-					case 'sad':
-						url = 'https://www.youtube.com/watch?v=2z7qykjme9I'
-						break
-					default:
-						url = command[1]
-				}
-				if (ytdl.validateURL(url)) {
-					const dispatcher = connection.playStream(ytdl(url), {
-						volume: 100,
-					})
-
-					dispatcher.on('error', e => {
-						console.log('error'.rainbow)
-						console.log(e)
-					})
-					dispatcher.on('end', () => {
-						console.log('leaving channel')
-						msg.member.voiceChannel.leave()
-						//msg.channel.send("Leaving voice channel")
-					})
-				} else {
-					console.log('invalid url')
-					msg.channel.send('Invalid url!')
-					//msg.channel.send("Leaving voice channel")
-					msg.member.voiceChannel.leave()
-				}
-			})
-			.catch(console.error)
-	} else {
-		msg.reply('You need to join a voice channel first!')
-	}
-})
-
-new ResText(commands, 'autovoice', msg => {
-	var command = msg.content.split(' ')
-	if (!checkPerms(msg.author.id, 'admin', msg.guild.id)) {
-		msg.reply('You dont have permission to use this command!')
-		return
-	}
-	if (command[1]) {
-		if (msg.guild.channels.get(command[1])) {
-			if (msg.guild.channels.get(command[1]).type == 'category') {
-				config[msg.guild.id].autoVoice = command[1]
-				console.log('autovoice enabled')
-				msg.channel.send("autovoice enabled - make sure that bot has 'manage channels' permission")
-			} else {
-				console.log('wrong channel')
-				msg.channel.send("id doesn't belong to category")
-			}
-		} else {
-			console.log('wrong id')
-			msg.channel.send('wrong id')
-		}
-	} else {
-		config[msg.guild.id].autoVoice = false
-		//console.log("autovoice disabled");
-		msg.channel.send('autovoice disabled')
-	}
-	saveConfig()
-})
-
-new ResText(commands, 'autovoicefirst', msg => {
-	if (!checkPerms(msg.author.id, 'admin', msg.guild.id)) {
-		msg.reply('You dont have permission to use this command!')
-		return
-	}
-
-	let nr = parseInt(msg.content.split(' ')[1])
-	if (!isNaN(nr)) {
-		config[msg.guild.id].autoVoiceFirstChannel = nr
-		saveConfig(msg.channel, `First autovoice channel set to ${nr}`)
-		var voiceChannels = msg.guild.channels.filter(channel => channel.type == 'voice' && channel.parentID == config[msg.guild.id].autoVoice).array()
-		voiceChannels.forEach((channel, iterator) => {
-			channel.setName((iterator + config[msg.guild.id].autoVoiceFirstChannel).toString())
-		})
-	} else {
-		msg.reply('Given value is NaN')
-	}
-})
-
-new ResText(commands, 'setprefix', msg => {
-	var command = msg.content.split(' ')
-	if (!checkPerms(msg.author.id, 'admin', msg.guild.id)) {
-		msg.reply('You dont have permission to use this command!')
-		return
-	}
-	if (command[1].length == 1) {
-		config[msg.guild.id].prefix = command[1]
-		saveConfig(msg.channel, `Chnaged prefix to: \`${command[1]}\``)
-	} else {
-		msg.channel.send('Invalid character')
-	}
 })
 
 new ResText(commands, 'setrandom', msg => {
