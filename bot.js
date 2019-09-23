@@ -2,7 +2,6 @@ const path = require('path')
 const Discord = require('discord.js')
 const client = new Discord.Client()
 const fs = require('fs')
-const ytdl = require('ytdl-core')
 const colors = require('colors')
 colors.setTheme({
 	reverse: ['black', 'bgWhite'],
