@@ -3,6 +3,8 @@ var { checkPerms } = require('../../res/Helpers.js')
 module.exports = {
 	name: 'setnickname',
 	aliases: ['changenickname'],
+	desc: `changes bot nickname on current guild`,
+	help: "`setnickname <nickname>` - sets bot' nickname on current guild to specified one\n- if specified nickname is invalid (ex. empty), bot nickname is removed",
 	run: msg => {
 		if (!checkPerms(msg.author.id, 'admin', msg.guild.id)) return
 

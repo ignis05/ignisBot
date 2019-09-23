@@ -3,7 +3,7 @@ const fs = require('fs')
 
 module.exports = {
 	checkPerms: function(uid, perm, guildID) {
-		console.log('checking perms:', uid, perm.guildID)
+		console.log('checking perms:', uid, perm, guildID)
 		//return true if user has permisssion
 		if (perm == 'ignis') {
 			return uid == 226032144856776704

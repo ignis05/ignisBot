@@ -4,6 +4,8 @@ const { RichEmbed } = require('discord.js')
 module.exports = {
 	name: 'checkperms',
 	aliases: ['botperms', 'myperms'],
+	desc: `displays bot's permissions as memebr of current guild`,
+	help: "`checkperms` - bot will reposnd with list of it's permissions",
 	run: msg => {
 		if (!checkPerms(msg.author.id, 'admin', msg.guild.id)) return
 

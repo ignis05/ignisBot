@@ -120,7 +120,7 @@ client.on('message', msg => {
 			cmd.run(msg)
 		} else {
 			console.log('Command unknown'.yellow)
-			msg.channel.send('Command unknown.\nType `help` for help')
+			msg.channel.send(`Command unknown.\nType \`${config[msg.guild.id].prefix}help\` for help`)
 		}
 	}
 })
@@ -184,9 +184,7 @@ function autovoiceActivity(guild) {
 						.catch(err => {
 							console.log('channel delete fail')
 							var channels = guild.channels.filter(a => a.type == 'text').array()
-							channels[0]
-								.send('unable to delete voice channel - permissions might be insufficient')
-								.then(msg => msg.delete(config[msg.guild.id].tempMsgTime))
+							channels[0].send('unable to delete voice channel - permissions might be insufficient').then(msg => msg.delete(config[msg.guild.id].tempMsgTime))
 						})
 				} else {
 					// else saves this one

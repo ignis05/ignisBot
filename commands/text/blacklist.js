@@ -2,6 +2,8 @@ var { checkPerms, config } = require('../../res/Helpers.js')
 
 module.exports = {
 	name: 'blacklist',
+	desc: `disables bot in current channel for non-admin users`,
+	help: '`blacklist` - disables bot in current channel for non-admin users, if channel is already disabled, re-enables it',
 	run: msg => {
 		if (!checkPerms(msg.author.id, 'admin', msg.guild.id)) {
 			msg.reply('You dont have permission to use this command!')

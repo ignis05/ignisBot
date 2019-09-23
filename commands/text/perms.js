@@ -3,6 +3,8 @@ const { RichEmbed } = require('discord.js')
 
 module.exports = {
 	name: 'perms',
+	desc: `manages access to bot's functionality`,
+	help: "`perms list` - displays permissions list\n\n`perms <add / del> @mention [permission1, permission2, ...]` - adds / removes specified user's permissions\n\n",
 	run: msg => {
 		var command = msg.content.split(' ')
 		if (!checkPerms(msg.author.id, 'admin', msg.guild.id)) {
