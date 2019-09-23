@@ -8,18 +8,17 @@ module.exports = {
 	run: msg => {
 		if (!checkPerms(msg.author.id, 'admin', msg.guild.id)) return
 
-		let nickname = msg.content
-			.split(' ')
-			.slice(1)
-			.join(' ')
+		if (msg.guild.me.hasPermission('CHANGE_NICKNAME')) {
+			let nickname = msg.content
+				.split(' ')
+				.slice(1)
+				.join(' ')
 
-		msg.guild.me
-			.setNickname(nickname)
-			.catch(() => {
-				msg.channel.send('Error - permissions might be insufficient')
-			})
-			.then(() => {
+			msg.guild.me.setNickname(nickname).then(() => {
 				msg.reply('Done!')
 			})
+		} else {
+			msg.channel.send("I don't have permission 'change nickname' on this guild")
+		}
 	},
 }

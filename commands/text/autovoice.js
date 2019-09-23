@@ -13,17 +13,24 @@ module.exports = {
 		}
 		if (command[1]) {
 			if (msg.guild.channels.get(command[1])) {
-				if (msg.guild.channels.get(command[1]).type == 'category') {
+				let categoryChannel = msg.guild.channels.get(command[1])
+
+				if (categoryChannel.type == 'category') {
+					if (!categoryChannel.permissionsFor(msg.guild.me).has('MANAGE_CHANNELS')) {
+						console.log('invalid permissions for autovoice')
+						msg.channel.send("I don't have permission 'manage channel' in this category")
+						return
+					}
 					config[msg.guild.id].autoVoice = command[1]
 					console.log('autovoice enabled')
-					msg.channel.send("autovoice enabled - make sure that bot has 'manage channels' permission")
+					msg.channel.send(`autovoice enabled for category: ${categoryChannel.name}`)
 				} else {
 					console.log('wrong channel')
 					msg.channel.send("id doesn't belong to category")
 				}
 			} else {
-				console.log('wrong id')
-				msg.channel.send('wrong id')
+				console.log('invalid id')
+				msg.channel.send('invalid id')
 			}
 		} else {
 			config[msg.guild.id].autoVoice = false

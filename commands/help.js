@@ -9,6 +9,14 @@ module.exports = {
 	help: '`help` - displays list of all commands\n\n`help [command]` - provides info about specific command',
 	run: msg => {
 		console.log('generating help'.accent)
+
+		let canDoEmbed = msg.channel.permissionsFor(msg.guild.me).has('EMBED_LINKS')
+		if (!canDoEmbed) {
+			console.log('no embed permission'.red)
+			msg.channel.send("I don't have permission 'embed links' on this channel")
+			return
+		}
+
 		let commands = fetchCommands(false)
 
 		if (msg.content.split(' ').length > 1) {
@@ -34,7 +42,9 @@ module.exports = {
 		var embed = new RichEmbed()
 			.setTitle('**Available commands:**')
 			.setColor(0x00ff00)
-			.setDescription('Some commands can only be used in server text chat or DM')
+			.setDescription(
+				`Some commands can only be used in server text chat or DM\n${msg.client.user.username} will not try to execute the command unless it can respond to the channel from which it was called`
+			)
 			.addBlankField()
 			.addField('**DM and text chat commands:**', multicommands.join('\n'))
 			.addBlankField()

@@ -9,6 +9,13 @@ module.exports = {
 	run: msg => {
 		if (!checkPerms(msg.author.id, 'admin', msg.guild.id)) return
 
+		let canDoEmbed = msg.channel.permissionsFor(msg.guild.me).has('EMBED_LINKS')
+		if (!canDoEmbed) {
+			console.log('no embed permission'.red)
+			msg.channel.send("I don't have permission 'embed links' on this channel")
+			return
+		}
+
 		var perms = msg.guild.me.permissions
 			.toArray()
 			.map(perm => `- ${perm}`)

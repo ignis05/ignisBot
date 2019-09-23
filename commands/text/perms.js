@@ -11,6 +11,12 @@ module.exports = {
 			msg.reply('You dont have permission to use this command!')
 			return
 		}
+		let canDoEmbed = msg.channel.permissionsFor(msg.guild.me).has('EMBED_LINKS')
+		if (!canDoEmbed) {
+			console.log('no embed permission'.red)
+			msg.channel.send("I don't have permission 'embed links' on this channel")
+			return
+		}
 		switch (command[1]) {
 			case 'list':
 				var list = ''

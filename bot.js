@@ -55,8 +55,8 @@ client.on('ready', () => {
 client.on('guildCreate', guild => {
 	if (guild.available) {
 		console.log(`Joined guild ${guild.name} (${guild.id})`.rainbow)
-		const defaultChannel = guild.channels.find(channel => channel.permissionsFor(guild.me).has('SEND_MESSAGES'))
-		defaultChannel.send('!')
+		const defaultChannel = guild.channels.find(channel => channel.permissionsFor(guild.me).has('SEND_MESSAGES') && channel.type == 'text')
+		defaultChannel.send('use `!help`')
 	}
 })
 
@@ -81,7 +81,7 @@ client.on('message', msg => {
 		return
 	}
 
-	// #region absolute commands
+	// #region absolute commands - temp - to be removed
 	if (checkPerms(msg.author.id, 'ignis') && msg.content.charAt(0) == '!') {
 		var command = msg.content.split('')
 		command.shift()
@@ -109,6 +109,12 @@ client.on('message', msg => {
 
 	// validate prefix and trigger function
 	if (msg.content.charAt(0) == config[msg.guild.id].prefix) {
+		// guild permissions check
+		if (!msg.channel.permissionsFor(msg.guild.me).has('SEND_MESSAGES')) {
+			console.log('Failed to send reponse to channel '.red + msg.channel.name.redRev + ' on guild '.red + msg.guild.name.redRev + ' - insuffiecient permissions'.red)
+			return
+		}
+
 		var command = msg.content.split('')
 		command.shift()
 		command = command.join('')
@@ -160,9 +166,9 @@ function autovoiceActivity(guild) {
 				reason: 'autovoice activity',
 			})
 			.catch(err => {
-				// console.log("channel create fail".red);
-				var channels = guild.channels.filter(a => a.type == 'text').array()
-				channels[0].send('unable to create voice channel - permissions might be insufficient').then(msg => msg.delete(config[msg.guild.id].tempMsgTime))
+				console.log('channel create fail'.red)
+				const defaultChannel = guild.channels.find(channel => channel.permissionsFor(guild.me).has('SEND_MESSAGES') && channel.type == 'text')
+				defaultChannel.send('unable to create voice channel - permissions might be insufficient').then(msg => msg.delete(config[msg.guild.id].tempMsgTime))
 			})
 	} else if (emptycount > 1) {
 		// console.log("there are to many empty channels")
@@ -178,14 +184,11 @@ function autovoiceActivity(guild) {
 				// console.log("empty")
 				if (left) {
 					// if one empty is left can delete channels
-					channel
-						.delete({ reason: 'autovoice activity' })
-						.then(channel => {})
-						.catch(err => {
-							console.log('channel delete fail')
-							var channels = guild.channels.filter(a => a.type == 'text').array()
-							channels[0].send('unable to delete voice channel - permissions might be insufficient').then(msg => msg.delete(config[msg.guild.id].tempMsgTime))
-						})
+					channel.delete({ reason: 'autovoice activity' }).catch(err => {
+						console.log('channel delete fail'.red)
+						const defaultChannel = guild.channels.find(channel => channel.permissionsFor(guild.me).has('SEND_MESSAGES') && channel.type == 'text')
+						defaultChannel.send('unable to delete voice channel - permissions might be insufficient').then(msg => msg.delete(config[msg.guild.id].tempMsgTime))
+					})
 				} else {
 					// else saves this one
 					left = true

@@ -4,10 +4,15 @@ module.exports = {
 	name: 'purge',
 	desc: `deletes messages in bulk`,
 	help:
-		'`purge` - deletes 5 last messages from current channel and message that invoked purge\n\n`purge <number>` - deletes specific amount of latest messages\n\n- api prevents messages older than 14 days from being deleted in bulk - in that case bot will delete only as many messages as it can\n\n - bot can delete maximum 100 messages with single purge',
+		'`purge` - deletes 5 last messages from current channel and message that called purge\n\n`purge <number>` - deletes specific amount of latest messages\n\n- api prevents messages older than 14 days from being deleted in bulk - in that case bot will delete only as many messages as it can\n\n - bot can delete maximum 100 messages with single purge',
 	run: function(msg, recursion) {
 		if (!checkPerms(msg.author.id, 'purge', msg.guild.id)) {
 			msg.reply('You dont have permission to use this command!')
+			return
+		}
+		if (!msg.channel.permissionsFor(msg.guild.me).has('MANAGE_MESSAGES')) {
+			console.log('purge failed - insuffiecient permissions')
+			msg.channel.send("I don't have permission 'manage messages' on this channel")
 			return
 		}
 		var command = msg.content.split(' ')
@@ -35,7 +40,7 @@ module.exports = {
 					}
 				} else {
 					console.log(err)
-					msg.channel.send(`Purge failed. Permissions might be insufficient`)
+					msg.channel.send(`Purge failed.\n${err.message}`)
 				}
 			})
 	},
