@@ -23,13 +23,20 @@ module.exports = {
 		}
 	},
 	saveConfig: function(channel, reply) {
-		console.log('saving config')
-		fs.writeFile('./data/config.json', JSON.stringify(config, null, 2), err => {
-			if (err) console.log(err)
-			console.log('modified config.json'.green)
-			if (reply) {
-				channel.send(reply)
-			}
+		return new Promise((res, rej) => {
+			console.log('saving config')
+			fs.writeFile('./data/config.json', JSON.stringify(config, null, 2), err => {
+				if (err) {
+					console.log(err)
+					rej(err)
+				} else {
+					console.log('modified config.json'.green)
+					if (reply) {
+						channel.send(reply)
+					}
+					res('ok')
+				}
+			})
 		})
 	},
 	fetchCommands: function(log) {

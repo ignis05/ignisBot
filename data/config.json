@@ -19,8 +19,8 @@
     "autoVoice": "467313439413501986",
     "autoVoiceFirstChannel": 0,
     "random": {
-      "min": 1,
-      "max": 10
+      "min": 0,
+      "max": 1
     }
   },
   "183212495501131776": {

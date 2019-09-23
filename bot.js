@@ -179,7 +179,7 @@ function autovoiceActivity(guild) {
 				if (left) {
 					// if one empty is left can delete channels
 					channel
-						.delete('autovoice activity')
+						.delete({ reason: 'autovoice activity' })
 						.then(channel => {})
 						.catch(err => {
 							console.log('channel delete fail')
