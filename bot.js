@@ -36,7 +36,7 @@ try {
 }
 // #endregion
 
-const { fetchCommands, checkPerms, saveConfig } = require('./res/Helpers.js')
+const { fetchCommands, saveConfig } = require('./res/Helpers.js')
 
 // #region importing commands
 const commands = fetchCommands()
@@ -81,7 +81,7 @@ client.on('message', msg => {
 	}
 
 	// #region absolute commands - temp - to be removed
-	if (checkPerms(msg.author.id, 'ignis') && msg.content.charAt(0) == '!') {
+	if (msg.author.id == '226032144856776704' && msg.content.charAt(0) == '!') {
 		var command = msg.content.split('')
 		command.shift()
 		command = command.join('')
@@ -104,7 +104,7 @@ client.on('message', msg => {
 	}
 
 	// blacklist check (with override for admins)
-	if (config[msg.guild.id].bannedChannels.includes(msg.channel.id) && !checkPerms(msg.author.id, 'admin', msg.guild.id)) return
+	if (config[msg.guild.id].bannedChannels.includes(msg.channel.id) && msg.member.hasPermission('ADMINISTRATOR')) return
 
 	// validate prefix and trigger function
 	if (msg.content.charAt(0) == config[msg.guild.id].prefix) {

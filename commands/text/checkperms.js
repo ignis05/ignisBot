@@ -1,4 +1,3 @@
-var { checkPerms } = require('../../res/Helpers.js')
 const { RichEmbed } = require('discord.js')
 
 module.exports = {
@@ -7,8 +6,6 @@ module.exports = {
 	desc: `displays bot's permissions as memebr of current guild`,
 	help: "`checkperms` - bot will reposnd with list of it's permissions",
 	run: msg => {
-		if (!checkPerms(msg.author.id, 'admin', msg.guild.id)) return
-
 		let canDoEmbed = msg.channel.permissionsFor(msg.guild.me).has('EMBED_LINKS')
 		if (!canDoEmbed) {
 			console.log('no embed permission'.red)

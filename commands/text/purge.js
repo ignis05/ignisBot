@@ -1,13 +1,12 @@
-const { checkPerms } = require('../../res/Helpers.js')
-
 module.exports = {
 	name: 'purge',
 	desc: `deletes messages in bulk`,
 	help:
 		'`purge` - deletes 5 last messages from current channel and message that called purge\n\n`purge <number>` - deletes specific amount of latest messages\n\n- api prevents messages older than 14 days from being deleted in bulk - in that case bot will delete only as many messages as it can\n\n - bot can delete maximum 100 messages with single purge',
 	run: function(msg, recursion) {
-		if (!checkPerms(msg.author.id, 'purge', msg.guild.id)) {
-			msg.reply('You dont have permission to use this command!')
+		if (!msg.channel.permissionsFor(msg.member).has('MANAGE_MESSAGES')) {
+			console.log('purge failed - insuffiecient permissions')
+			msg.reply("You don't have permission 'manage messages' on this channel")
 			return
 		}
 		if (!msg.channel.permissionsFor(msg.guild.me).has('MANAGE_MESSAGES')) {
