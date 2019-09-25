@@ -8,7 +8,7 @@ module.exports = {
 	help: '`random` - return random number from default range: <0, 10>\n- on guild default range can be changed with `setrandom`\n\n`random <min> <max>` - returns random number using specified range',
 	run: msg => {
 		let min, max
-		if (msg.guild) {
+		if (msg.guild && config[msg.guild.id].random) {
 			min = config[msg.guild.id].random.min
 			max = config[msg.guild.id].random.max
 		}

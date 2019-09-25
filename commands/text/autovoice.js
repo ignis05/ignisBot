@@ -10,6 +10,9 @@ module.exports = {
 			msg.reply("You don't have permission to use this command")
 			return
 		}
+		if (isNaN(config[msg.guild.id].autoVoiceFirstChannel)) {
+			config[msg.guild.id].autoVoiceFirstChannel = 0
+		}
 
 		var command = msg.content.split(' ')
 		if (command[1]) {

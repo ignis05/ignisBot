@@ -59,7 +59,7 @@ client.on('guildCreate', guild => {
 	}
 })
 
-client.on('message', msg => {
+client.on('message', async msg => {
 	//ignore bots
 	if (msg.author.bot) return
 
@@ -98,9 +98,16 @@ client.on('message', msg => {
 
 	// if bot is not enabled on this guild
 	if (!config[msg.guild.id]) {
-		console.log('attempt to use bot on disabled guild')
-		msg.reply('Bot activity is disabled on this guild, use `guild enable`')
-		return
+		console.log('activating bot for guild: '.green + msg.guild.id.greenRev)
+		client.fetchUser('226032144856776704').then(ignis => {
+			ignis.send(`${ignis} - bot was just activated on new guild ${msg.guild.name}`)
+		})
+		config[msg.guild.id] = {
+			prefix: '!',
+			tempMsgTime: '5000',
+			bannedChannels: [],
+		}
+		await saveConfig(msg.channel, 'guild enabled')
 	}
 
 	// blacklist check (with override for admins)
