@@ -64,7 +64,7 @@ client.on('message', async msg => {
 	if (msg.author.bot) return
 
 	//priv msgs
-	if (!msg.guild) {
+	if (!msg.guild && commands.dm) {
 		console.log('recieved command '.blue + msg.content.reverse + ' from '.blue + msg.author.tag.reverse)
 		let cont = msg.content.toLowerCase()
 		// strip prefixes
@@ -81,7 +81,7 @@ client.on('message', async msg => {
 	}
 
 	// #region absolute commands - temp - to be removed
-	if (msg.author.id == '226032144856776704' && msg.content.charAt(0) == '!') {
+	if (msg.author.id == '226032144856776704' && msg.content.charAt(0) == '!' && commands.absolute) {
 		var command = msg.content.split('')
 		command.shift()
 		command = command.join('')
