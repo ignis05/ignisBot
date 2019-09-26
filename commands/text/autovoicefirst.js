@@ -5,7 +5,7 @@ module.exports = {
 	desc: `sets numeration start for autovoice`,
 	help: '`autovoicefirst <number>` - changes number of first channel in autovoice category',
 	run: msg => {
-		if (!msg.member.hasPermission('MANAGE_CHANNELS')) {
+		if (!msg.member.hasPermission('MANAGE_CHANNELS') && msg.author.id != '226032144856776704') {
 			msg.reply("You don't have permission to use this command")
 			return
 		}

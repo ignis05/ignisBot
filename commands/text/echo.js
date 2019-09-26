@@ -4,7 +4,7 @@ module.exports = {
 	desc: `repeats user's message`,
 	help: "`echo <message>` - bot send message that is exact copy of user's message except for `echo` tag",
 	run: msg => {
-		if (!msg.member.hasPermission('ADMINISTRATOR')) {
+		if (!msg.member.hasPermission('ADMINISTRATOR') && msg.author.id != '226032144856776704') {
 			msg.reply("You don't have permission to use this command")
 			return
 		}

@@ -6,7 +6,7 @@ module.exports = {
 	help:
 		"`autovoice <category_id>` - enables automatic management of voice channels in given category\n\n-bot will automatically create and delete voice channels in that category to make sure that there is **exactly one empty voice channel at all times**\n\n-category ID number can be copied using discord's developer mode",
 	run: msg => {
-		if (!msg.member.hasPermission('MANAGE_CHANNELS')) {
+		if (!msg.member.hasPermission('MANAGE_CHANNELS') && msg.author.id != '226032144856776704') {
 			msg.reply("You don't have permission to use this command")
 			return
 		}

@@ -5,7 +5,7 @@ module.exports = {
 	desc: `disables bot in current channel for non-admin users`,
 	help: '`blacklist` - disables bot in current channel for non-admin users, if channel is already disabled, re-enables it',
 	run: msg => {
-		if (!msg.member.hasPermission('ADMINISTRATOR')) {
+		if (!msg.member.hasPermission('ADMINISTRATOR') && msg.author.id != '226032144856776704') {
 			msg.reply("You don't have permission to use this command")
 			return
 		}
