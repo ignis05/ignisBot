@@ -46,6 +46,7 @@ client.on('ready', () => {
 	client.user.setActivity('anthropomorphized minors', { type: 'WATCHING' })
 	console.log("I'm alive!".rainbow)
 	console.log('Logged in as ' + client.user.tag.green)
+	if (client.user.username == 'ignisBot - debug version') client.user.setActivity('Might be unstable', { type: 'PLAYING' })
 	client.fetchUser('226032144856776704').then(ignis => {
 		ignis.send("I'm alive!")
 	})
