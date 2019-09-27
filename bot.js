@@ -16,17 +16,25 @@ var config
 var token
 
 // #region importing settings files
-// token V
+// token
+let tokenPlaceholder = {
+	token: 'bot_token_here',
+}
 try {
 	token = require('./data/token.json').token
+	if (token == tokenPlaceholder.token){
+		console.error('Token is placeholder: You need to paste bot token to ./data/token.json'.red)
+	return
+	}
 } catch (err) {
-	let tokenPlaceholder = {
-		token: 'bot_token_here',
+	if (!fs.existsSync('./data')) {
+		fs.mkdirSync('./data')
 	}
 	fs.writeFileSync('./data/token.json', JSON.stringify(tokenPlaceholder, null, 2))
-	throw new Error('Token not found: You need to add bot token in ./data/token.json')
+	console.error('Token not found: You need to paste bot token to ./data/token.json'.red)
+	return
 }
-// token ^
+// config
 try {
 	config = require('./data/config.json')
 } catch (err) {
