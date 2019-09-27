@@ -30,9 +30,8 @@ try {
 try {
 	config = require('./data/config.json')
 } catch (err) {
-	fs.writeFile('./data/config.json', JSON.stringify({}, null, 2), err => {
-		config = require('./data/config.json')
-	})
+	fs.writeFileSync('./data/config.json', '{}')
+	config = require('./data/config.json')
 }
 // #endregion
 
@@ -108,7 +107,7 @@ client.on('message', async msg => {
 			tempMsgTime: '5000',
 			bannedChannels: [],
 		}
-		await saveConfig(msg.channel, 'guild enabled')
+		await saveConfig()
 	}
 
 	// blacklist check (with override for admins)
@@ -143,67 +142,67 @@ client.on('voiceStateUpdate', (oldMember, newMember) => {
 		if (oldMember.voiceChannelID != newMember.voiceChannelID) {
 			// change
 			if (!config[newMember.guild.id].autoVoice) return
-			autovoiceActivity(newMember.voiceChannel.guild)
+			autovoiceActivity(newMember.guild)
 		}
 	} else if (newMember.voiceChannelID) {
 		//join
 		if (!config[newMember.guild.id].autoVoice) return
-		autovoiceActivity(newMember.voiceChannel.guild)
+		autovoiceActivity(newMember.guild)
 	} else if (oldMember.voiceChannelID) {
 		//leave
 		if (!config[newMember.guild.id].autoVoice) return
-		autovoiceActivity(oldMember.voiceChannel.guild)
+		autovoiceActivity(oldMember.guild)
 	}
 })
 
 // #region voice functions
-function autovoiceActivity(guild) {
-	var voiceChannels = guild.channels.filter(channel => channel.type == 'voice' && channel.parentID == config[guild.id].autoVoice).array()
-	// var tab = []
-	//var emptycount = 0
+async function autovoiceActivity(guild) {
+	let categoryChannel = guild.channels.get(config[guild.id].autoVoice)
 
-	var emptycount = voiceChannels.filter(channel => channel.members.firstKey() == undefined).length
-	// console.log(emptycount);
+	if (!categoryChannel.permissionsFor(guild.me).has('MANAGE_CHANNELS')) {
+		console.log('autovoice perms fail'.red, err)
+		const defaultChannel = guild.channels.find(channel => channel.permissionsFor(guild.me).has('SEND_MESSAGES') && channel.type == 'text')
+		defaultChannel.send(`Unable to manage voice activity - permission 'MANAGE_CHANNEL' might have been revoked`).then(msg => msg.delete(config[msg.guild.id].tempMsgTime))
+	}
+	let catChannels = categoryChannel.children
+	let voiceChannels = catChannels.filter(channel => channel.type == 'voice').array()
+
+	let emptyChannels = voiceChannels.filter(channel => channel.members.firstKey() == undefined)
+	emptyChannels.reverse()
+	let emptycount = emptyChannels.length
+
 	if (emptycount == 0) {
 		// console.log("there are no empty channels");
-		guild
+		await guild
 			.createChannel((voiceChannels.length + config[guild.id].autoVoiceFirstChannel).toString(), {
 				type: 'voice',
 				parent: config[guild.id].autoVoice,
 				reason: 'autovoice activity',
 			})
 			.catch(err => {
-				console.log('channel create fail'.red)
-				const defaultChannel = guild.channels.find(channel => channel.permissionsFor(guild.me).has('SEND_MESSAGES') && channel.type == 'text')
-				defaultChannel.send('unable to create voice channel - permissions might be insufficient').then(msg => msg.delete(config[msg.guild.id].tempMsgTime))
+				console.log('channel create fail'.red, err)
 			})
 	} else if (emptycount > 1) {
-		// console.log("there are to many empty channels")
-		var left = false // skips first mathing empty channel
-		let iterator = 0
-		voiceChannels.forEach(channel => {
-			// console.log(channel.name);
-			if (channel.members.firstKey()) {
-				// console.log("filled")
-				channel.setName((iterator + config[guild.id].autoVoiceFirstChannel).toString())
-				iterator++
-			} else {
-				// console.log("empty")
-				if (left) {
-					// if one empty is left can delete channels
-					channel.delete({ reason: 'autovoice activity' }).catch(err => {
-						console.log('channel delete fail'.red)
-						const defaultChannel = guild.channels.find(channel => channel.permissionsFor(guild.me).has('SEND_MESSAGES') && channel.type == 'text')
-						defaultChannel.send('unable to delete voice channel - permissions might be insufficient').then(msg => msg.delete(config[msg.guild.id].tempMsgTime))
-					})
-				} else {
-					// else saves this one
-					left = true
-					channel.setName((iterator + config[guild.id].autoVoiceFirstChannel).toString())
-					iterator++
+		let oneEmptySaved = false
+		let index = config[guild.id].autoVoiceFirstChannel
+		for (let channel of voiceChannels) {
+			// channel empty
+			if (channel.members.firstKey() == undefined) {
+				// leave one empty channel
+				if (!oneEmptySaved) {
+					oneEmptySaved = true
+					channel.setName(`${index++}`)
+					continue
 				}
+				channel.delete({ reason: 'autovoice activity' }).catch(err => {
+					console.log('channel delete fail'.red, err)
+				})
 			}
-		})
+			// channel full
+			else {
+				channel.setName(`${index++}`)
+			}
+		}
 	}
 }
 // #endregion
