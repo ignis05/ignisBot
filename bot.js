@@ -203,20 +203,24 @@ async function autovoiceActivity(guild) {
 	// reload channels
 	categoryChannel = guild.channels.get(config[guild.id].autoVoice)
 	voiceChannels = categoryChannel.children.filter(channel => channel.type == 'voice').array()
+	// let textChannels = categoryChannel.children.filter(channel => channel.type == 'text').array()
 
 	let emptychannel = voiceChannels.find(channel => channel.members.firstKey() == undefined)
 	let fullVoiceChannels = voiceChannels.filter(channel => channel.members.firstKey() != undefined)
 
 	if (fullVoiceChannels.some(channel => channel.position > emptychannel.position)) {
-		let maxPos = fullVoiceChannels.reduce //end this
+		let maxPos = fullVoiceChannels.reduce((acc, channel) => (acc > channel.position ? acc : channel.position), 0)
+		console.log('maxPos: ', maxPos)
+		console.log('emptychannel - Pos: ' + emptychannel.position)
+		maxPos++
+		await emptychannel.setPosition(maxPos)
+		console.log('emptychannel - Pos: ' + emptychannel.position)
 	}
 	let index = 0
 	for (let channel of voiceChannels) {
-		console.log(channel.position)
 		channel.setName((index + config[guild.id].autoVoiceFirstChannel).toString())
 		index++
 	}
-	console.log('done setting names'.blue)
 }
 // #endregion
 
