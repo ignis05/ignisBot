@@ -183,43 +183,27 @@ async function autovoiceActivity(guild) {
 			.catch(err => {
 				console.log('channel create fail'.red, err)
 			})
-		console.log('done creating')
 	} else if (emptycount > 1) {
 		let oneEmptySaved = false
-		for (let channel of emptyChannels) {
-			// leave one empty channel
-			if (!oneEmptySaved) {
-				oneEmptySaved = true
-				continue
+		let index = config[guild.id].autoVoiceFirstChannel
+		for (let channel of voiceChannels) {
+			// channel empty
+			if (channel.members.firstKey() == undefined) {
+				// leave one empty channel
+				if (!oneEmptySaved) {
+					oneEmptySaved = true
+					channel.setName(`${index++}`)
+					continue
+				}
+				channel.delete({ reason: 'autovoice activity' }).catch(err => {
+					console.log('channel delete fail'.red, err)
+				})
 			}
-
-			await channel.delete({ reason: 'autovoice activity' }).catch(err => {
-				console.log('channel delete fail'.red, err)
-			})
+			// channel full
+			else {
+				channel.setName(`${index++}`)
+			}
 		}
-		console.log('done deleting')
-	}
-	console.log('done everything'.magenta)
-	// reload channels
-	categoryChannel = guild.channels.get(config[guild.id].autoVoice)
-	voiceChannels = categoryChannel.children.filter(channel => channel.type == 'voice').array()
-	// let textChannels = categoryChannel.children.filter(channel => channel.type == 'text').array()
-	// let emptychannel = voiceChannels.find(channel => channel.members.firstKey() == undefined)
-	// let fullVoiceChannels = voiceChannels.filter(channel => channel.members.firstKey() != undefined)
-
-	// setPosition appears to be broken
-	/* if (fullVoiceChannels.some(channel => channel.position > emptychannel.position)) {
-		let maxPos = fullVoiceChannels.reduce((acc, channel) => (acc > channel.position ? acc : channel.position), 0)
-		console.log('maxPos: ', maxPos)
-		console.log('emptychannel - Pos: ' + emptychannel.position)
-		maxPos++
-		await emptychannel.setPosition(maxPos + 1, true)
-		console.log('emptychannel - Pos: ' + emptychannel.position)
-	} */
-	let index = 0
-	for (let channel of voiceChannels) {
-		channel.setName((index + config[guild.id].autoVoiceFirstChannel).toString())
-		index++
 	}
 }
 // #endregion

@@ -14,6 +14,7 @@ module.exports = {
 		if (!isNaN(nr)) {
 			config[msg.guild.id].autoVoiceFirstChannel = nr
 			saveConfig(msg.channel, `First autovoice channel set to ${nr}`)
+			// set names
 			var voiceChannels = msg.guild.channels.filter(channel => channel.type == 'voice' && channel.parentID == config[msg.guild.id].autoVoice).array()
 			voiceChannels.forEach((channel, iterator) => {
 				channel.setName((iterator + config[msg.guild.id].autoVoiceFirstChannel).toString())
