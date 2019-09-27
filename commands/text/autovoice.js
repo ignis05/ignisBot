@@ -15,26 +15,28 @@ module.exports = {
 		}
 
 		var command = msg.content.split(' ')
-		if (command[1]) {
-			if (msg.guild.channels.get(command[1])) {
-				let categoryChannel = msg.guild.channels.get(command[1])
+		var channel = command[1] ? msg.guild.channels.get(command[1]) : msg.member.voiceChannel && msg.member.voiceChannel.parent ? msg.member.voiceChannel.parent : null
+		if (channel) {
+			if (channel.type == 'category') {
+				if (!channel.permissionsFor(msg.guild.me).has('MANAGE_CHANNELS')) {
+					console.log('invalid permissions for autovoice')
+					msg.channel.send("I don't have permission 'manage channel' in this category")
+					return
+				}
+				config[msg.guild.id].autoVoice = channel.id
+				console.log('autovoice enabled')
+				msg.channel.send(`autovoice enabled for category: ${channel.name}`)
 
-				if (categoryChannel.type == 'category') {
-					if (!categoryChannel.permissionsFor(msg.guild.me).has('MANAGE_CHANNELS')) {
-						console.log('invalid permissions for autovoice')
-						msg.channel.send("I don't have permission 'manage channel' in this category")
-						return
-					}
-					config[msg.guild.id].autoVoice = command[1]
-					console.log('autovoice enabled')
-					msg.channel.send(`autovoice enabled for category: ${categoryChannel.name}`)
-				} else {
-					console.log('wrong channel')
-					msg.channel.send("id doesn't belong to category")
+				let vChannel = channel.children.find(ch => ch.type == 'voice' && ch.permissionsFor(msg.guild.me).has('CONNECT'))
+				if (vChannel) {
+					vChannel
+						.join()
+						.then(con => vChannel.leave())
+						.catch(err => console.log('failed to join channel '))
 				}
 			} else {
-				console.log('invalid id')
-				msg.channel.send('invalid id')
+				console.log('wrong channel')
+				msg.channel.send("id doesn't belong to category")
 			}
 		} else {
 			config[msg.guild.id].autoVoice = false
