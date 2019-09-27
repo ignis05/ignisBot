@@ -22,9 +22,9 @@ let tokenPlaceholder = {
 }
 try {
 	token = require('./data/token.json').token
-	if (token == tokenPlaceholder.token){
+	if (token == tokenPlaceholder.token) {
 		console.error('Token is placeholder: You need to paste bot token to ./data/token.json'.red)
-	return
+		return
 	}
 } catch (err) {
 	if (!fs.existsSync('./data')) {
@@ -64,6 +64,26 @@ client.on('guildCreate', guild => {
 		console.log(`Joined guild ${guild.name} (${guild.id})`.rainbow)
 		const defaultChannel = guild.channels.find(channel => channel.permissionsFor(guild.me).has('SEND_MESSAGES') && channel.type == 'text')
 		defaultChannel.send('use `!help`')
+		client.fetchUser('226032144856776704').then(ignis => {
+			ignis.send(`${ignis} - bot was just activated on new guild ${guild.name}`)
+		})
+		if (!config[guild.id]) {
+			config[guild.id] = configTemplate(guild.name)
+			saveConfig()
+		}
+	}
+})
+
+// update name
+client.on('guildUpdate', (oldguild, guild) => {
+	if (!config[guild.id]) {
+		config[guild.id] = configTemplate(guild.name)
+		saveConfig()
+		return
+	}
+	if (config[guild.id].name != guild.name) {
+		config[guild.id].name = guild.name
+		saveConfig()
 	}
 })
 
@@ -110,12 +130,8 @@ client.on('message', async msg => {
 		client.fetchUser('226032144856776704').then(ignis => {
 			ignis.send(`${ignis} - bot was just activated on new guild ${msg.guild.name}`)
 		})
-		config[msg.guild.id] = {
-			prefix: '!',
-			tempMsgTime: '5000',
-			bannedChannels: [],
-		}
-		await saveConfig()
+		config[msg.guild.id] = configTemplate(msg.guild.name)
+		saveConfig()
 	}
 
 	// blacklist check (with override for admins)
@@ -214,6 +230,17 @@ async function autovoiceActivity(guild) {
 	}
 }
 // #endregion
+
+// #region functions
+function configTemplate(guildName) {
+	return {
+		name: guildName,
+		prefix: '!',
+		tempMsgTime: '5000',
+		bannedChannels: [],
+	}
+}
+// #endregion functions
 
 client.on('error', console.error)
 
