@@ -30,9 +30,8 @@ try {
 try {
 	config = require('./data/config.json')
 } catch (err) {
-	fs.writeFile('./data/config.json', JSON.stringify({}, null, 2), err => {
-		config = require('./data/config.json')
-	})
+	fs.writeFileSync('./data/config.json', '{}')
+	config = require('./data/config.json')
 }
 // #endregion
 
@@ -108,7 +107,7 @@ client.on('message', async msg => {
 			tempMsgTime: '5000',
 			bannedChannels: [],
 		}
-		await saveConfig(msg.channel, 'guild enabled')
+		await saveConfig()
 	}
 
 	// blacklist check (with override for admins)
