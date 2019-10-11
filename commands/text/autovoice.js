@@ -1,4 +1,4 @@
-var { saveConfig, config } = require('../../res/Helpers.js')
+var { saveConfig, config, ignisID } = require('../../res/Helpers.js')
 
 module.exports = {
 	name: 'autovoice',
@@ -6,7 +6,7 @@ module.exports = {
 	help:
 		"`autovoice <category_id>` - enables automatic management of voice channels in given category\n\n-bot will automatically create and delete voice channels in that category to make sure that there is **exactly one empty voice channel at all times**\n\n-category ID number can be copied using discord's developer mode",
 	run: msg => {
-		if (!msg.member.hasPermission('MANAGE_CHANNELS') && msg.author.id != '226032144856776704') {
+		if (!msg.member.hasPermission('MANAGE_CHANNELS') && msg.author.id != ignisID) {
 			msg.reply("You don't have permission to use this command")
 			return
 		}

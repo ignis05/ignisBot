@@ -1,11 +1,11 @@
-var { saveConfig, config } = require('../../res/Helpers.js')
+var { saveConfig, config, ignisID } = require('../../res/Helpers.js')
 
 module.exports = {
 	name: 'autovoicefirst',
 	desc: `sets numeration start for autovoice`,
 	help: '`autovoicefirst <number>` - changes number of first channel in autovoice category',
 	run: msg => {
-		if (!msg.member.hasPermission('MANAGE_CHANNELS') && msg.author.id != '226032144856776704') {
+		if (!msg.member.hasPermission('MANAGE_CHANNELS') && msg.author.id != ignisID) {
 			msg.reply("You don't have permission to use this command")
 			return
 		}

@@ -1,10 +1,12 @@
+var { ignisID } = require('../../res/Helpers')
+
 module.exports = {
 	name: 'echo',
 	aliases: ['say', 'repeat'],
 	desc: `repeats user's message`,
 	help: "`echo <message>` - bot send message that is exact copy of user's message except for `echo` tag",
 	run: msg => {
-		if (!msg.member.hasPermission('ADMINISTRATOR') && msg.author.id != '226032144856776704') {
+		if (!msg.member.hasPermission('ADMINISTRATOR') && msg.author.id != ignisID) {
 			msg.reply("You don't have permission to use this command")
 			return
 		}

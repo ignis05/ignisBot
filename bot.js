@@ -43,7 +43,7 @@ try {
 }
 // #endregion
 
-const { fetchCommands, saveConfig } = require('./res/Helpers.js')
+const { fetchCommands, saveConfig, ignisID } = require('./res/Helpers.js')
 
 // #region importing commands
 const commands = fetchCommands()
@@ -54,7 +54,7 @@ client.on('ready', () => {
 	console.log("I'm alive!".rainbow)
 	console.log('Logged in as ' + client.user.tag.green)
 	if (client.user.username == 'ignisBot - debug version') client.user.setActivity('Might be unstable', { type: 'PLAYING' })
-	client.fetchUser('226032144856776704').then(ignis => {
+	client.fetchUser(ignisID).then(ignis => {
 		ignis.send("I'm alive!")
 	})
 })
@@ -64,7 +64,7 @@ client.on('guildCreate', guild => {
 		console.log(`Joined guild ${guild.name} (${guild.id})`.rainbow)
 		const defaultChannel = guild.channels.find(channel => channel.permissionsFor(guild.me).has('SEND_MESSAGES') && channel.type == 'text')
 		defaultChannel.send('use `!help`')
-		client.fetchUser('226032144856776704').then(ignis => {
+		client.fetchUser(ignisID).then(ignis => {
 			ignis.send(`${ignis} - bot was just activated on new guild ${guild.name}`)
 		})
 		if (!config[guild.id]) {
@@ -108,26 +108,10 @@ client.on('message', async msg => {
 		return
 	}
 
-	// #region absolute commands - temp - to be removed
-	if (msg.author.id == '226032144856776704' && msg.content.charAt(0) == '!' && commands.absolute && commands.absolute.length > 0) {
-		var command = msg.content.split('')
-		command.shift()
-		command = command.join('')
-		command = command.split(' ')[0].toLowerCase()
-
-		let cmd = commands.absolute.find(cmd => cmd.name == command || cmd.aliases.includes(command))
-		if (cmd) {
-			console.log('recieved absolute command '.accent + command.reverse + ' from '.blue + msg.author.tag.reverse)
-			cmd.run(msg)
-			return
-		}
-	}
-	// #endregion absolute commands
-
 	// if bot is not enabled on this guild
 	if (!config[msg.guild.id]) {
 		console.log('activating bot for guild: '.green + msg.guild.id.greenRev)
-		client.fetchUser('226032144856776704').then(ignis => {
+		client.fetchUser(ignisID).then(ignis => {
 			ignis.send(`${ignis} - bot was just activated on new guild ${msg.guild.name}`)
 		})
 		config[msg.guild.id] = configTemplate(msg.guild.name)
@@ -135,7 +119,7 @@ client.on('message', async msg => {
 	}
 
 	// blacklist check (with override for admins)
-	if (config[msg.guild.id].bannedChannels.includes(msg.channel.id) && (msg.member.hasPermission('ADMINISTRATOR') || msg.author.id == '226032144856776704')) return
+	if (config[msg.guild.id].bannedChannels.includes(msg.channel.id) && (msg.member.hasPermission('ADMINISTRATOR') || msg.author.id == ignisID)) return
 
 	// validate prefix and trigger function
 	if (msg.content.charAt(0) == config[msg.guild.id].prefix) {
@@ -176,6 +160,39 @@ client.on('voiceStateUpdate', (oldMember, newMember) => {
 		//leave
 		if (!config[newMember.guild.id].autoVoice) return
 		autovoiceActivity(oldMember.guild)
+	}
+})
+
+client.on('messageDelete', msg => {
+	console.log('message delete')
+	if (!msg.guild) return
+	if (!config[msg.guild.id]) return
+	if (config[msg.guild.id].log && config[msg.guild.id].log.msg && config[msg.guild.id].log.msg.length > 0) {
+		for (channelID of config[msg.guild.id].log.msg) {
+			let channel = client.channels.get(channelID)
+			if (!channel || !channel.permissionsFor(msg.guild.me).has('SEND_MESSAGES')) {
+				config[msg.guild.id].log.msg.splice(config[msg.guild.id].log.msg.indexOf(channelID), 1)
+				saveConfig()
+				continue
+			}
+			if (!channel.permissionsFor(msg.guild.me).has('EMBED_LINKS')) {
+				channel.send(`Turn on embed links permission for better messages\nAuthor: ${msg.author.tag}\nContent: ${msg.cleanContent}`).catch(err => console.error(err))
+				continue
+			}
+			var embed = new Discord.RichEmbed()
+				.setTitle('**Message Deleted**')
+				.setColor(0xff0000)
+				// .setDescription()
+				.addField('Author', msg.author.toString(), true)
+				.addField('Channel', msg.channel.toString(), true)
+				.addField('Created', msg.createdAt.toLocaleString('en-GB'), true)
+				.addField('Last edited', msg.editedAt ? msg.editedAt.toLocaleString('en-GB') : 'never', true)
+				.addBlankField()
+				.addField('Content', msg.content)
+				.addBlankField()
+				.setFooter(new Date().toLocaleString('en-GB'))
+			channel.send(embed).catch(err => console.error(err))
+		}
 	}
 })
 
