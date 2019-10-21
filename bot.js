@@ -163,6 +163,7 @@ client.on('voiceStateUpdate', (oldMember, newMember) => {
 	}
 })
 
+// #region msg log
 client.on('messageDelete', msg => {
 	console.log('message delete')
 	if (!msg.guild) return
@@ -187,14 +188,47 @@ client.on('messageDelete', msg => {
 				.addField('Channel', msg.channel.toString(), true)
 				.addField('Created', msg.createdAt.toLocaleString('en-GB'), true)
 				.addField('Last edited', msg.editedAt ? msg.editedAt.toLocaleString('en-GB') : 'never', true)
-				.addBlankField()
-				.addField('Content', msg.content)
-				.addBlankField()
+				.addField('Content', msg.content, true)
 				.setFooter(new Date().toLocaleString('en-GB'))
 			channel.send(embed).catch(err => console.error(err))
 		}
 	}
 })
+client.on('messageDeleteBulk', col => {
+	console.log('message delete bulk')
+	col = col.sort((msg1, msg2) => msg1.createdTimestamp > msg2.createdTimestamp)
+	var msg = col.first()
+	if (!msg.guild) return
+	if (!config[msg.guild.id]) return
+	if (config[msg.guild.id].log && config[msg.guild.id].log.msg && config[msg.guild.id].log.msg.length > 0) {
+		for (channelID of config[msg.guild.id].log.msg) {
+			let channel = client.channels.get(channelID)
+			if (!channel || !channel.permissionsFor(msg.guild.me).has('SEND_MESSAGES')) {
+				config[msg.guild.id].log.msg.splice(config[msg.guild.id].log.msg.indexOf(channelID), 1)
+				saveConfig()
+				continue
+			}
+			if (!channel.permissionsFor(msg.guild.me).has('EMBED_LINKS')) {
+				channel.send(`Turn on embed links permission for better messages\nChannel: ${msg.channel.name}\nCount: ${col.size}`).catch(err => console.error(err))
+				continue
+			}
+			console.log(col.map(msg => msg.cleanContent))
+			var embed = new Discord.RichEmbed()
+				.setTitle('**Messages Deleted In Bulk**')
+				.setColor(0xff0000)
+				.setDescription(`${col.size} messages were deleted`)
+				.setFooter(new Date().toLocaleString('en-GB'))
+			if (col.size > 10) {
+				embed.addField(`Content can't be shown`, 'Only up to 10 messages can be logged from bulk delete').addBlankField()
+			} else {
+				embed.addField('Channel', msg.channel.toString())
+				col.map(msg => embed.addField(`${msg.createdAt.toLocaleString('en-GB') || '<unknown>'}:`, `${msg.author || '<unknown>'} : ${msg.content || '<unknown>'}`))
+			}
+			channel.send(embed).catch(err => console.error(err))
+		}
+	}
+})
+//#endregion msg log
 
 // #region voice functions
 async function autovoiceActivity(guild) {

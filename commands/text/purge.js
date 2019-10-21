@@ -33,7 +33,7 @@ module.exports = {
 						x++
 					}
 					if (x > 0) {
-						this(msg, x - 1)
+						this.run(msg, x - 1)
 					} else {
 						msg.channel.send(`Purge failed. No valid messages`)
 					}
