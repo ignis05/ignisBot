@@ -165,10 +165,10 @@ client.on('voiceStateUpdate', (oldMember, newMember) => {
 
 // #region msg log
 client.on('messageDelete', msg => {
-	console.log('message delete')
 	if (!msg.guild) return
 	if (!config[msg.guild.id]) return
 	if (config[msg.guild.id].log && config[msg.guild.id].log.msg && config[msg.guild.id].log.msg.length > 0) {
+		console.log('message delete')
 		for (channelID of config[msg.guild.id].log.msg) {
 			let channel = client.channels.get(channelID)
 			if (!channel || !channel.permissionsFor(msg.guild.me).has('SEND_MESSAGES')) {
@@ -195,12 +195,12 @@ client.on('messageDelete', msg => {
 	}
 })
 client.on('messageDeleteBulk', col => {
-	console.log('message delete bulk')
 	col = col.sort((msg1, msg2) => msg1.createdTimestamp > msg2.createdTimestamp)
 	var msg = col.first()
 	if (!msg.guild) return
 	if (!config[msg.guild.id]) return
 	if (config[msg.guild.id].log && config[msg.guild.id].log.msg && config[msg.guild.id].log.msg.length > 0) {
+		console.log('message delete bulk')
 		for (channelID of config[msg.guild.id].log.msg) {
 			let channel = client.channels.get(channelID)
 			if (!channel || !channel.permissionsFor(msg.guild.me).has('SEND_MESSAGES')) {
@@ -224,6 +224,39 @@ client.on('messageDeleteBulk', col => {
 				embed.addField('Channel', msg.channel.toString())
 				col.map(msg => embed.addField(`${msg.createdAt.toLocaleString('en-GB') || '<unknown>'}:`, `${msg.author || '<unknown>'} : ${msg.content || '<unknown>'}`))
 			}
+			channel.send(embed).catch(err => console.error(err))
+		}
+	}
+})
+client.on('messageUpdate', (oldmsg, msg) => {
+	if (!msg.guild) return
+	if (msg.author.bot) return
+	if (!config[msg.guild.id]) return
+	if (config[msg.guild.id].log && config[msg.guild.id].log.msg && config[msg.guild.id].log.msg.length > 0) {
+		console.log('message update')
+		for (channelID of config[msg.guild.id].log.msg) {
+			let channel = client.channels.get(channelID)
+			if (!channel || !channel.permissionsFor(msg.guild.me).has('SEND_MESSAGES')) {
+				config[msg.guild.id].log.msg.splice(config[msg.guild.id].log.msg.indexOf(channelID), 1)
+				saveConfig()
+				continue
+			}
+			if (!channel.permissionsFor(msg.guild.me).has('EMBED_LINKS')) {
+				channel
+					.send(`Turn on embed links permission for better messages\nAuthor: ${msg.author.tag}\nOld Content: ${oldmsg.cleanContent}\n New Content: ${msg.cleanContent}`)
+					.catch(err => console.error(err))
+				continue
+			}
+			var embed = new Discord.RichEmbed()
+				.setTitle('**Message Updated**')
+				.setColor(0x0000ff)
+				// .setDescription()
+				.addField('Author', msg.author.toString(), true)
+				.addField('Channel', msg.channel.toString(), true)
+				.addField('Created', msg.createdAt.toLocaleString('en-GB'), true)
+				.addField('Old content', oldmsg.content || 'unknown', true)
+				.addField('New content', msg.content || 'unknown', true)
+				.setFooter(new Date().toLocaleString('en-GB'))
 			channel.send(embed).catch(err => console.error(err))
 		}
 	}
