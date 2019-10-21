@@ -146,20 +146,19 @@ client.on('message', async msg => {
 })
 
 client.on('voiceStateUpdate', (oldMember, newMember) => {
+	if (config[newMember.guild.id].log && config[newMember.guild.id].log.voice && config[newMember.guild.id].log.voice.length > 0) voiceLog(oldMember, newMember)
+
 	if (oldMember.voiceChannelID && newMember.voiceChannelID) {
 		if (oldMember.voiceChannelID != newMember.voiceChannelID) {
 			// change
-			if (!config[newMember.guild.id].autoVoice) return
-			autovoiceActivity(newMember.guild)
+			if (config[newMember.guild.id].autoVoice) autovoiceActivity(newMember.guild)
 		}
 	} else if (newMember.voiceChannelID) {
 		//join
-		if (!config[newMember.guild.id].autoVoice) return
-		autovoiceActivity(newMember.guild)
+		if (config[newMember.guild.id].autoVoice) autovoiceActivity(newMember.guild)
 	} else if (oldMember.voiceChannelID) {
 		//leave
-		if (!config[newMember.guild.id].autoVoice) return
-		autovoiceActivity(oldMember.guild)
+		if (config[newMember.guild.id].autoVoice) autovoiceActivity(oldMember.guild)
 	}
 })
 
@@ -181,7 +180,7 @@ client.on('messageDelete', msg => {
 				continue
 			}
 			var embed = new Discord.RichEmbed()
-				.setTitle('**Message Deleted**')
+				.setTitle('Message Deleted')
 				.setColor(0xff0000)
 				// .setDescription()
 				.addField('Author', msg.author.toString(), true)
@@ -214,7 +213,7 @@ client.on('messageDeleteBulk', col => {
 			}
 			console.log(col.map(msg => msg.cleanContent))
 			var embed = new Discord.RichEmbed()
-				.setTitle('**Messages Deleted In Bulk**')
+				.setTitle('Messages Deleted In Bulk')
 				.setColor(0xff0000)
 				.setDescription(`${col.size} messages were deleted`)
 				.setFooter(new Date().toLocaleString('en-GB'))
@@ -311,6 +310,49 @@ async function autovoiceActivity(guild) {
 				channel.setName(`${index++}`)
 			}
 		}
+	}
+}
+function voiceLog(oldMember, newMember) {
+	console.log('voice log')
+	var guild = newMember.guild
+	var activity = 'unknown'
+	var vchannel = 'unknown'
+	if (oldMember.voiceChannelID && newMember.voiceChannelID && oldMember.voiceChannelID != newMember.voiceChannelID) {
+		activity = 'switch'
+		vchannel = {
+			old: oldMember.voiceChannel,
+			new: newMember.voiceChannel,
+		}
+	} else if (newMember.voiceChannelID) {
+		activity = 'join'
+		vchannel = newMember.voiceChannel
+	} else if (oldMember.voiceChannelID) {
+		activity = 'leave'
+		vchannel = oldMember.voiceChannel
+	}
+	for (channelID of config[guild.id].log.voice) {
+		let channel = client.channels.get(channelID)
+		if (!channel || !channel.permissionsFor(guild.me).has('SEND_MESSAGES')) {
+			config[guild.id].log.voice.splice(config[guild.id].log.voice.indexOf(channelID), 1)
+			saveConfig()
+			continue
+		}
+		if (!channel.permissionsFor(guild.me).has('EMBED_LINKS')) {
+			channel.send(`Turn on embed links permission for better messages\nUser: ${newMember}\nActivity: ${activity}`).catch(err => console.error(err))
+			continue
+		}
+		var embed = new Discord.RichEmbed()
+			.setTitle(`Voice ${activity}`)
+			.setColor(0x0000ff)
+			// .setDescription()
+			.addField('User', newMember.toString(), true)
+			.setFooter(new Date().toLocaleString('en-GB'))
+		if (vchannel.old && vchannel.new) {
+			embed.addField('Old Channel', vchannel.old.toString(), true).addField('New Channel', vchannel.new.toString(), true)
+		} else {
+			embed.addField('Channel', vchannel.toString(), true)
+		}
+		channel.send(embed).catch(err => console.error(err))
 	}
 }
 // #endregion

@@ -43,7 +43,7 @@ module.exports = {
 							'Voice log:',
 							log.voice.length > 0
 								? log.voice.map(chID => {
-										let channel = voice.channel.guild.channels.get(chID)
+										let channel = msg.channel.guild.channels.get(chID)
 										return channel ? channel.toString() : 'deleted channel - will be cleared on next attempt to send log'
 								  })
 								: 'no channels'
@@ -52,7 +52,7 @@ module.exports = {
 							'Moderation log:',
 							log.mod.length > 0
 								? log.mod.map(chID => {
-										let channel = mod.channel.guild.channels.get(chID)
+										let channel = msg.channel.guild.channels.get(chID)
 										return channel ? channel.toString() : 'deleted channel - will be cleared on next attempt to send log'
 								  })
 								: 'no channels'
@@ -99,6 +99,35 @@ module.exports = {
 				else {
 					config[msg.guild.id].log.msg.push(msg.channel.id)
 					msg.channel.send('Enabled msg log in this channel')
+				}
+				saveConfig()
+				break
+			case 'voice':
+				let j = config[msg.guild.id].log.voice.indexOf(msg.channel.id)
+				// already logging to this channel - disable
+				if (j != -1) {
+					config[msg.guild.id].log.voice.splice(j, 1)
+					msg.channel.send('Disabled voice log in this channel')
+				}
+				// enable channel
+				else {
+					config[msg.guild.id].log.voice.push(msg.channel.id)
+					msg.channel.send('Enabled voice log in this channel')
+				}
+				saveConfig()
+				break
+			case 'mod':
+			case 'moderation':
+				let k = config[msg.guild.id].log.mod.indexOf(msg.channel.id)
+				// already logging to this channel - disable
+				if (k != -1) {
+					config[msg.guild.id].log.mod.splice(k, 1)
+					msg.channel.send('Disabled mod log in this channel')
+				}
+				// enable channel
+				else {
+					config[msg.guild.id].log.mod.push(msg.channel.id)
+					msg.channel.send('Enabled mod log in this channel')
 				}
 				saveConfig()
 				break
