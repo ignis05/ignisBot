@@ -15,7 +15,7 @@ module.exports = {
 		console.log(`Set reminder on ${new Date(Date.now() + pureTime * 60000).toLocaleString()}`)
 		msg.reply(`Set reminder on ${new Date(Date.now() + pureTime * 60000).toLocaleString()}`)
 		msg.client.setTimeout(() => {
-			msg.author.send(`${msg.author} ${msgArr.slice(2).join(' ')}`)
+			msg.channel.send(`${msg.author} ${msgArr.slice(2).join(' ')}`).catch(err => console.log(err.message))
 		}, pureTime * 60000)
 	},
 }
