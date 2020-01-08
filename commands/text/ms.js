@@ -1,5 +1,6 @@
 var { saveConfig, config } = require('../../res/Helpers.js')
 var request = require('request')
+const { RichEmbed, Attachment } = require('discord.js')
 
 module.exports = {
 	name: 'ms',
@@ -8,7 +9,7 @@ module.exports = {
 	help:
 		'`ms <url / name>` - Checks status of server using given url or saved name\n\n`ms list` - lists saved servers\n\n`ms add <name> <url>` - saves server url under short name (or updates url of exisitng saved server)\n\n`ms del <name>` - removes saved server',
 	run: async msg => {
-		const urlRegex = /^(\w+\.\w+|\d+\.\d+\.\d+\.\d+)(:\d+)?$/gm
+		const urlRegex = /^(\S+\.\S+|\d+\.\d+\.\d+\.\d+)(:\d+)?$/gm
 		function testConn(url) {
 			let tmp = url.split(':')
 			let mcIP = tmp[0]
@@ -19,19 +20,25 @@ module.exports = {
 					msg.channel.send('Error getting Minecraft server status...')
 					return
 				}
-				msg.channel.send('tmp:\n' + body)
 				body = JSON.parse(body)
-				console.log(body)
-				var status = `*This minecraft server is currently offline*`
+				var embed = new RichEmbed()
+					.setTitle('**Minecraft Server Status:**')
+					.setDescription('This server is currently **offline**')
+					.setColor(0xff0000)
+					.addField('Address', url)
 				if (body.online) {
-					status = '**Minecraft** server is **online**  -  '
-					if (body.players.now) {
-						status += '**' + body.players.now + '** people are playing!'
-					} else {
-						status += '*Nobody is playing!*'
-					}
+					const imageStream = Buffer.from(body.favicon, 'base64')
+					const attachment = new Attachment(imageStream, 'icon.png')
+					embed
+						.setColor(0x00ff00)
+						.setDescription('This server is currently **online**')
+						.addField('Status', `${body.motd}`)
+						.addField('Players', `${body.players.now} / ${body.players.max}`)
+						.setFooter(`Online since ${new Date(Date.now() - body.last_online)}`)
+						.attachFiles([attachment])
+						.setThumbnail('attachment://icon.png')
 				}
-				msg.channel.send(status)
+				msg.channel.send(embed)
 			})
 		}
 
