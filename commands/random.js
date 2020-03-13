@@ -5,7 +5,7 @@ module.exports = {
 	aliases: ['rand'],
 	categories: ['text', 'dm'],
 	desc: 'returns random number',
-	help: '`random` - return random number from default range: <0, 10>\n- on guild default range can be changed with `setrandom`\n\n`random <min> <max>` - returns random number using specified range',
+	help: '`random` - return random number from default range: <0, 10>\n- on guild default range can be changed with `setrandom`\n\n`random <min> <max> [x]` - returns x random numbers using specified range. x defaults to 1',
 	run: msg => {
 		let min, max
 		if (msg.guild && config[msg.guild.id].random) {
@@ -15,7 +15,8 @@ module.exports = {
 		let tmp_arr = msg.content.split(' ')
 		tmp_arr[1] = parseInt(tmp_arr[1])
 		tmp_arr[2] = parseInt(tmp_arr[2])
-		if (tmp_arr.length == 3 && !isNaN(tmp_arr[1]) && !isNaN(tmp_arr[2])) {
+		tmp_arr[3] = parseInt(tmp_arr[3])
+		if (tmp_arr.length >= 3 && !isNaN(tmp_arr[1]) && !isNaN(tmp_arr[2])) {
 			min = tmp_arr[1]
 			max = tmp_arr[2]
 		}
@@ -23,7 +24,18 @@ module.exports = {
 			min = 1
 			max = 10
 		}
-		let rand = Math.floor(Math.random() * (max + 1 - min)) + min
-		msg.channel.send(`Your random number <${min}, ${max}>:\n${rand}`)
+		let repeat = tmp_arr[3]
+		if (!isNaN(repeat) && repeat > 0) {
+			repeat = repeat <= 50 ? repeat : 50
+			let str = ''
+			for (let i = 0; i < repeat; i++) {
+				let rand = Math.floor(Math.random() * (max + 1 - min)) + min
+				str += `\n${rand}`
+			}
+			msg.channel.send(`Your random numbers <${min}, ${max}>:` + str)
+		} else {
+			let rand = Math.floor(Math.random() * (max + 1 - min)) + min
+			msg.channel.send(`Your random number <${min}, ${max}>:\n${rand}`)
+		}
 	},
 }
