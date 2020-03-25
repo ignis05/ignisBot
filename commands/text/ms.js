@@ -21,22 +21,24 @@ module.exports = {
 					return
 				}
 				body = JSON.parse(body)
+				console.log(body)
 				var embed = new RichEmbed()
 					.setTitle('**Minecraft Server Status:**')
 					.setDescription('This server is currently **offline**')
 					.setColor(0xff0000)
 					.addField('Address', url)
 				if (body.online) {
-					const imageStream = Buffer.from(body.favicon, 'base64')
-					const attachment = new Attachment(imageStream, 'icon.png')
 					embed
 						.setColor(0x00ff00)
 						.setDescription('This server is currently **online**')
 						.addField('Status', `${body.motd}`)
 						.addField('Players', `${body.players.now} / ${body.players.max}`)
 						.setFooter(`Online since ${new Date(Date.now() - body.last_online)}`)
-						.attachFiles([attachment])
-						.setThumbnail('attachment://icon.png')
+					if (body.favicon) {
+						const imageStream = Buffer.from(body.favicon, 'base64')
+						const attachment = new Attachment(imageStream, 'icon.png')
+						embed.attachFiles([attachment]).setThumbnail('attachment://icon.png')
+					}
 				}
 				msg.channel.send(embed)
 			})
