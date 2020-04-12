@@ -10,10 +10,7 @@ module.exports = {
 			msg.reply("You don't have permission to use this command")
 			return
 		}
-		let cnt = msg.content
-			.split(' ')
-			.slice(1)
-			.join(' ')
+		let cnt = msg.content.split(' ').slice(1).join(' ')
 		msg.channel.send(cnt)
 	},
 }

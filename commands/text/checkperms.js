@@ -13,10 +13,7 @@ module.exports = {
 			.map(perm => `- ${perm}`)
 			.join('\n')
 
-		const embed = new MessageEmbed()
-			.setTitle('My permissions on this guild are:')
-			.setColor(0xff0000)
-			.setDescription(perms)
+		const embed = new MessageEmbed().setTitle('My permissions on this guild are:').setColor(0xff0000).setDescription(perms)
 
 		if (canDoEmbed) {
 			msg.channel.send(embed)

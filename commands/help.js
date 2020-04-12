@@ -24,7 +24,7 @@ module.exports = {
 				.setTitle(`**${cmd.name}** - info:`)
 				.setColor(cmd.categories ? 0xff00ff : 0x00ffff)
 				.setDescription(`${cmd.aliases.length > 0 ? `Aliases: *${cmd.aliases.join(', ')}*\n` : ''}\n${cmd.help ? cmd.help : 'no help provided'}`)
-				.setThumbnail(msg.client.user.displayAvatarURL({format:'png'}))
+				.setThumbnail(msg.client.user.displayAvatarURL({ format: 'png' }))
 			if (canDoEmbed) msg.channel.send(embed)
 			else msg.channel.send(`**${cmd.name}** - info:\n` + `${cmd.aliases.length > 0 ? `Aliases: *${cmd.aliases.join(', ')}*\n` : ''}\n${cmd.help ? cmd.help : 'no help provided'}`)
 			return
@@ -38,26 +38,14 @@ module.exports = {
 		var embed = new MessageEmbed()
 			.setTitle('**Available commands:**')
 			.setColor(0x00ff00)
-			.setDescription(
-				`Some commands can only be used in server text chat or DM\n${msg.client.user.username} will not try to execute the command unless it can respond to the channel from which it was called`
-			)
+			.setDescription(`Some commands can only be used in server text chat or DM\n${msg.client.user.username} will not try to execute the command unless it can respond to the channel from which it was called`)
 			.addField('\u200b', '\u200b')
 			.addField('**DM and text chat commands:**', multicommands.join('\n'))
 			.addField('\u200b', '\u200b')
 			.addField('**Text chat commands:**', textCommands.join('\n'))
-			.setThumbnail(msg.client.user.displayAvatarURL({format:'png'}))
+			.setThumbnail(msg.client.user.displayAvatarURL({ format: 'png' }))
 			.setFooter(`Type '${msg.guild ? config[msg.guild.id].prefix : ''}help command' for detailed help with 'command'`)
 		if (canDoEmbed) msg.channel.send(embed)
-		else
-			msg.channel.send(
-				'__**Allowing bot to send Embed links is recommended for better formatting of messages**__' +
-					'**Available commands:**\n' +
-					`Some commands can only be used in server text chat or DM\n${msg.client.user.username} will not try to execute the command unless it can respond to the channel from which it was called\n\n` +
-					'**DM and text chat commands:\n**' +
-					multicommands.join('\n') +
-					'**\nText chat commands:**\n' +
-					textCommands.join('\n') +
-					`\nType '${msg.guild ? config[msg.guild.id].prefix : ''}help command' for detailed help with 'command'`
-			)
+		else msg.channel.send('__**Allowing bot to send Embed links is recommended for better formatting of messages**__' + '**Available commands:**\n' + `Some commands can only be used in server text chat or DM\n${msg.client.user.username} will not try to execute the command unless it can respond to the channel from which it was called\n\n` + '**DM and text chat commands:\n**' + multicommands.join('\n') + '**\nText chat commands:**\n' + textCommands.join('\n') + `\nType '${msg.guild ? config[msg.guild.id].prefix : ''}help command' for detailed help with 'command'`)
 	},
 }

@@ -6,26 +6,21 @@ module.exports = {
 	name: 'ms',
 	aliases: ['mc', 'minecraft'],
 	desc: `Allows to check minecraft server status`,
-	help:
-		'`ms <url / name>` - Checks status of server using given url or saved name\n\n`ms list` - lists saved servers\n\n`ms add <name> <url>` - saves server url under short name (or updates url of exisitng saved server)\n\n`ms del <name>` - removes saved server',
+	help: '`ms <url / name>` - Checks status of server using given url or saved name\n\n`ms list` - lists saved servers\n\n`ms add <name> <url>` - saves server url under short name (or updates url of exisitng saved server)\n\n`ms del <name>` - removes saved server',
 	run: async msg => {
 		const urlRegex = /^(\S+\.\S+|\d+\.\d+\.\d+\.\d+)(:\d+)?$/gm
 		function testConn(url) {
 			let tmp = url.split(':')
 			let mcIP = tmp[0]
 			let mcPort = parseInt(tmp[1]) || 25565
-			request('http://mcapi.us/server/status?ip=' + mcIP + '&port=' + mcPort, function(err, response, body) {
+			request('http://mcapi.us/server/status?ip=' + mcIP + '&port=' + mcPort, function (err, response, body) {
 				if (err) {
 					console.log(err)
 					msg.channel.send('Error getting Minecraft server status...')
 					return
 				}
 				body = JSON.parse(body)
-				var embed = new MessageEmbed()
-					.setTitle('**Minecraft Server Status:**')
-					.setDescription('This server is currently **offline**')
-					.setColor(0xff0000)
-					.addField('Address', url)
+				var embed = new MessageEmbed().setTitle('**Minecraft Server Status:**').setDescription('This server is currently **offline**').setColor(0xff0000).addField('Address', url)
 				if (body.online) {
 					embed
 						.setColor(0x00ff00)

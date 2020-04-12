@@ -5,8 +5,7 @@ module.exports = {
 	name: 'log',
 	aliases: ['track'],
 	desc: `Selects channels for moderation logs`,
-	help:
-		'`log list` - shows current log settings\n\n`log <msg / voice / mod>` - enables / disables logs of selected type in current channel\n\nmsg - logs deleted and updated messages\nvoice - logs voice channels activity\nmod - logs guild members joining / leaving / being kicked/banned/unbanned',
+	help: '`log list` - shows current log settings\n\n`log <msg / voice / mod>` - enables / disables logs of selected type in current channel\n\nmsg - logs deleted and updated messages\nvoice - logs voice channels activity\nmod - logs guild members joining / leaving / being kicked/banned/unbanned',
 	run: async msg => {
 		if (!msg.member.hasPermission('ADMINISTRATOR') && msg.author.id != ignisID) {
 			msg.reply("You don't have permission to use this command")

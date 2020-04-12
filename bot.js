@@ -212,11 +212,7 @@ client.on('messageDeleteBulk', col => {
 				continue
 			}
 			console.log(col.map(msg => msg.cleanContent))
-			var embed = new Discord.MessageEmbed()
-				.setTitle('Messages Deleted In Bulk')
-				.setColor(0xff0000)
-				.setDescription(`${col.size} messages were deleted`)
-				.setFooter(new Date().toLocaleString('en-GB'))
+			var embed = new Discord.MessageEmbed().setTitle('Messages Deleted In Bulk').setColor(0xff0000).setDescription(`${col.size} messages were deleted`).setFooter(new Date().toLocaleString('en-GB'))
 			if (col.size > 10) {
 				embed.addField(`Content can't be shown`, 'Only up to 10 messages can be logged from bulk delete').addField('\u200b', '\u200b')
 			} else {
@@ -241,9 +237,7 @@ client.on('messageUpdate', (oldmsg, msg) => {
 				continue
 			}
 			if (!channel.permissionsFor(msg.guild.me).has('EMBED_LINKS')) {
-				channel
-					.send(`Turn on embed links permission for better messages\nAuthor: ${msg.author.tag}\nOld Content: ${oldmsg.cleanContent}\n New Content: ${msg.cleanContent}`)
-					.catch(err => console.error(err))
+				channel.send(`Turn on embed links permission for better messages\nAuthor: ${msg.author.tag}\nOld Content: ${oldmsg.cleanContent}\n New Content: ${msg.cleanContent}`).catch(err => console.error(err))
 				continue
 			}
 			var embed = new Discord.MessageEmbed()
@@ -269,7 +263,7 @@ async function autovoiceActivity(guild) {
 	if (!categoryChannel.permissionsFor(guild.me).has('MANAGE_CHANNELS')) {
 		console.log('autovoice perms fail'.red, err)
 		const defaultChannel = guild.channels.find(channel => channel.permissionsFor(guild.me).has('SEND_MESSAGES') && channel.type == 'text')
-		defaultChannel.send(`Unable to manage voice activity - permission 'MANAGE_CHANNEL' might have been revoked`).then(msg => msg.delete({timeout:config[msg.guild.id].tempMsgTime,reason:'Deleted temp message'}))
+		defaultChannel.send(`Unable to manage voice activity - permission 'MANAGE_CHANNEL' might have been revoked`).then(msg => msg.delete({ timeout: config[msg.guild.id].tempMsgTime, reason: 'Deleted temp message' }))
 	}
 	let catChannels = categoryChannel.children
 	let voiceChannels = catChannels.filter(channel => channel.type == 'voice').array()
