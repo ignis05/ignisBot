@@ -280,7 +280,7 @@ async function autovoiceActivity(guild) {
 
 	if (emptycount == 0) {
 		// console.log("there are no empty channels");
-		await guild
+		await guild.channels
 			.createChannel((voiceChannels.length + config[guild.id].autoVoiceFirstChannel).toString(), {
 				type: 'voice',
 				parent: config[guild.id].autoVoice,
