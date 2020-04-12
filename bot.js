@@ -269,7 +269,7 @@ async function autovoiceActivity(guild) {
 	if (!categoryChannel.permissionsFor(guild.me).has('MANAGE_CHANNELS')) {
 		console.log('autovoice perms fail'.red, err)
 		const defaultChannel = guild.channels.find(channel => channel.permissionsFor(guild.me).has('SEND_MESSAGES') && channel.type == 'text')
-		defaultChannel.send(`Unable to manage voice activity - permission 'MANAGE_CHANNEL' might have been revoked`).then(msg => msg.delete(config[msg.guild.id].tempMsgTime))
+		defaultChannel.send(`Unable to manage voice activity - permission 'MANAGE_CHANNEL' might have been revoked`).then(msg => msg.delete({timeout:config[msg.guild.id].tempMsgTime,reason:'Deleted temp message'}))
 	}
 	let catChannels = categoryChannel.children
 	let voiceChannels = catChannels.filter(channel => channel.type == 'voice').array()

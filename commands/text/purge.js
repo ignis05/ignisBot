@@ -24,7 +24,7 @@ module.exports = {
 			.bulkDelete(x + 1)
 			.then(() => {
 				console.log('success'.green)
-				msg.channel.send(`Deleted ${x} messages.`).then(msg => msg.delete(config[msg.guild.id].tempMsgTime))
+				msg.channel.send(`Deleted ${x} messages.`).then(msg => msg.delete({timeout:config[msg.guild.id].tempMsgTime,reason:'Deleted temp message'}))
 			})
 			.catch(err => {
 				if (err.code == 50034) {

@@ -11,11 +11,6 @@ module.exports = {
 		console.log('generating help'.accent)
 
 		let canDoEmbed = msg.channel.permissionsFor(msg.guild.me).has('EMBED_LINKS')
-		// if (!canDoEmbed) {
-		// 	console.log('no embed permission'.red)
-		// 	msg.channel.send("I don't have permission 'embed links' on this channel")
-		// 	return
-		// }
 
 		let commands = fetchCommands(false)
 

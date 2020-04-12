@@ -21,7 +21,7 @@ module.exports = {
 
 		if (prefix) {
 			config[msg.guild.id].prefix = prefix
-			saveConfig(msg.channel, `Chnaged prefix to: \`${prefix}\``)
+			saveConfig(msg.channel, `Changed prefix to: \`${prefix}\``)
 		} else {
 			msg.channel.send('Invalid character')
 		}
