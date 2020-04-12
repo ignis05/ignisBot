@@ -54,7 +54,7 @@ client.on('ready', () => {
 	console.log("I'm alive!".rainbow)
 	console.log('Logged in as ' + client.user.tag.green)
 	if (client.user.username == 'ignisBot - debug version') client.user.setActivity('Might be unstable', { type: 'PLAYING' })
-	client.fetchUser(ignisID).then(ignis => {
+	client.users.fetch(ignisID).then(ignis => {
 		ignis.send("I'm alive!")
 	})
 })
@@ -64,7 +64,7 @@ client.on('guildCreate', guild => {
 		console.log(`Joined guild ${guild.name} (${guild.id})`.rainbow)
 		const defaultChannel = guild.channels.find(channel => channel.permissionsFor(guild.me).has('SEND_MESSAGES') && channel.type == 'text')
 		defaultChannel.send('use `!help`')
-		client.fetchUser(ignisID).then(ignis => {
+		client.users.fetch(ignisID).then(ignis => {
 			ignis.send(`${ignis} - bot was just activated on new guild ${guild.name}`)
 		})
 		if (!config[guild.id]) {
@@ -111,7 +111,7 @@ client.on('message', async msg => {
 	// if bot is not enabled on this guild
 	if (!config[msg.guild.id]) {
 		console.log('activating bot for guild: '.green + msg.guild.id.greenRev)
-		client.fetchUser(ignisID).then(ignis => {
+		client.users.fetch(ignisID).then(ignis => {
 			ignis.send(`${ignis} - bot was just activated on new guild ${msg.guild.name}`)
 		})
 		config[msg.guild.id] = configTemplate(msg.guild.name)
@@ -179,7 +179,7 @@ client.on('messageDelete', msg => {
 				channel.send(`Turn on embed links permission for better messages\nAuthor: ${msg.author.tag}\nContent: ${msg.cleanContent}`).catch(err => console.error(err))
 				continue
 			}
-			var embed = new Discord.RichEmbed()
+			var embed = new Discord.MessageEmbed()
 				.setTitle('Message Deleted')
 				.setColor(0xff0000)
 				// .setDescription()
@@ -212,13 +212,13 @@ client.on('messageDeleteBulk', col => {
 				continue
 			}
 			console.log(col.map(msg => msg.cleanContent))
-			var embed = new Discord.RichEmbed()
+			var embed = new Discord.MessageEmbed()
 				.setTitle('Messages Deleted In Bulk')
 				.setColor(0xff0000)
 				.setDescription(`${col.size} messages were deleted`)
 				.setFooter(new Date().toLocaleString('en-GB'))
 			if (col.size > 10) {
-				embed.addField(`Content can't be shown`, 'Only up to 10 messages can be logged from bulk delete').addBlankField()
+				embed.addField(`Content can't be shown`, 'Only up to 10 messages can be logged from bulk delete').addField('\u200b', '\u200b')
 			} else {
 				embed.addField('Channel', msg.channel.toString())
 				col.map(msg => embed.addField(`${msg.createdAt.toLocaleString('en-GB') || '<unknown>'}:`, `${msg.author || '<unknown>'} : ${msg.content || '<unknown>'}`))
@@ -246,7 +246,7 @@ client.on('messageUpdate', (oldmsg, msg) => {
 					.catch(err => console.error(err))
 				continue
 			}
-			var embed = new Discord.RichEmbed()
+			var embed = new Discord.MessageEmbed()
 				.setTitle('**Message Updated**')
 				.setColor(0x0000ff)
 				// .setDescription()
@@ -341,7 +341,7 @@ function voiceLog(oldMember, newMember) {
 			channel.send(`Turn on embed links permission for better messages\nUser: ${newMember}\nActivity: ${activity}`).catch(err => console.error(err))
 			continue
 		}
-		var embed = new Discord.RichEmbed()
+		var embed = new Discord.MessageEmbed()
 			.setTitle(`Voice ${activity}`)
 			.setColor(0x0000ff)
 			// .setDescription()

@@ -1,5 +1,5 @@
 var { saveConfig, config, ignisID } = require('../../res/Helpers.js')
-const { RichEmbed } = require('discord.js')
+const { MessageEmbed } = require('discord.js')
 
 module.exports = {
 	name: 'log',
@@ -26,7 +26,7 @@ module.exports = {
 			case 'settings':
 				let log = config[msg.guild.id].log
 				if (msg.channel.permissionsFor(msg.guild.me).has('EMBED_LINKS')) {
-					var embed = new RichEmbed()
+					var embed = new MessageEmbed()
 						.setTitle('**Moderation logs settings:**')
 						.setColor(0x00ffff)
 						.setDescription(`Which activities are logged to which channels`)

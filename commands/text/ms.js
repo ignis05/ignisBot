@@ -1,6 +1,6 @@
 var { saveConfig, config } = require('../../res/Helpers.js')
 var request = require('request')
-const { RichEmbed, Attachment } = require('discord.js')
+const { MessageEmbed, MessageAttachment } = require('discord.js')
 
 module.exports = {
 	name: 'ms',
@@ -21,8 +21,7 @@ module.exports = {
 					return
 				}
 				body = JSON.parse(body)
-				console.log(body)
-				var embed = new RichEmbed()
+				var embed = new MessageEmbed()
 					.setTitle('**Minecraft Server Status:**')
 					.setDescription('This server is currently **offline**')
 					.setColor(0xff0000)
@@ -36,7 +35,7 @@ module.exports = {
 						.setFooter(`Online since ${new Date(Date.now() - body.last_online)}`)
 					if (body.favicon) {
 						const imageStream = Buffer.from(body.favicon, 'base64')
-						const attachment = new Attachment(imageStream, 'icon.png')
+						const attachment = new MessageAttachment(imageStream, 'icon.png')
 						embed.attachFiles([attachment]).setThumbnail('attachment://icon.png')
 					}
 				}

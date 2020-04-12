@@ -1,4 +1,4 @@
-const { RichEmbed } = require('discord.js')
+const { MessageEmbed } = require('discord.js')
 
 module.exports = {
 	name: 'checkperms',
@@ -13,7 +13,7 @@ module.exports = {
 			.map(perm => `- ${perm}`)
 			.join('\n')
 
-		const embed = new RichEmbed()
+		const embed = new MessageEmbed()
 			.setTitle('My permissions on this guild are:')
 			.setColor(0xff0000)
 			.setDescription(perms)
