@@ -145,20 +145,20 @@ client.on('message', async msg => {
 	}
 })
 
-client.on('voiceStateUpdate', (oldMember, newMember) => {
-	if (config[newMember.guild.id].log && config[newMember.guild.id].log.voice && config[newMember.guild.id].log.voice.length > 0) voiceLog(oldMember, newMember)
+client.on('voiceStateUpdate', (oldState, newState) => {
+	if (config[newState.guild.id].log && config[newState.guild.id].log.voice && config[newState.guild.id].log.voice.length > 0) voiceLog(oldState, newState)
 
-	if (oldMember.voiceChannelID && newMember.voiceChannelID) {
-		if (oldMember.voiceChannelID != newMember.voiceChannelID) {
+	if (oldState.channelID && newState.channelID) {
+		if (oldState.channelID != newState.channelID) {
 			// change
-			if (config[newMember.guild.id].autoVoice) autovoiceActivity(newMember.guild)
+			if (config[newState.guild.id].autoVoice) autovoiceActivity(newState.guild)
 		}
-	} else if (newMember.voiceChannelID) {
+	} else if (newState.channelID) {
 		//join
-		if (config[newMember.guild.id].autoVoice) autovoiceActivity(newMember.guild)
-	} else if (oldMember.voiceChannelID) {
+		if (config[newState.guild.id].autoVoice) autovoiceActivity(newState.guild)
+	} else if (oldState.channelID) {
 		//leave
-		if (config[newMember.guild.id].autoVoice) autovoiceActivity(oldMember.guild)
+		if (config[newState.guild.id].autoVoice) autovoiceActivity(oldState.guild)
 	}
 })
 
@@ -169,7 +169,7 @@ client.on('messageDelete', msg => {
 	if (config[msg.guild.id].log && config[msg.guild.id].log.msg && config[msg.guild.id].log.msg.length > 0) {
 		console.log('message delete')
 		for (channelID of config[msg.guild.id].log.msg) {
-			let channel = client.channels.get(channelID)
+			let channel = client.channels.cache.get(channelID)
 			if (!channel || !channel.permissionsFor(msg.guild.me).has('SEND_MESSAGES')) {
 				config[msg.guild.id].log.msg.splice(config[msg.guild.id].log.msg.indexOf(channelID), 1)
 				saveConfig()
@@ -201,7 +201,7 @@ client.on('messageDeleteBulk', col => {
 	if (config[msg.guild.id].log && config[msg.guild.id].log.msg && config[msg.guild.id].log.msg.length > 0) {
 		console.log('message delete bulk')
 		for (channelID of config[msg.guild.id].log.msg) {
-			let channel = client.channels.get(channelID)
+			let channel = client.channels.cache.get(channelID)
 			if (!channel || !channel.permissionsFor(msg.guild.me).has('SEND_MESSAGES')) {
 				config[msg.guild.id].log.msg.splice(config[msg.guild.id].log.msg.indexOf(channelID), 1)
 				saveConfig()
@@ -234,7 +234,7 @@ client.on('messageUpdate', (oldmsg, msg) => {
 	if (config[msg.guild.id].log && config[msg.guild.id].log.msg && config[msg.guild.id].log.msg.length > 0) {
 		console.log('message update')
 		for (channelID of config[msg.guild.id].log.msg) {
-			let channel = client.channels.get(channelID)
+			let channel = client.channels.cache.get(channelID)
 			if (!channel || !channel.permissionsFor(msg.guild.me).has('SEND_MESSAGES')) {
 				config[msg.guild.id].log.msg.splice(config[msg.guild.id].log.msg.indexOf(channelID), 1)
 				saveConfig()
@@ -264,7 +264,7 @@ client.on('messageUpdate', (oldmsg, msg) => {
 
 // #region voice functions
 async function autovoiceActivity(guild) {
-	let categoryChannel = guild.channels.get(config[guild.id].autoVoice)
+	let categoryChannel = guild.channels.cache.get(config[guild.id].autoVoice)
 
 	if (!categoryChannel.permissionsFor(guild.me).has('MANAGE_CHANNELS')) {
 		console.log('autovoice perms fail'.red, err)
@@ -312,40 +312,40 @@ async function autovoiceActivity(guild) {
 		}
 	}
 }
-function voiceLog(oldMember, newMember) {
-	console.log('voice log')
-	var guild = newMember.guild
+function voiceLog(oldState, newState) {
+	// console.log('voice log')
+	var guild = newState.guild
 	var activity = 'unknown'
 	var vchannel = 'unknown'
-	if (oldMember.voiceChannelID && newMember.voiceChannelID && oldMember.voiceChannelID != newMember.voiceChannelID) {
+	if (oldState.channelID && newState.channelID && oldState.channelID != newState.channelID) {
 		activity = 'switch'
 		vchannel = {
-			old: oldMember.voiceChannel,
-			new: newMember.voiceChannel,
+			old: oldState.channel,
+			new: newState.channel,
 		}
-	} else if (newMember.voiceChannelID) {
+	} else if (newState.channelID) {
 		activity = 'join'
-		vchannel = newMember.voiceChannel
-	} else if (oldMember.voiceChannelID) {
+		vchannel = newState.channel
+	} else if (oldState.channelID) {
 		activity = 'leave'
-		vchannel = oldMember.voiceChannel
+		vchannel = oldState.channel
 	}
 	for (channelID of config[guild.id].log.voice) {
-		let channel = client.channels.get(channelID)
+		let channel = client.channels.cache.get(channelID)
 		if (!channel || !channel.permissionsFor(guild.me).has('SEND_MESSAGES')) {
 			config[guild.id].log.voice.splice(config[guild.id].log.voice.indexOf(channelID), 1)
 			saveConfig()
 			continue
 		}
 		if (!channel.permissionsFor(guild.me).has('EMBED_LINKS')) {
-			channel.send(`Turn on embed links permission for better messages\nUser: ${newMember}\nActivity: ${activity}`).catch(err => console.error(err))
+			channel.send(`Turn on embed links permission for better messages\nUser: ${newState.member}\nActivity: ${activity}`).catch(err => console.error(err))
 			continue
 		}
 		var embed = new Discord.MessageEmbed()
 			.setTitle(`Voice ${activity}`)
 			.setColor(0x0000ff)
 			// .setDescription()
-			.addField('User', newMember.toString(), true)
+			.addField('User', newState.member.toString(), true)
 			.setFooter(new Date().toLocaleString('en-GB'))
 		if (vchannel.old && vchannel.new) {
 			embed.addField('Old Channel', vchannel.old.toString(), true).addField('New Channel', vchannel.new.toString(), true)

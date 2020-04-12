@@ -34,7 +34,7 @@ module.exports = {
 							'Message log:',
 							log.msg.length > 0
 								? log.msg.map(chID => {
-										let channel = msg.channel.guild.channels.get(chID)
+										let channel = msg.channel.guild.channels.cache.get(chID)
 										return channel ? channel.toString() : 'deleted channel - will be cleared on next attempt to send log'
 								  })
 								: 'no channels'
@@ -43,7 +43,7 @@ module.exports = {
 							'Voice log:',
 							log.voice.length > 0
 								? log.voice.map(chID => {
-										let channel = msg.channel.guild.channels.get(chID)
+										let channel = msg.channel.guild.channels.cache.get(chID)
 										return channel ? channel.toString() : 'deleted channel - will be cleared on next attempt to send log'
 								  })
 								: 'no channels'
@@ -52,7 +52,7 @@ module.exports = {
 							'Moderation log:',
 							log.mod.length > 0
 								? log.mod.map(chID => {
-										let channel = msg.channel.guild.channels.get(chID)
+										let channel = msg.channel.guild.channels.cache.get(chID)
 										return channel ? channel.toString() : 'deleted channel - will be cleared on next attempt to send log'
 								  })
 								: 'no channels'
@@ -64,21 +64,21 @@ module.exports = {
 						`Turn on embed links permission for better messages\nMessage: ${
 							log.msg.length > 0
 								? log.msg.map(chID => {
-										let channel = msg.channel.guild.channels.get(chID)
+										let channel = msg.channel.guild.channels.cache.get(chID)
 										return channel ? channel.toString() : 'deleted channel - will be cleared on next attempt to send log'
 								  })
 								: 'no channels'
 						}\nVoice: ${
 							log.voice.length > 0
 								? log.voice.map(chID => {
-										let channel = voice.channel.guild.channels.get(chID)
+										let channel = voice.channel.guild.channels.cache.get(chID)
 										return channel ? channel.toString() : 'deleted channel - will be cleared on next attempt to send log'
 								  })
 								: 'no channels'
 						}\nModeration: ${
 							log.mod.length > 0
 								? log.mod.map(chID => {
-										let channel = mod.channel.guild.channels.get(chID)
+										let channel = mod.channel.guild.channels.cache.get(chID)
 										return channel ? channel.toString() : 'deleted channel - will be cleared on next attempt to send log'
 								  })
 								: 'no channels'
