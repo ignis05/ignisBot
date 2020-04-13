@@ -1,8 +1,11 @@
 # ignisBot
-discord bot running on node and discord.js<br>
+Discord bot running on node and discord.js<br>
 
 #### First launch:
-Error will be thrown, and you will need to specify bot token in ./data/token.json file
+install packages with `npm i`<br>
+start bot with `node bot.js`<br>
+Error will be thrown, and you will need to paste bot token to ./data/token.json file.<br>
+Now bot can be started again properly.
 
 #### Node version:
-Bot requires node.js package v10.16.3 or later
+Bot requires node.js package v12.16.2 or later
