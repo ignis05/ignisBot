@@ -51,8 +51,6 @@ const commands = fetchCommands()
 
 client.on('ready', () => {
 	client.user.setActivity('anthropomorphized minors', { type: 'WATCHING' })
-	console.log("I'm alive!".rainbow)
-	console.log('Logged in as ' + client.user.tag.green)
 	if (client.user.username == 'ignisBot - debug version') client.user.setActivity('Might be unstable', { type: 'PLAYING' })
 	client.users.fetch(ignisID).then(ignis => {
 		ignis.send("I'm alive!")
@@ -61,7 +59,6 @@ client.on('ready', () => {
 
 client.on('guildCreate', guild => {
 	if (guild.available) {
-		console.log(`Joined guild ${guild.name} (${guild.id})`.rainbow)
 		const defaultChannel = guild.channels.find(channel => channel.permissionsFor(guild.me).has('SEND_MESSAGES') && channel.type == 'text')
 		defaultChannel.send('use `!help`')
 		client.users.fetch(ignisID).then(ignis => {
@@ -93,7 +90,6 @@ client.on('message', async msg => {
 
 	//priv msgs
 	if (!msg.guild && commands.dm && commands.dm.length > 0) {
-		console.log('recieved command '.blue + msg.content.reverse + ' from '.blue + msg.author.tag.reverse)
 		let cont = msg.content.toLowerCase()
 		// strip prefixes
 		cont = cont.replace(/\W*/, '')
@@ -102,7 +98,6 @@ client.on('message', async msg => {
 		if (cmd) {
 			cmd.run(msg)
 		} else {
-			console.log('Command unknown'.yellow)
 			msg.channel.send('Command unknown.\nType `help` for help')
 		}
 		return
@@ -110,7 +105,6 @@ client.on('message', async msg => {
 
 	// if bot is not enabled on this guild
 	if (!config[msg.guild.id]) {
-		console.log('activating bot for guild: '.green + msg.guild.id.greenRev)
 		client.users.fetch(ignisID).then(ignis => {
 			ignis.send(`${ignis} - bot was just activated on new guild ${msg.guild.name}`)
 		})
@@ -125,21 +119,18 @@ client.on('message', async msg => {
 	if (msg.content.charAt(0) == config[msg.guild.id].prefix) {
 		// guild permissions check
 		if (!msg.channel.permissionsFor(msg.guild.me).has('SEND_MESSAGES')) {
-			console.log('Failed to send reponse to channel '.red + msg.channel.name.redRev + ' on guild '.red + msg.guild.name.redRev + ' - insuffiecient permissions'.red)
 			return
 		}
 
 		var command = msg.content.split('')
 		command.shift()
 		command = command.join('')
-		console.log('recieved command '.blue + command.reverse + ' from '.blue + msg.author.tag.reverse)
 		command = command.split(' ')[0].toLowerCase()
 
 		let cmd = commands.text.find(cmd => cmd.name == command || cmd.aliases.includes(command))
 		if (cmd) {
 			cmd.run(msg)
 		} else {
-			console.log('Command unknown'.yellow)
 			msg.channel.send(`Command unknown.\nType \`${config[msg.guild.id].prefix}help\` for help`)
 		}
 	}
@@ -167,7 +158,6 @@ client.on('messageDelete', msg => {
 	if (!msg.guild) return
 	if (!config[msg.guild.id]) return
 	if (config[msg.guild.id].log && config[msg.guild.id].log.msg && config[msg.guild.id].log.msg.length > 0) {
-		console.log('message delete')
 		for (channelID of config[msg.guild.id].log.msg) {
 			let channel = client.channels.cache.get(channelID)
 			if (!channel || !channel.permissionsFor(msg.guild.me).has('SEND_MESSAGES')) {
@@ -199,7 +189,6 @@ client.on('messageDeleteBulk', col => {
 	if (!msg.guild) return
 	if (!config[msg.guild.id]) return
 	if (config[msg.guild.id].log && config[msg.guild.id].log.msg && config[msg.guild.id].log.msg.length > 0) {
-		console.log('message delete bulk')
 		for (channelID of config[msg.guild.id].log.msg) {
 			let channel = client.channels.cache.get(channelID)
 			if (!channel || !channel.permissionsFor(msg.guild.me).has('SEND_MESSAGES')) {
@@ -228,7 +217,6 @@ client.on('messageUpdate', (oldmsg, msg) => {
 	if (msg.author.bot) return
 	if (!config[msg.guild.id]) return
 	if (config[msg.guild.id].log && config[msg.guild.id].log.msg && config[msg.guild.id].log.msg.length > 0) {
-		console.log('message update')
 		for (channelID of config[msg.guild.id].log.msg) {
 			let channel = client.channels.cache.get(channelID)
 			if (!channel || !channel.permissionsFor(msg.guild.me).has('SEND_MESSAGES')) {
@@ -256,12 +244,176 @@ client.on('messageUpdate', (oldmsg, msg) => {
 })
 //#endregion msg log
 
+// #region mod log
+client.on('guildMemberAdd', member => {
+	const guildID = member.guild.id
+	if (!config[guildID]) return
+	if (config[guildID].log && config[guildID].log.mod && config[guildID].log.mod.length > 0) {
+		for (channelID of config[guildID].log.mod) {
+			let channel = client.channels.cache.get(channelID)
+			if (!channel || !channel.permissionsFor(member.guild.me).has('SEND_MESSAGES')) {
+				config[guildID].log.mod.splice(config[guildID].log.mod.indexOf(channelID), 1)
+				saveConfig()
+				continue
+			}
+			if (!channel.permissionsFor(member.guild.me).has('EMBED_LINKS')) {
+				channel.send(`${member} has joined!`).catch(err => console.error(err))
+				continue
+			}
+			var embed = new Discord.MessageEmbed()
+				.setTitle('User joined')
+				.setColor(0x00ff00)
+				// .setDescription()
+				.addField('User', member.toString(), true)
+				.addField('Tag', member.user.tag, true)
+				.setFooter(new Date().toLocaleString('en-GB'))
+			channel.send(embed).catch(err => console.error(err))
+		}
+	}
+})
+client.on('guildMemberRemove', async member => {
+	const guildID = member.guild.id
+	if (!config[guildID]) return
+	if (config[guildID].log && config[guildID].log.mod && config[guildID].log.mod.length > 0) {
+		for (channelID of config[guildID].log.mod) {
+			let channel = client.channels.cache.get(channelID)
+			if (!channel || !channel.permissionsFor(member.guild.me).has('SEND_MESSAGES')) {
+				config[guildID].log.mod.splice(config[guildID].log.mod.indexOf(channelID), 1)
+				saveConfig()
+				continue
+			}
+			if (!channel.permissionsFor(member.guild.me).has('EMBED_LINKS')) {
+				channel.send(`${member} has left!`).catch(err => console.error(err))
+				continue
+			}
+
+			const ban_data = await member.guild.fetchAuditLogs({ type: 'MEMBER_BAN_ADD', limit: 1 }).catch(err => console.log(err))
+			if (ban_data && ban_data.entries.first()) {
+				const entry = ban_data.entries.first()
+				let now = Date.now() - 60000
+				if (entry.target.id == member.id && entry.createdTimestamp > now) {
+					// relevant ban entry found - ban log will be shown anyway
+					console.log('relevant ban entry found')
+					return
+				}
+			}
+
+			var embed = new Discord.MessageEmbed()
+				.setTitle('User left')
+				.setColor(0xff0000)
+				// .setDescription()
+				.addField('User', member.toString(), true)
+				.addField('Tag', member.user.tag, true)
+				.setFooter(new Date().toLocaleString('en-GB'))
+
+			const data = await member.guild.fetchAuditLogs({ type: 'MEMBER_KICK', limit: 1 }).catch(err => console.log(err))
+
+			if (data && data.entries.first()) {
+				const entry = data.entries.first()
+				let now = Date.now() - 60000
+				if (entry.target.id == member.id && entry.createdTimestamp > now) {
+					// relevant kick entry found
+					embed.addField('Executor', entry.executor.toString(), true).addField('Reason', entry.reason, true).setTitle('User was kicked')
+				}
+			}
+			if (!data) {
+				embed.addField('Info', 'User might have been kicked, but I need **VIEW_AUDIT_LOG** permission to check that', true)
+			}
+
+			channel.send(embed).catch(err => console.error(err))
+		}
+	}
+})
+client.on('guildBanAdd', async (guild, user) => {
+	const guildID = guild.id
+	if (!config[guildID]) return
+	if (config[guildID].log && config[guildID].log.mod && config[guildID].log.mod.length > 0) {
+		for (channelID of config[guildID].log.mod) {
+			let channel = client.channels.cache.get(channelID)
+			if (!channel || !channel.permissionsFor(guild.me).has('SEND_MESSAGES')) {
+				config[guildID].log.mod.splice(config[guildID].log.mod.indexOf(channelID), 1)
+				saveConfig()
+				continue
+			}
+
+			if (!channel.permissionsFor(guild.me).has('EMBED_LINKS')) {
+				channel.send(`${user} has been banned`).catch(err => console.error(err))
+				continue
+			}
+			const data = await guild.fetchAuditLogs({ type: 'MEMBER_BAN_ADD', limit: 1 }).catch(err => console.log(err))
+
+			var embed = new Discord.MessageEmbed()
+				.setTitle('User banned')
+				.setColor(0xff0000)
+				// .setDescription()
+				.addField('User', user.toString(), true)
+				.addField('Tag', user.tag, true)
+				.setFooter(new Date().toLocaleString('en-GB'))
+
+			if (!data) {
+				embed.addField('Info', '**VIEW_AUDIT_LOG** permission is required to fetch ban details', true)
+			} else {
+				const entry = data.entries.first()
+				let now = Date.now() - 60000
+				if (entry && entry.target.id == user.id && entry.createdTimestamp > now) {
+					embed.addField('Executor', entry.executor.toString(), true)
+					embed.addField('Reason', entry.reason, true)
+				} else {
+					embed.addField('Info', 'No relevant audit logs were found', true)
+				}
+			}
+			channel.send(embed).catch(err => console.error(err))
+		}
+	}
+})
+client.on('guildBanRemove', async (guild, user) => {
+	const guildID = guild.id
+	if (!config[guildID]) return
+	if (config[guildID].log && config[guildID].log.mod && config[guildID].log.mod.length > 0) {
+		for (channelID of config[guildID].log.mod) {
+			let channel = client.channels.cache.get(channelID)
+			if (!channel || !channel.permissionsFor(guild.me).has('SEND_MESSAGES')) {
+				config[guildID].log.mod.splice(config[guildID].log.mod.indexOf(channelID), 1)
+				saveConfig()
+				continue
+			}
+			if (!channel.permissionsFor(guild.me).has('EMBED_LINKS')) {
+				channel.send(`${user} has been unbanned`).catch(err => console.error(err))
+				continue
+			}
+			const data = await guild.fetchAuditLogs({ type: 'MEMBER_BAN_REMOVE', limit: 1 }).catch(err => console.log(err))
+
+			var embed = new Discord.MessageEmbed()
+				.setTitle('User unbanned')
+				.setColor(0x00ff00)
+				// .setDescription()
+				.addField('User', user.toString(), true)
+				.addField('Tag', user.tag, true)
+				.setFooter(new Date().toLocaleString('en-GB'))
+
+			if (!data) {
+				embed.addField('Info', '**VIEW_AUDIT_LOG** permission is required to fetch unban details', true)
+			} else {
+				const entry = data.entries.first()
+				let now = Date.now() - 60000
+				if (entry && entry.target.id == user.id && entry.createdTimestamp > now) {
+					console.log(entry)
+					embed.addField('Executor', entry.executor.toString(), true)
+				} else {
+					embed.addField('Info', 'No relevant audit logs were found', true)
+				}
+			}
+			channel.send(embed).catch(err => console.error(err))
+		}
+	}
+})
+// #endregion mod log
+
 // #region voice functions
 async function autovoiceActivity(guild) {
 	let categoryChannel = guild.channels.cache.get(config[guild.id].autoVoice)
 
 	if (!categoryChannel.permissionsFor(guild.me).has('MANAGE_CHANNELS')) {
-		console.log('autovoice perms fail'.red, err)
 		const defaultChannel = guild.channels.find(channel => channel.permissionsFor(guild.me).has('SEND_MESSAGES') && channel.type == 'text')
 		defaultChannel.send(`Unable to manage voice activity - permission 'MANAGE_CHANNEL' might have been revoked`).then(msg => msg.delete({ timeout: config[msg.guild.id].tempMsgTime, reason: 'Deleted temp message' }))
 	}
@@ -273,16 +425,13 @@ async function autovoiceActivity(guild) {
 	let emptycount = emptyChannels.length
 
 	if (emptycount == 0) {
-		// console.log("there are no empty channels");
 		await guild.channels
 			.create((voiceChannels.length + config[guild.id].autoVoiceFirstChannel).toString(), {
 				type: 'voice',
 				parent: config[guild.id].autoVoice,
 				reason: 'autovoice activity',
 			})
-			.catch(err => {
-				console.log('channel create fail'.red, err)
-			})
+			.catch(err => {})
 	} else if (emptycount > 1) {
 		let oneEmptySaved = false
 		let index = config[guild.id].autoVoiceFirstChannel
@@ -295,9 +444,7 @@ async function autovoiceActivity(guild) {
 					channel.setName(`${index++}`)
 					continue
 				}
-				channel.delete({ reason: 'autovoice activity' }).catch(err => {
-					console.log('channel delete fail'.red, err)
-				})
+				channel.delete({ reason: 'autovoice activity' }).catch(err => {})
 			}
 			// channel full
 			else {
@@ -307,7 +454,6 @@ async function autovoiceActivity(guild) {
 	}
 }
 function voiceLog(oldState, newState) {
-	// console.log('voice log')
 	var guild = newState.guild
 	var activity = 'unknown'
 	var vchannel = 'unknown'
