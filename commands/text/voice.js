@@ -109,11 +109,9 @@ function skip(msg, serverQueue) {
 }
 
 function stop(msg, serverQueue) {
-	msg.channel.send('Disconnecting')
+	msg.channel.send('Manually diconnected.')
 	serverQueue.songs = []
-	serverQueue.connection.dispatcher.end().catch(() => {
-		serverQueue.connection.disconnect()
-	})
+	serverQueue.connection.dispatcher.end()
 }
 
 function play(guild, song) {
@@ -142,7 +140,6 @@ function play(guild, song) {
 }
 
 function list(msg, serverQueue) {
-	console.log(serverQueue.songs)
 	if (!serverQueue) {
 		msg.channel.send('Queue is empty')
 		return
@@ -164,7 +161,7 @@ module.exports = {
 	name: 'voice',
 	aliases: ['music', 'song'],
 	desc: `used to play music from youtube`,
-	help: '`voice play <link / url>` - plays music from specified url or fetches first search result\nIf music is already playing adds it to queue instead.\n`voice skip` - skips current song\n`voice stop` - leaves voice channel and deletes queue\n\nBot will automatically leave channel once queue is emptied.',
+	help: '`voice play <link / url>` - plays music from specified url or fetches first search result\nIf music is already playing adds it to queue instead.\n`voice queue` - shows current song queue\n`voice skip [n]` - skips n-th song from playlist. If no valid n is given skips currently playing song\n`voice stop` - leaves voice channel and deletes queue\n\nBot will automatically leave channel once queue is emptied.',
 	run: async msg => {
 		let args = msg.content.split(' ')
 		args.shift()
