@@ -1,6 +1,7 @@
 var { formatTime } = require('../../res/Helpers')
 const ytdl = require('ytdl-core')
 const ytsr = require('ytsr')
+const { MessageEmbed } = require('discord.js')
 
 const queue = new Map()
 
@@ -57,12 +58,17 @@ async function execute(msg, serverQueue) {
 
 		queue.set(msg.guild.id, queueContruct)
 
+		if (queueContruct.songs.length > 20) {
+			msg.channel.send('Queue is full')
+			return
+		}
+
 		queueContruct.songs.push(song)
 
 		try {
 			var connection = await voiceChannel.join()
 			queueContruct.connection = connection
-			play(msg, queueContruct.songs[0])
+			play(msg.guild, queueContruct.songs[0])
 		} catch (err) {
 			console.log(err)
 			queue.delete(msg.guild.id)
@@ -70,14 +76,36 @@ async function execute(msg, serverQueue) {
 		}
 	} else {
 		serverQueue.songs.push(song)
-		return msg.channel.send(`${song.title} has been added to the queue!`)
+		if (!msg.channel.permissionsFor(msg.guild.me).has('EMBED_LINKS')) {
+			msg.channel.send(`${song.title} has been added to the queue!`)
+		} else {
+			var embed = new MessageEmbed().setTitle('**Song added to queue**').setColor(0x00ff00).setImage(song.thumbnail).addField('Title', song.title, true).addField('Url', song.url, true).addField('Length', song.length, true)
+			msg.channel.send(embed)
+		}
 	}
 }
 
 function skip(msg, serverQueue) {
 	if (!msg.member.voice.channel) return msg.channel.send('You have to be in a voice channel to skip the music')
 	if (!serverQueue) return msg.channel.send('Queue is already empty')
-	serverQueue.connection.dispatcher.end()
+	let nr = parseInt(msg.content.split(' ')[2])
+	if (!isNaN(nr) && serverQueue.songs[nr] != undefined) {
+		serverQueue.songs.splice(nr, 1)
+
+		if (!msg.channel.permissionsFor(msg.guild.me).has('EMBED_LINKS')) {
+			msg.channel.send('```Skipped song ' + nr + '\n' + JSON.stringify(serverQueue.songs, null, 4) + '```')
+		} else {
+			var embed = new MessageEmbed().setTitle(`**Skipped song ${nr}**`).setColor(0x0000ff)
+			var i = 0
+			for (let song of serverQueue.songs) {
+				embed.addField(`${i} - '${song.title}' [${song.length}]`, `${song.url}\n`)
+				i++
+			}
+			msg.channel.send(embed)
+		}
+	} else {
+		serverQueue.connection.dispatcher.end()
+	}
 }
 
 function stop(msg, serverQueue) {
@@ -88,12 +116,12 @@ function stop(msg, serverQueue) {
 	})
 }
 
-function play(msg, song) {
-	const serverQueue = queue.get(msg.guild.id)
+function play(guild, song) {
+	const serverQueue = queue.get(guild.id)
 	if (!song) {
-		msg.channel.send('Queue finished. Disconnecting.')
+		serverQueue.textChannel.send('Queue finished. Disconnecting.')
 		serverQueue.voiceChannel.leave()
-		queue.delete(msg.guild.id)
+		queue.delete(guild.id)
 		return
 	}
 
@@ -101,11 +129,16 @@ function play(msg, song) {
 		.play(ytdl(song.url))
 		.on('finish', () => {
 			serverQueue.songs.shift()
-			play(msg, serverQueue.songs[0])
+			play(guild, serverQueue.songs[0])
 		})
 		.on('error', error => console.error(error))
 	dispatcher.setVolumeLogarithmic(serverQueue.volume / 5)
-	serverQueue.textChannel.send(`Now playing: **${song.title}**`)
+	if (!serverQueue.textChannel.permissionsFor(guild.me).has('EMBED_LINKS')) {
+		serverQueue.textChannel.send(`Now playing: **${song.title}**`)
+	} else {
+		var embed = new MessageEmbed().setTitle('**Now playing**').setColor(0x00ffff).setImage(song.thumbnail).addField('Title', song.title, true).addField('Url', song.url, true).addField('Length', song.length, true)
+		serverQueue.textChannel.send(embed)
+	}
 }
 
 function list(msg, serverQueue) {
@@ -114,7 +147,17 @@ function list(msg, serverQueue) {
 		msg.channel.send('Queue is empty')
 		return
 	}
-	msg.channel.send('```' + JSON.stringify(serverQueue.songs, null, 4) + '```', { embed: null })
+	if (!msg.channel.permissionsFor(msg.guild.me).has('EMBED_LINKS')) {
+		msg.channel.send('```' + JSON.stringify(serverQueue.songs, null, 4) + '```')
+	} else {
+		var embed = new MessageEmbed().setTitle('**Song queue**').setColor(0x0000ff)
+		var i = 0
+		for (let song of serverQueue.songs) {
+			embed.addField(`${i} - '${song.title}' [${song.length}]`, `${song.url}\n`)
+			i++
+		}
+		msg.channel.send(embed)
+	}
 }
 
 module.exports = {
@@ -134,6 +177,7 @@ module.exports = {
 				skip(msg, serverQueue)
 				break
 			case 'stop':
+			case 'kys':
 			case 'leave':
 				stop(msg, serverQueue)
 				break
