@@ -182,6 +182,10 @@ module.exports = {
 			case 'list':
 				list(msg, serverQueue)
 				break
+			default:
+				msg.channel.send("Command unknown - use `!help voice` to see available commands")
+				break
+
 		}
 	},
 }
