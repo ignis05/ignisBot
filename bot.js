@@ -274,6 +274,15 @@ client.on('guildMemberAdd', member => {
 			channel.send(embed).catch(err => console.error(err))
 		}
 	}
+	// autorole
+	if (config[guildID].autorole) {
+		member.roles
+			.add(config[guildID].autorole)
+			.catch(err => console.log(err))
+			.then(() => {
+				console.log('added autorole')
+			})
+	}
 })
 client.on('guildMemberRemove', async member => {
 	const guildID = member.guild.id
