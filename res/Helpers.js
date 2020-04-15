@@ -2,7 +2,20 @@ config = require('../data/config.json')
 const fs = require('fs')
 
 module.exports = {
-	saveConfig: function(channel, reply) {
+	formatTime: function (time) {
+		var hrs = ~~(time / 3600)
+		var mins = ~~((time % 3600) / 60)
+		var secs = ~~time % 60
+
+		var ret = ''
+		if (hrs > 0) {
+			ret += '' + hrs + ':' + (mins < 10 ? '0' : '')
+		}
+		ret += '' + mins + ':' + (secs < 10 ? '0' : '')
+		ret += '' + secs
+		return ret
+	},
+	saveConfig: function (channel, reply) {
 		return new Promise((res, rej) => {
 			console.log('saving config')
 			fs.writeFile('./data/config.json', JSON.stringify(config, null, 2), err => {
@@ -19,7 +32,7 @@ module.exports = {
 			})
 		})
 	},
-	fetchCommands: function(log) {
+	fetchCommands: function (log) {
 		if (log === undefined) log = true
 		const commands = {}
 		if (log) console.log('Loading commands from files:'.accent)

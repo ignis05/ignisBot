@@ -11,6 +11,6 @@ module.exports = {
 			return
 		}
 		let cnt = msg.content.split(' ').slice(1).join(' ')
-		msg.channel.send(cnt)
+		msg.channel.send(cnt, { disableMentions: 'everyone' })
 	},
 }
