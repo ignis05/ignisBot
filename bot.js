@@ -169,6 +169,7 @@ client.on('messageDelete', msg => {
 				channel.send(`Turn on embed links permission for better messages\nAuthor: ${msg.author.tag}\nContent: ${msg.cleanContent}`).catch(err => console.error(err))
 				continue
 			}
+			console.log(msg.attachments.array())
 			var embed = new Discord.MessageEmbed()
 				.setTitle('Message Deleted')
 				.setColor(0xff0000)
@@ -179,6 +180,9 @@ client.on('messageDelete', msg => {
 				.addField('Last edited', msg.editedAt ? msg.editedAt.toLocaleString('en-GB') : 'never', true)
 				.addField('Content', msg.content, true)
 				.setFooter(new Date().toLocaleString('en-GB'))
+			for ({ proxyURL } of msg.attachments.array()) {
+				embed.addField('Attachment', proxyURL, true)
+			}
 			channel.send(embed).catch(err => console.error(err))
 		}
 	}
