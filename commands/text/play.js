@@ -92,7 +92,6 @@ function play(guild, song) {
 	if (!song) {
 		serverQueue.voiceChannel.leave()
 		queue.delete(guild.id)
-		message.channel.send('Queue finished, disconnecting')
 		return
 	}
 
