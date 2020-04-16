@@ -21,6 +21,7 @@ async function execute(msg, serverQueue) {
 	if (!song) {
 		return msg.channel.send('No matching results found')
 	}
+	song.user = msg.author
 
 	if (!serverQueue) {
 		const queueContruct = {
@@ -121,7 +122,7 @@ function play(guild, song) {
 	if (!serverQueue.textChannel.permissionsFor(guild.me).has('EMBED_LINKS')) {
 		serverQueue.textChannel.send(`Now playing: **${song.title}**`)
 	} else {
-		var embed = new MessageEmbed().setTitle('**Now playing**').setColor(0x00ffff).setImage(song.thumbnail).addField('Title', song.title, true).addField('Url', song.url, true).addField('Length', song.length, true)
+		var embed = new MessageEmbed().setTitle('**Now playing**').setColor(0x00ffff).setImage(song.thumbnail).addField('Title', song.title, true).addField('Url', song.url, true).addField('Length', song.length, true).addField('Requested by', song.user.toString(), true)
 		serverQueue.textChannel.send(embed)
 	}
 }
@@ -193,6 +194,7 @@ module.exports = {
 				break
 			case 'queue':
 			case 'list':
+			case 'playlist':
 				list(serverQueue, msg)
 				break
 			case 'playnow':
@@ -204,6 +206,7 @@ module.exports = {
 					temp.splice(0, 2)
 					fetchYT(temp.join(' ')).then(song => {
 						if (!song) return msg.channel.send('No results found')
+						song.user = msg.author
 						let now = serverQueue.songs.shift()
 						serverQueue.songs.unshift(song)
 						serverQueue.songs.unshift(now)
@@ -234,6 +237,19 @@ module.exports = {
 					msg.channel.send('Queue is empty')
 				}
 				break
+			case 'switch':
+			case 'channel':
+				break
+			case 'volume':
+			// if (!serverQueue || !serverQueue.connection) return msg.channel.send('Queue is already empty')
+			// if (!msg.member.voice.channel || msg.member.voice.channel.id != serverQueue.voiceChannel.id) return msg.channel.send("You have to be in bot's voice channel to adjust voice")
+			// let volume = parseInt(msg.content.split(' ')[2])
+			// if (volume !== 0 && !isNaN(volume) && serverQueue.songs[volume] != undefined) {
+			// 	serverQueue.volume = volume
+			// } else {
+			// 	serverQueue.volume = 5
+			// }
+			// break
 			default:
 				msg.channel.send('Command unknown - use `!help voice` to see available commands')
 				break
