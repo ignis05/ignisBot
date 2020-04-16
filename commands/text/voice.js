@@ -7,8 +7,7 @@ const queue = new Map()
 
 async function execute(msg, serverQueue) {
 	var args = msg.content.split(' ')
-	args.shift()
-	args.shift()
+	args.splice(0, 2)
 	var songarg = args.join(' ')
 
 	const voiceChannel = msg.member.voice.channel
@@ -18,33 +17,10 @@ async function execute(msg, serverQueue) {
 		return msg.channel.send("I don't have permissions CONNECT and SPEAK in this voice channel")
 	}
 
-	const songInfo = await ytdl.getBasicInfo(songarg).catch(err => {})
-
-	var song
-
-	if (!songInfo) {
-		const search = await ytsr(songarg, { limit: 1 }).catch(err => {})
-		if (search.items.length < 1) return
-
-		const item = search.items[0]
-		console.log(item)
-
-		song = {
-			title: item.title,
-			url: item.link,
-			length: item.duration,
-			thumbnail: item.thumbnail.split('?')[0],
-		}
-	} else {
-		song = {
-			title: songInfo.title,
-			url: songInfo.video_url,
-			length: formatTime(songInfo.length_seconds),
-			thumbnail: `https://i.ytimg.com/vi/${songInfo.video_id}/hqdefault.jpg`,
-		}
+	var song = await fetchYT(songarg)
+	if (!song) {
+		return msg.channel.send('No matching results found')
 	}
-
-	console.log(song)
 
 	if (!serverQueue) {
 		const queueContruct = {
@@ -85,33 +61,44 @@ async function execute(msg, serverQueue) {
 	}
 }
 
-function skip(msg, serverQueue) {
-	if (!msg.member.voice.channel) return msg.channel.send('You have to be in a voice channel to skip the music')
-	if (!serverQueue) return msg.channel.send('Queue is already empty')
-	let nr = parseInt(msg.content.split(' ')[2])
-	if (!isNaN(nr) && serverQueue.songs[nr] != undefined) {
-		serverQueue.songs.splice(nr, 1)
+function fetchYT(resolvable) {
+	return new Promise(async (resolve, reject) => {
+		const songInfo = await ytdl.getBasicInfo(resolvable).catch(err => {
+			console.log('Url fetch failed')
+		})
 
-		if (!msg.channel.permissionsFor(msg.guild.me).has('EMBED_LINKS')) {
-			msg.channel.send('```Skipped song ' + nr + '\n' + JSON.stringify(serverQueue.songs, null, 4) + '```')
-		} else {
-			var embed = new MessageEmbed().setTitle(`**Skipped song ${nr}**`).setColor(0x0000ff)
-			var i = 0
-			for (let song of serverQueue.songs) {
-				embed.addField(`${i} - '${song.title}' [${song.length}]`, `${song.url}\n`)
-				i++
+		var song
+
+		if (!songInfo) {
+			const filters = await ytsr.getFilters(resolvable)
+			var filter = filters.get('Type').find(o => o.name === 'Video')
+			const search = await ytsr(resolvable, { limit: 1, nextpageRef: filter.ref }).catch(err => {})
+			if (!search || search.items.length < 1) {
+				console.log('YT search failed')
+				return resolve(null)
 			}
-			msg.channel.send(embed)
-		}
-	} else {
-		serverQueue.connection.dispatcher.end()
-	}
-}
 
-function stop(msg, serverQueue) {
-	msg.channel.send('Manually diconnected.')
-	serverQueue.songs = []
-	serverQueue.connection.dispatcher.end()
+			const item = search.items[0]
+			console.log(item)
+
+			song = {
+				title: item.title,
+				url: item.link,
+				length: item.duration,
+				thumbnail: item.thumbnail.split('?')[0],
+			}
+		} else {
+			song = {
+				title: songInfo.title,
+				url: songInfo.video_url,
+				length: formatTime(songInfo.length_seconds),
+				thumbnail: `https://i.ytimg.com/vi/${songInfo.video_id}/hqdefault.jpg`,
+			}
+		}
+
+		console.log(song)
+		resolve(song)
+	})
 }
 
 function play(guild, song) {
@@ -139,24 +126,6 @@ function play(guild, song) {
 	}
 }
 
-function list(msg, serverQueue) {
-	if (!serverQueue) {
-		msg.channel.send('Queue is empty')
-		return
-	}
-	if (!msg.channel.permissionsFor(msg.guild.me).has('EMBED_LINKS')) {
-		msg.channel.send('```' + JSON.stringify(serverQueue.songs, null, 4) + '```')
-	} else {
-		var embed = new MessageEmbed().setTitle('**Song queue**').setColor(0x0000ff)
-		var i = 0
-		for (let song of serverQueue.songs) {
-			embed.addField(`${i} - '${song.title}' [${song.length}]`, `${song.url}\n`)
-			i++
-		}
-		msg.channel.send(embed)
-	}
-}
-
 module.exports = {
 	name: 'voice',
 	aliases: ['music', 'song'],
@@ -171,21 +140,89 @@ module.exports = {
 				execute(msg, serverQueue)
 				break
 			case 'skip':
-				skip(msg, serverQueue)
+				if (!msg.member.voice.channel) return msg.channel.send('You have to be in a voice channel to skip the music')
+				if (!serverQueue) return msg.channel.send('Queue is already empty')
+				let nr = parseInt(msg.content.split(' ')[2])
+				if (nr !== 0 && !isNaN(nr) && serverQueue.songs[nr] != undefined) {
+					serverQueue.songs.splice(nr, 1)
+
+					if (!msg.channel.permissionsFor(msg.guild.me).has('EMBED_LINKS')) {
+						msg.channel.send('```Skipped song ' + nr + '\n' + JSON.stringify(serverQueue.songs, null, 4) + '```')
+					} else {
+						var embed = new MessageEmbed().setTitle(`**Skipped song ${nr}**`).setColor(0x0000ff)
+						var i = 0
+						for (let song of serverQueue.songs) {
+							embed.addField(`${i} - '${song.title}' [${song.length}]`, `${song.url}\n`)
+							i++
+						}
+						msg.channel.send(embed)
+					}
+				} else {
+					serverQueue.connection.dispatcher.end()
+				}
 				break
 			case 'stop':
 			case 'kys':
 			case 'leave':
-				stop(msg, serverQueue)
+				if (serverQueue) {
+					msg.channel.send('Manually diconnected.')
+					serverQueue.songs = []
+					serverQueue.connection.dispatcher.end()
+				} else {
+					msg.channel.send('No server queue found. If bot is still connected it will leave automatically in a moment')
+				}
+
 				break
 			case 'queue':
 			case 'list':
-				list(msg, serverQueue)
+				if (!serverQueue) {
+					msg.channel.send('Queue is empty')
+					return
+				}
+				if (!msg.channel.permissionsFor(msg.guild.me).has('EMBED_LINKS')) {
+					msg.channel.send('```' + JSON.stringify(serverQueue.songs, null, 4) + '```')
+				} else {
+					var embed = new MessageEmbed().setTitle('**Song queue**').setColor(0x0000ff)
+					var i = 0
+					for (let song of serverQueue.songs) {
+						embed.addField(`${i} - '${song.title}' [${song.length}]`, `${song.url}\n`)
+						i++
+					}
+					msg.channel.send(embed)
+				}
+				break
+			case 'playnow':
+			case 'forceplay':
+				if (!serverQueue) {
+					execute(msg, serverQueue)
+				} else {
+					let temp = msg.content.split(' ')
+					temp.splice(0, 2)
+					fetchYT(temp.join(' ')).then(song => {
+						if (!song) return msg.channel.send('No results found')
+						let now = serverQueue.songs.shift()
+						serverQueue.songs.unshift(song)
+						serverQueue.songs.unshift(now)
+						serverQueue.connection.dispatcher.end()
+					})
+				}
+				break
+			case 'search':
+				let temp = msg.content.split(' ')
+				temp.splice(0, 2)
+				fetchYT(temp.join(' ')).then(song => {
+					if (!song) return msg.channel.send('No results found')
+					if (!msg.channel.permissionsFor(msg.guild.me).has('EMBED_LINKS')) {
+						msg.channel.send(`Search result: **${song.title}**`)
+					} else {
+						var embed = new MessageEmbed().setTitle('**Search result**').setColor(0x00ffff).setImage(song.thumbnail).addField('Title', song.title, true).addField('Url', song.url, true).addField('Length', song.length, true)
+						msg.channel.send(embed)
+					}
+				})
 				break
 			default:
-				msg.channel.send("Command unknown - use `!help voice` to see available commands")
+				msg.channel.send('Command unknown - use `!help voice` to see available commands')
 				break
-
 		}
 	},
 }
