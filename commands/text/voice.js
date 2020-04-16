@@ -241,15 +241,15 @@ module.exports = {
 			case 'channel':
 				break
 			case 'volume':
-			// if (!serverQueue || !serverQueue.connection) return msg.channel.send('Queue is already empty')
-			// if (!msg.member.voice.channel || msg.member.voice.channel.id != serverQueue.voiceChannel.id) return msg.channel.send("You have to be in bot's voice channel to adjust voice")
-			// let volume = parseInt(msg.content.split(' ')[2])
-			// if (volume !== 0 && !isNaN(volume) && serverQueue.songs[volume] != undefined) {
-			// 	serverQueue.volume = volume
-			// } else {
-			// 	serverQueue.volume = 5
-			// }
-			// break
+				// if (!serverQueue || !serverQueue.connection) return msg.channel.send('Queue is already empty')
+				// if (!msg.member.voice.channel || msg.member.voice.channel.id != serverQueue.voiceChannel.id) return msg.channel.send("You have to be in bot's voice channel to adjust voice")
+				// let volume = parseInt(msg.content.split(' ')[2])
+				// if (volume !== 0 && !isNaN(volume) && serverQueue.songs[volume] != undefined) {
+				// 	serverQueue.volume = volume
+				// } else {
+				// 	serverQueue.volume = 5
+				// }
+				break
 			default:
 				msg.channel.send('Command unknown - use `!help voice` to see available commands')
 				break
