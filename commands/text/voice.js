@@ -126,6 +126,24 @@ function play(guild, song) {
 	}
 }
 
+function list(serverQueue, msg) {
+	if (!serverQueue) {
+		msg.channel.send('Queue is empty')
+		return
+	}
+	if (!msg.channel.permissionsFor(msg.guild.me).has('EMBED_LINKS')) {
+		msg.channel.send('```' + JSON.stringify(serverQueue.songs, null, 4) + '```')
+	} else {
+		var embed = new MessageEmbed().setTitle('**Song queue**').setColor(0x0000ff)
+		var i = 0
+		for (let song of serverQueue.songs) {
+			embed.addField(`${i} - '${song.title}' [${song.length}]`, `${song.url}\n`)
+			i++
+		}
+		msg.channel.send(embed)
+	}
+}
+
 module.exports = {
 	name: 'voice',
 	aliases: ['music', 'song'],
@@ -175,21 +193,7 @@ module.exports = {
 				break
 			case 'queue':
 			case 'list':
-				if (!serverQueue) {
-					msg.channel.send('Queue is empty')
-					return
-				}
-				if (!msg.channel.permissionsFor(msg.guild.me).has('EMBED_LINKS')) {
-					msg.channel.send('```' + JSON.stringify(serverQueue.songs, null, 4) + '```')
-				} else {
-					var embed = new MessageEmbed().setTitle('**Song queue**').setColor(0x0000ff)
-					var i = 0
-					for (let song of serverQueue.songs) {
-						embed.addField(`${i} - '${song.title}' [${song.length}]`, `${song.url}\n`)
-						i++
-					}
-					msg.channel.send(embed)
-				}
+				list(serverQueue, msg)
 				break
 			case 'playnow':
 			case 'forceplay':
@@ -219,6 +223,16 @@ module.exports = {
 						msg.channel.send(embed)
 					}
 				})
+				break
+			case 'shuffle':
+				if (serverQueue) {
+					let now = serverQueue.songs.shift()
+					serverQueue.songs.sort(() => Math.random() - 0.5)
+					serverQueue.songs.unshift(now)
+					list(serverQueue, msg)
+				} else {
+					msg.channel.send('Queue is empty')
+				}
 				break
 			default:
 				msg.channel.send('Command unknown - use `!help voice` to see available commands')
