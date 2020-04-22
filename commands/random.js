@@ -32,10 +32,10 @@ module.exports = {
 				let rand = Math.floor(Math.random() * (max + 1 - min)) + min
 				str += `\n${rand}`
 			}
-			msg.channel.send(`Your random numbers <${min}, ${max}>:` + str)
+			msg.channel.send(`Here are your random numbers picked from: **< ${min}, ${max} >**:` + str)
 		} else {
 			let rand = Math.floor(Math.random() * (max + 1 - min)) + min
-			msg.channel.send(`Your random number <${min}, ${max}>:\n${rand}`)
+			msg.channel.send(`Here is your random number picked from: **< ${min}, ${max} >**:\n${rand}`)
 		}
 	},
 }

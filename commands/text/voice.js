@@ -136,11 +136,8 @@ function list(serverQueue, msg) {
 		msg.channel.send('```' + JSON.stringify(serverQueue.songs, null, 4) + '```')
 	} else {
 		var embed = new MessageEmbed().setTitle('**Song queue**').setColor(0x0000ff)
-		var i = 0
-		for (let song of serverQueue.songs) {
-			embed.addField(`${i} - '${song.title}' [${song.length}]`, `${song.url}\n`)
-			i++
-		}
+		var str = serverQueue.songs.reduce((acc, song, i) => acc + `${i} - [${song.title}](${song.url}) [${song.length}] - requested by ${song.user}\n`, '')
+		embed.addField('Queue', str)
 		msg.channel.send(embed)
 	}
 }
@@ -149,7 +146,7 @@ module.exports = {
 	name: 'voice',
 	aliases: ['music', 'song'],
 	desc: `used to play music from youtube`,
-	help: '`voice play <link / url>` - plays music from specified url or fetches first search result\nIf music is already playing adds it to queue instead.\n`voice queue` - shows current song queue\n`voice skip [n]` - skips n-th song from playlist. If no valid n is given skips currently playing song\n`voice stop` - leaves voice channel and deletes queue\n\nBot will automatically leave channel once queue is emptied.',
+	help: '`voice play <link / url>` - plays music from specified url or fetches first search result\nIf music is already playing adds it to queue instead.\n`voice queue` - shows current song queue\n`voice skip [n]` - skips n-th song from playlist. If no valid n is given skips currently playing song\n`voice stop` - leaves voice channel and deletes queue\n`voice playnow <link / url>` - Adds song to the front of the queue and skips current song\n`voice shuffle` - radomly shuffles songs in playlist\n\nBot will automatically leave channel once queue is emptied.',
 	run: async msg => {
 		let args = msg.content.split(' ')
 		args.shift()
@@ -184,7 +181,7 @@ module.exports = {
 			case 'kys':
 			case 'leave':
 				if (serverQueue) {
-					msg.channel.send('Manually diconnected.')
+					msg.channel.send('Manually disconnected.')
 					serverQueue.songs = []
 					serverQueue.connection.dispatcher.end()
 				} else {
