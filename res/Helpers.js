@@ -1,7 +1,56 @@
 config = require('../data/config.json')
 const fs = require('fs')
+const path = require('path')
 
 module.exports = {
+	countLines: function () {
+		return new Promise(async res => {
+			function countLines(filepath) {
+				return new Promise((res, rej) => {
+					var i
+					var count = 0
+					fs.createReadStream(filepath)
+						.on('data', function (chunk) {
+							for (i = 0; i < chunk.length; ++i) if (chunk[i] == 10) count++
+						})
+						.on('end', function () {
+							res(count)
+						})
+				})
+			}
+			var count = await countLines(path.resolve(__dirname + '/../bot.js'))
+			count += await countLines(path.resolve(__dirname + '/Helpers.js'))
+			var files_count = 2
+
+			const cmdDir = path.join(__dirname + '/../commands')
+
+			let cmds = fs
+				.readdirSync(cmdDir, { withFileTypes: true })
+				.filter(dirent => dirent.isFile())
+				.map(dirent => dirent.name)
+			for (let cmd of cmds) {
+				count += await countLines(cmdDir + `/${cmd}`)
+				files_count++
+			}
+
+			let groups = fs
+				.readdirSync(cmdDir, { withFileTypes: true })
+				.filter(dirent => dirent.isDirectory())
+				.map(dirent => dirent.name)
+			for (let group of groups) {
+				let files = fs
+					.readdirSync(cmdDir + `/${group}`, { withFileTypes: true })
+					.filter(dirent => dirent.isFile())
+					.map(dirent => dirent.name)
+				for (let filename of files) {
+					count += await countLines(cmdDir + `/${group}/${filename}`)
+					files_count++
+				}
+			}
+			console.log(count, files_count)
+			res({ lines: count, files: files_count })
+		})
+	},
 	formatTime: function (time) {
 		var hrs = ~~(time / 3600)
 		var mins = ~~((time % 3600) / 60)

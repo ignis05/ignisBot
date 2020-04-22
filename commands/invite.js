@@ -8,7 +8,7 @@ module.exports = {
 		console.log('sending invite link'.success)
 		msg.client
 			.generateInvite(['ADMINISTRATOR'])
-			.then(link => msg.channel.send(`Generated bot invite link: ${link}`))
+			.then(link => msg.channel.send(`Generated bot invite link:\n<${link}>`))
 			.catch(console.error)
 	},
 }
