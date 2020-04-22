@@ -5,7 +5,7 @@ const { MessageEmbed } = require('discord.js')
 
 const queue = new Map()
 
-async function execute(msg, serverQueue) {
+async function execute(msg, serverQueue, volume) {
 	var args = msg.content.split(' ')
 	args.splice(0, 2)
 	var songarg = args.join(' ')
@@ -22,6 +22,7 @@ async function execute(msg, serverQueue) {
 		return msg.channel.send('No matching results found')
 	}
 	song.user = msg.author
+	song.volume = volume
 
 	if (!serverQueue) {
 		const queueContruct = {
@@ -29,7 +30,6 @@ async function execute(msg, serverQueue) {
 			voiceChannel: voiceChannel,
 			connection: null,
 			songs: [],
-			volume: 5,
 			playing: true,
 		}
 
@@ -118,7 +118,7 @@ function play(guild, song) {
 			play(guild, serverQueue.songs[0])
 		})
 		.on('error', error => console.error(error))
-	dispatcher.setVolumeLogarithmic(serverQueue.volume / 5)
+	dispatcher.setVolumeLogarithmic(song.volume || 1)
 	if (!serverQueue.textChannel.permissionsFor(guild.me).has('EMBED_LINKS')) {
 		serverQueue.textChannel.send(`Now playing: **${song.title}**`)
 	} else {
@@ -146,7 +146,7 @@ module.exports = {
 	name: 'voice',
 	aliases: ['music', 'song'],
 	desc: `used to play music from youtube`,
-	help: '`voice play <link / url>` - plays music from specified url or fetches first search result\nIf music is already playing adds it to queue instead.\n`voice queue` - shows current song queue\n`voice skip [n]` - skips n-th song from playlist. If no valid n is given skips currently playing song\n`voice stop` - leaves voice channel and deletes queue\n`voice playnow <link / url>` - Adds song to the front of the queue and skips current song\n`voice shuffle` - radomly shuffles songs in playlist\n\nBot will automatically leave channel once queue is emptied.',
+	help: '`voice play <link / url>` - plays music from specified url or fetches first search result\nIf music is already playing adds it to queue instead.\n`voice queue` - shows current song queue\n`voice skip [n]` - skips n-th song from playlist. If no valid n is given skips currently playing song\n`voice stop` - leaves voice channel and deletes queue\n`voice playnow <link / url>` - Adds song to the front of the queue and skips current song\n`voice shuffle` - radomly shuffles songs in playlist\n`voice switch` - Moves bot to a different voice channel\n`voice earrape <link / url>` - like "voice playnow" but louder\n\nBot will automatically leave channel once queue is emptied.',
 	run: async msg => {
 		let args = msg.content.split(' ')
 		args.shift()
@@ -236,16 +236,31 @@ module.exports = {
 				break
 			case 'switch':
 			case 'channel':
+				if (!serverQueue) return msg.channel.send('Bot is not playing anything')
+				if (!msg.member.voice.channel || msg.member.voice.channel.id == serverQueue.voiceChannel.id) return msg.channel.send('You have to be in a voice channel to use this')
+				const permissions = msg.member.voice.channel.permissionsFor(msg.client.user)
+				if (!permissions.has('CONNECT') || !permissions.has('SPEAK')) {
+					return msg.channel.send("I don't have permissions CONNECT and SPEAK in this voice channel")
+				}
+				msg.member.voice.channel.join()
+				serverQueue.voiceChannel = msg.member.voice.channel
 				break
-			case 'volume':
-				// if (!serverQueue || !serverQueue.connection) return msg.channel.send('Queue is already empty')
-				// if (!msg.member.voice.channel || msg.member.voice.channel.id != serverQueue.voiceChannel.id) return msg.channel.send("You have to be in bot's voice channel to adjust voice")
-				// let volume = parseInt(msg.content.split(' ')[2])
-				// if (volume !== 0 && !isNaN(volume) && serverQueue.songs[volume] != undefined) {
-				// 	serverQueue.volume = volume
-				// } else {
-				// 	serverQueue.volume = 5
-				// }
+			case 'earrape':
+				if (!serverQueue) {
+					execute(msg, serverQueue, 100)
+				} else {
+					let temp = msg.content.split(' ')
+					temp.splice(0, 2)
+					fetchYT(temp.join(' ')).then(song => {
+						if (!song) return msg.channel.send('No results found')
+						song.user = msg.author
+						song.volume = 100
+						let now = serverQueue.songs.shift()
+						serverQueue.songs.unshift(song)
+						serverQueue.songs.unshift(now)
+						serverQueue.connection.dispatcher.end()
+					})
+				}
 				break
 			default:
 				msg.channel.send('Command unknown - use `!help voice` to see available commands')
