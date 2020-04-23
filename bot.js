@@ -167,7 +167,6 @@ client.on('messageDelete', msg => {
 				channel.send(`Turn on embed links permission for better messages\nAuthor: ${msg.author.tag}\nContent: ${msg.cleanContent}`).catch(err => console.error(err))
 				continue
 			}
-			console.log(msg.attachments.array())
 			var embed = new Discord.MessageEmbed()
 				.setTitle('Message Deleted')
 				.setColor(0xff0000)
@@ -202,7 +201,10 @@ client.on('messageDeleteBulk', col => {
 				channel.send(`Turn on embed links permission for better messages\nChannel: ${msg.channel.name}\nCount: ${col.size}`).catch(err => console.error(err))
 				continue
 			}
-			console.log(col.map(msg => msg.cleanContent))
+			console.log(
+				'bulk delete:',
+				col.map(msg => msg.cleanContent)
+			)
 			var embed = new Discord.MessageEmbed().setTitle('Messages Deleted In Bulk').setColor(0xff0000).setDescription(`${col.size} messages were deleted`).setFooter(new Date().toLocaleString('en-GB'))
 			if (col.size > 10) {
 				embed.addField(`Content can't be shown`, 'Only up to 10 messages can be logged from bulk delete').addField('\u200b', '\u200b')
