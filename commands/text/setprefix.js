@@ -6,7 +6,7 @@ module.exports = {
 	desc: `changes bot prefix on current guild`,
 	help: '`setprefix <prefix>` - changes bot prefix on current guild to specified one\n\n`setprefix` - restores default prefix',
 	run: msg => {
-		var command = msg.content.split(' ')
+		var command = msg.content.split(' ').filter(arg => arg != '')
 		if (!msg.member.hasPermission('ADMINISTRATOR') && msg.author.id != ignisID) {
 			msg.reply("You don't have permission to use this command")
 			return

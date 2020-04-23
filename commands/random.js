@@ -12,7 +12,7 @@ module.exports = {
 			min = config[msg.guild.id].random.min
 			max = config[msg.guild.id].random.max
 		}
-		let tmp_arr = msg.content.split(' ')
+		let tmp_arr = msg.content.split(' ').filter(arg => arg != '')
 		tmp_arr[1] = parseInt(tmp_arr[1])
 		tmp_arr[2] = parseInt(tmp_arr[2])
 		tmp_arr[3] = parseInt(tmp_arr[3])

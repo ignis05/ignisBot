@@ -44,14 +44,14 @@ module.exports = {
 		}
 		const mc_servers = config[msg.guild.id].mc_servers
 
-		const arg = msg.content.split(' ')[1]
+		const arg = msg.content.split(' ').filter(arg => arg != '')[1]
 		switch (arg) {
 			case 'list':
 				msg.channel.send(JSON.stringify(mc_servers))
 				break
 			case 'add':
-				var name = msg.content.split(' ')[2]
-				var url = msg.content.split(' ')[3]
+				var name = msg.content.split(' ').filter(arg => arg != '')[2]
+				var url = msg.content.split(' ').filter(arg => arg != '')[3]
 				if (!name || !url) return msg.reply('Please specify name and url')
 				if (!name.match(/^\w+$/) || name == 'add' || name == 'list' || name == 'del') return msg.reply('Invalid name')
 				if (!url.match(urlRegex)) return msg.reply('Invalid url')
@@ -60,7 +60,7 @@ module.exports = {
 				msg.reply(`Added *${name}* to saved servers`)
 				break
 			case 'del':
-				var name = msg.content.split(' ')[2]
+				var name = msg.content.split(' ').filter(arg => arg != '')[2]
 				if (!name) return msg.reply('Please specify server name')
 				if (!mc_servers[name]) return msg.reply("Name doesn't match any saved servers")
 				delete mc_servers[name]

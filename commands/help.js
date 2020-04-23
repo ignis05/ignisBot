@@ -14,8 +14,8 @@ module.exports = {
 
 		let commands = fetchCommands(false)
 
-		if (msg.content.split(' ').length > 1) {
-			let command = msg.content.split(' ')[1]
+		if (msg.content.split(' ').filter(arg => arg != '').length > 1) {
+			let command = msg.content.split(' ').filter(arg => arg != '')[1]
 			console.log('searching for command ' + command)
 			let cmd = commands.text.find(cmd => cmd.name == command || cmd.aliases.includes(command))
 			console.log(`${cmd ? 'found' : 'not found'}`)

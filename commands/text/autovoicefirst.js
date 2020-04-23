@@ -10,7 +10,7 @@ module.exports = {
 			return
 		}
 
-		let nr = parseInt(msg.content.split(' ')[1])
+		let nr = parseInt(msg.content.split(' ').filter(arg => arg != '')[1])
 		if (!isNaN(nr)) {
 			config[msg.guild.id].autoVoiceFirstChannel = nr
 			saveConfig(msg.channel, `First autovoice channel set to ${nr}`)

@@ -13,7 +13,7 @@ module.exports = {
 			config[msg.guild.id].autoVoiceFirstChannel = 0
 		}
 
-		var command = msg.content.split(' ')
+		var command = msg.content.split(' ').filter(arg => arg != '')
 		var channel = command[1] ? msg.guild.channels.cache.get(command[1]) : msg.member.voiceChannel && msg.member.voiceChannel.parent ? msg.member.voiceChannel.parent : null
 		if (channel) {
 			if (channel.type == 'category') {

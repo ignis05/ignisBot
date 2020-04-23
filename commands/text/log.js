@@ -18,7 +18,7 @@ module.exports = {
 			await saveConfig()
 		}
 
-		let arg = msg.content.split(' ')[1]
+		let arg = msg.content.split(' ').filter(arg => arg != '')[1]
 		console.log(arg)
 		switch (arg) {
 			case 'list':

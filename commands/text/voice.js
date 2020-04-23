@@ -6,7 +6,7 @@ const { MessageEmbed } = require('discord.js')
 const queue = new Map()
 
 async function execute(msg, serverQueue, volume) {
-	var args = msg.content.split(' ')
+	var args = msg.content.split(' ').filter(arg => arg != '')
 	args.splice(0, 2)
 	var songarg = args.join(' ')
 
@@ -148,7 +148,7 @@ module.exports = {
 	desc: `used to play music from youtube`,
 	help: '`voice play <link / url>` - plays music from specified url or fetches first search result\nIf music is already playing adds it to queue instead.\n`voice queue` - shows current song queue\n`voice skip [n]` - skips n-th song from playlist. If no valid n is given skips currently playing song\n`voice stop` - leaves voice channel and deletes queue\n`voice playnow <link / url>` - Adds song to the front of the queue and skips current song\n`voice shuffle` - radomly shuffles songs in playlist\n`voice switch` - Moves bot to a different voice channel\n`voice earrape <link / url>` - like "voice playnow" but louder\n\nBot will automatically leave channel once queue is emptied.',
 	run: async msg => {
-		let args = msg.content.split(' ')
+		let args = msg.content.split(' ').filter(arg => arg != '')
 		args.shift()
 		const serverQueue = queue.get(msg.guild.id)
 		switch (args[0]) {
@@ -158,7 +158,7 @@ module.exports = {
 			case 'skip':
 				if (!msg.member.voice.channel) return msg.channel.send('You have to be in a voice channel to skip the music')
 				if (!serverQueue) return msg.channel.send('Queue is already empty')
-				let nr = parseInt(msg.content.split(' ')[2])
+				let nr = parseInt(msg.content.split(' ').filter(arg => arg != '')[2])
 				if (nr !== 0 && !isNaN(nr) && serverQueue.songs[nr] != undefined) {
 					serverQueue.songs.splice(nr, 1)
 
@@ -199,7 +199,7 @@ module.exports = {
 				if (!serverQueue) {
 					execute(msg, serverQueue)
 				} else {
-					let temp = msg.content.split(' ')
+					let temp = msg.content.split(' ').filter(arg => arg != '')
 					temp.splice(0, 2)
 					fetchYT(temp.join(' ')).then(song => {
 						if (!song) return msg.channel.send('No results found')
@@ -212,7 +212,7 @@ module.exports = {
 				}
 				break
 			case 'search':
-				let temp = msg.content.split(' ')
+				let temp = msg.content.split(' ').filter(arg => arg != '')
 				temp.splice(0, 2)
 				fetchYT(temp.join(' ')).then(song => {
 					if (!song) return msg.channel.send('No results found')
@@ -249,7 +249,7 @@ module.exports = {
 				if (!serverQueue) {
 					execute(msg, serverQueue, 100)
 				} else {
-					let temp = msg.content.split(' ')
+					let temp = msg.content.split(' ').filter(arg => arg != '')
 					temp.splice(0, 2)
 					fetchYT(temp.join(' ')).then(song => {
 						if (!song) return msg.channel.send('No results found')
