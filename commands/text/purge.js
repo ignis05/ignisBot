@@ -3,10 +3,7 @@ function fetchAfter(msg) {
 		var count = msg.content.split(' ').filter(arg => arg != '')[1]
 		count = count < 100 ? count : 100
 		var arg = msg.content.split(' ').filter(arg => arg != '')[2]
-		let temp = arg.split(':')
-		temp.splice(0, 1)
-		var val = temp.join(':')
-		console.log('value:', val)
+		var val = arg.split(':').slice(1).join(':')
 		msg.channel.messages
 			.fetch(val, false)
 			.then(async message => {

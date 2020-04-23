@@ -6,9 +6,11 @@ const { MessageEmbed } = require('discord.js')
 const queue = new Map()
 
 async function execute(msg, serverQueue, volume) {
-	var args = msg.content.split(' ').filter(arg => arg != '')
-	args.splice(0, 2)
-	var songarg = args.join(' ')
+	var songarg = msg.content
+		.split(' ')
+		.filter(arg => arg != '')
+		.slice(2)
+		.join(' ')
 
 	const voiceChannel = msg.member.voice.channel
 	if (!voiceChannel) return msg.channel.send('You need to be in a voice channel to play music')
@@ -199,9 +201,12 @@ module.exports = {
 				if (!serverQueue) {
 					execute(msg, serverQueue)
 				} else {
-					let temp = msg.content.split(' ').filter(arg => arg != '')
-					temp.splice(0, 2)
-					fetchYT(temp.join(' ')).then(song => {
+					let temp = msg.content
+						.split(' ')
+						.filter(arg => arg != '')
+						.slice(2)
+						.join(' ')
+					fetchYT(temp).then(song => {
 						if (!song) return msg.channel.send('No results found')
 						song.user = msg.author
 						let now = serverQueue.songs.shift()
@@ -212,9 +217,12 @@ module.exports = {
 				}
 				break
 			case 'search':
-				let temp = msg.content.split(' ').filter(arg => arg != '')
-				temp.splice(0, 2)
-				fetchYT(temp.join(' ')).then(song => {
+				let temp = msg.content
+					.split(' ')
+					.filter(arg => arg != '')
+					.slice(2)
+					.join(' ')
+				fetchYT(temp).then(song => {
 					if (!song) return msg.channel.send('No results found')
 					if (!msg.channel.permissionsFor(msg.guild.me).has('EMBED_LINKS')) {
 						msg.channel.send(`Search result: **${song.title}**`)
@@ -249,9 +257,12 @@ module.exports = {
 				if (!serverQueue) {
 					execute(msg, serverQueue, 100)
 				} else {
-					let temp = msg.content.split(' ').filter(arg => arg != '')
-					temp.splice(0, 2)
-					fetchYT(temp.join(' ')).then(song => {
+					let temp = msg.content
+						.split(' ')
+						.filter(arg => arg != '')
+						.slice(2)
+						.join(' ')
+					fetchYT(temp).then(song => {
 						if (!song) return msg.channel.send('No results found')
 						song.user = msg.author
 						song.volume = 100

@@ -123,10 +123,7 @@ client.on('message', async msg => {
 			return
 		}
 
-		var command = msg.content.split('')
-		command.shift()
-		command = command.join('')
-		command = command.split(' ')[0].toLowerCase()
+		var command = msg.content.slice(1).split(' ')[0].toLowerCase()
 
 		let cmd = commands.text.find(cmd => cmd.name == command || cmd.aliases.includes(command))
 		if (cmd) {
