@@ -113,6 +113,8 @@ client.on('message', async msg => {
 		saveConfig()
 	}
 
+	jpgLarge(msg)
+
 	// blacklist check (with override for admins)
 	if (config[msg.guild.id].bannedChannels.includes(msg.channel.id) && (msg.member.hasPermission('ADMINISTRATOR') || msg.author.id == ignisID)) return
 
@@ -518,6 +520,13 @@ function configTemplate(guildName) {
 		tempMsgTime: '5000',
 		bannedChannels: [],
 	}
+}
+function jpgLarge(msg) {
+	if (msg.attachments.size < 1) return
+	const attachment = msg.attachments.first()
+	if (!attachment.name.endsWith('.jpglarge')) return
+	let converted = new Discord.MessageAttachment(attachment.attachment, attachment.name.substring(0, attachment.name.length - 5))
+	msg.channel.send('Converted jpglarge:', converted)
 }
 // #endregion functions
 
