@@ -523,10 +523,11 @@ function configTemplate(guildName) {
 }
 function jpgLarge(msg) {
 	if (msg.attachments.size < 1) return
-	const attachment = msg.attachments.first()
-	if (!attachment.name.endsWith('.jpglarge')) return
-	let converted = new Discord.MessageAttachment(attachment.attachment, attachment.name.substring(0, attachment.name.length - 5))
-	msg.channel.send('Converted jpglarge:', converted)
+	for (let attachment of msg.attachments.array()) {
+		if (!attachment.name.endsWith('.jpglarge')) continue
+		let converted = new Discord.MessageAttachment(attachment.attachment, attachment.name.substring(0, attachment.name.length - 5))
+		msg.channel.send('Converted jpglarge:', converted)
+	}
 }
 // #endregion functions
 
