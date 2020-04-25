@@ -10,7 +10,7 @@ module.exports = {
 	run: msg => {
 		console.log('generating help'.accent)
 
-		let canDoEmbed = msg.channel.permissionsFor(msg.guild.me).has('EMBED_LINKS')
+		let canDoEmbed = !msg.guild || msg.channel.permissionsFor(msg.guild.me).has('EMBED_LINKS')
 
 		let commands = fetchCommands(false)
 
@@ -19,7 +19,7 @@ module.exports = {
 			console.log('searching for command ' + command)
 			let cmd = commands.text.find(cmd => cmd.name == command || cmd.aliases.includes(command))
 			console.log(`${cmd ? 'found' : 'not found'}`)
-			if (!cmd) return
+			if (!cmd) return msg.channel.send(`Command ${command} not found - try !help to list all commands`)
 			var embed = new MessageEmbed()
 				.setTitle(`**${cmd.name}** - info:`)
 				.setColor(cmd.categories ? 0xff00ff : 0x00ffff)

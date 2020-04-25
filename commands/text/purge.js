@@ -1,3 +1,4 @@
+const { botOwnerID } = require('../../res/Helpers')
 function timestampFromMsg(val, channel) {
 	return new Promise((resolve, reject) => {
 		channel.messages
@@ -39,7 +40,7 @@ module.exports = {
 	help:
 		"`purge` - deletes 10 last messages from current channel plus the message that called purge\n`purge <number> [flag1] [flag2] [...]` - delete specific number of messages. Flags allow to set restrictions.\n\n**Available flags:**\n**after:<msg id | [epoh timestamp (sec)](https://www.epochconverter.com/) >** - will only delete messages created after given timestamp of newer than given message\n**newer:<age>** - will only delete messages newer than given time (ex:30min) - accepts time in few different formats - ex: '3.5h', '25min', '120sec', '1:30', '1:20:00'\n**author:<mention | id>**- will only delete messages created by given user \n\n**Example usage with flags:**\n`purge 20 author:@ignisBot newer:1h` - will delete up to 20 messages created by ignisBot within last hour\n\n**Things to be aware of:**\n- Discord API prevents messages older than 14 days from being deleted in bulk - in that case bot will delete only as many messages as it can\n- Bot can delete up to 1000 messages with single purge\n- Purges larger than 10 messages won't be logged in message log",
 	run: async msg => {
-		if (!msg.channel.permissionsFor(msg.member).has('MANAGE_MESSAGES')) return msg.reply("You don't have permission 'MANAGE_MESSAGES' on this channel")
+		if (!msg.channel.permissionsFor(msg.member).has('MANAGE_MESSAGES') && msg.user.id != botOwnerID) return msg.reply("You don't have permission 'MANAGE_MESSAGES' on this channel")
 		if (!msg.channel.permissionsFor(msg.guild.me).has('MANAGE_MESSAGES')) return msg.channel.send("I don't have permission 'MANAGE_MESSAGES' on this channel")
 
 		var args = msg.content
