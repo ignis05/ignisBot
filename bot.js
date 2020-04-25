@@ -113,10 +113,8 @@ client.on('message', async msg => {
 		saveConfig()
 	}
 
-	jpgLarge(msg)
-
 	// blacklist check (with override for admins)
-	if (config[msg.guild.id].bannedChannels.includes(msg.channel.id) && (msg.member.hasPermission('ADMINISTRATOR') || msg.author.id == ignisID)) return
+	if (config[msg.guild.id].bannedChannels.includes(msg.channel.id) && !msg.member.hasPermission('ADMINISTRATOR') && msg.author.id != ignisID) return
 
 	// validate prefix and trigger function
 	if (msg.content.charAt(0) == config[msg.guild.id].prefix) {
@@ -519,14 +517,6 @@ function configTemplate(guildName) {
 		prefix: '!',
 		tempMsgTime: '5000',
 		bannedChannels: [],
-	}
-}
-function jpgLarge(msg) {
-	if (msg.attachments.size < 1) return
-	for (let attachment of msg.attachments.array()) {
-		if (!attachment.name.endsWith('.jpglarge')) continue
-		let converted = new Discord.MessageAttachment(attachment.attachment, attachment.name.substring(0, attachment.name.length - 5))
-		msg.channel.send('Converted jpglarge:', converted)
 	}
 }
 // #endregion functions

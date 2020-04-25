@@ -1,4 +1,4 @@
-var { config, ignisID } = require('../../res/Helpers.js')
+var { config, ignisID, saveConfig } = require('../../res/Helpers.js')
 
 module.exports = {
 	name: 'blacklist',

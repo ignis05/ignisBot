@@ -10,7 +10,11 @@ module.exports = {
 			msg.reply("You don't have permission to use this command")
 			return
 		}
-		let cnt = msg.content.split(' ').filter(arg => arg != '').slice(1).join(' ')
-		msg.channel.send(cnt, { disableMentions: 'everyone' })
+		let cnt = msg.content
+			.split(' ')
+			.filter(arg => arg != '')
+			.slice(1)
+			.join(' ')
+		msg.channel.send(cnt, { disableMentions: 'everyone', allowedMentions: { users: [] } })
 	},
 }
