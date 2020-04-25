@@ -85,6 +85,7 @@ module.exports = {
 		if (log === undefined) log = true
 		const commands = {}
 		var errors = false
+		var noHelp = false
 		if (log) console.log('Loading commands from files:'.accent)
 		let groups = fs
 			.readdirSync(__dirname + '/../commands/', { withFileTypes: true })
@@ -115,7 +116,10 @@ module.exports = {
 							console.log(`${group}/${temp.name} - loaded, but has some invalid properties`.warn)
 						} else {
 							if (temp.desc && temp.help) console.log(`${group}/${temp.name} - loaded`.green)
-							else console.log(`${group}/${temp.name} - loaded, but is missing help info`.warn)
+							else {
+								noHelp = true
+								console.log(`${group}/${temp.name} - loaded, but is missing help info`.warn)
+							}
 						}
 					}
 					if (!commands[group]) {
@@ -146,7 +150,10 @@ module.exports = {
 							console.log(`${group}/${temp.name} - loaded, but has some invalid properties`.warn)
 						} else {
 							if ((temp.desc && temp.help) || group == 'absolute') console.log(`${group}/${temp.name} - loaded`.green)
-							else console.log(`${group}/${temp.name} - loaded, but is missing help info`.warn)
+							else {
+								noHelp = true
+								console.log(`${group}/${temp.name} - loaded, but is missing help info`.warn)
+							}
 						}
 					}
 
@@ -164,6 +171,7 @@ module.exports = {
 		if (log) {
 			if (errors) console.log("Some files weren't loaded - check errors above for details".redRev)
 			else console.log('Everything loaded correctly'.greenRev)
+			if (noHelp) console.log('Some files are missing help info'.warn)
 		}
 		return commands
 	},
