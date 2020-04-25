@@ -1,6 +1,6 @@
 const path = require('path')
 const Discord = require('discord.js')
-const client = new Discord.Client()
+const client = require('./res/client')
 const fs = require('fs')
 const colors = require('colors')
 colors.setTheme({
