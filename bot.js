@@ -134,67 +134,6 @@ client.on('message', async msg => {
 	}
 })
 
-client.on('voiceStateUpdate', (oldState, newState) => {
-	if (oldState.channelID && newState.channelID) {
-		if (oldState.channelID != newState.channelID) {
-			// change
-			if (config[newState.guild.id].autoVoice) autovoiceActivity(newState.guild)
-		}
-	} else if (newState.channelID) {
-		//join
-		if (config[newState.guild.id].autoVoice) autovoiceActivity(newState.guild)
-	} else if (oldState.channelID) {
-		//leave
-		if (config[newState.guild.id].autoVoice) autovoiceActivity(oldState.guild)
-	}
-})
-
-// #region voice functions
-async function autovoiceActivity(guild) {
-	let categoryChannel = guild.channels.cache.get(config[guild.id].autoVoice)
-
-	if (!categoryChannel.permissionsFor(guild.me).has('MANAGE_CHANNELS')) {
-		const defaultChannel = guild.channels.find(channel => channel.permissionsFor(guild.me).has('SEND_MESSAGES') && channel.type == 'text')
-		defaultChannel.send(`Unable to manage voice activity - permission 'MANAGE_CHANNEL' might have been revoked`).then(msg => msg.delete({ timeout: config[msg.guild.id].tempMsgTime, reason: 'Deleted temp message' }))
-	}
-	let catChannels = categoryChannel.children
-	let voiceChannels = catChannels.filter(channel => channel.type == 'voice').array()
-
-	let emptyChannels = voiceChannels.filter(channel => channel.members.firstKey() == undefined)
-	emptyChannels.reverse()
-	let emptycount = emptyChannels.length
-
-	if (emptycount == 0) {
-		await guild.channels
-			.create((voiceChannels.length + config[guild.id].autoVoiceFirstChannel).toString(), {
-				type: 'voice',
-				parent: config[guild.id].autoVoice,
-				reason: 'autovoice activity',
-			})
-			.catch(err => {})
-	} else if (emptycount > 1) {
-		let oneEmptySaved = false
-		let index = config[guild.id].autoVoiceFirstChannel
-		for (let channel of voiceChannels) {
-			// channel empty
-			if (channel.members.firstKey() == undefined) {
-				// leave one empty channel
-				if (!oneEmptySaved) {
-					oneEmptySaved = true
-					channel.setName(`${index++}`)
-					continue
-				}
-				channel.delete({ reason: 'autovoice activity' }).catch(err => {})
-			}
-			// channel full
-			else {
-				channel.setName(`${index++}`)
-			}
-		}
-	}
-}
-// #endregion
-
 // #region functions
 function configTemplate(guildName) {
 	return {

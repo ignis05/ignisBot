@@ -1,4 +1,66 @@
 var { saveConfig, config, ignisID } = require('../../res/Helpers.js')
+const client = require('../../res/client')
+
+client.on('voiceStateUpdate', (oldState, newState) => {
+	if (oldState.channelID && newState.channelID) {
+		if (oldState.channelID != newState.channelID) {
+			// change
+			if (config[newState.guild.id].autoVoice) autovoiceActivity(newState.guild)
+		}
+	} else if (newState.channelID) {
+		//join
+		if (config[newState.guild.id].autoVoice) autovoiceActivity(newState.guild)
+	} else if (oldState.channelID) {
+		//leave
+		if (config[newState.guild.id].autoVoice) autovoiceActivity(oldState.guild)
+	}
+})
+
+async function autovoiceActivity(guild) {
+	let categoryChannel = guild.channels.cache.get(config[guild.id].autoVoice)
+
+	if (!categoryChannel.manageable) {
+		const defaultChannel = guild.channels.find(channel => channel.permissionsFor(guild.me).has('SEND_MESSAGES') && channel.type == 'text')
+		defaultChannel.send(`Unable to manage voice activity - permission 'MANAGE_CHANNEL' might have been revoked\nAutovoice disabled`)
+		config[msg.guild.id].autoVoice = false
+		saveConfig()
+	}
+	let catChannels = categoryChannel.children
+	let voiceChannels = catChannels.filter(channel => channel.type == 'voice').array()
+
+	let emptyChannels = voiceChannels.filter(channel => channel.members.firstKey() == undefined)
+	emptyChannels.reverse()
+	let emptycount = emptyChannels.length
+
+	if (emptycount == 0) {
+		await guild.channels
+			.create((voiceChannels.length + config[guild.id].autoVoiceFirstChannel).toString(), {
+				type: 'voice',
+				parent: config[guild.id].autoVoice,
+				reason: 'autovoice activity',
+			})
+			.catch(err => {})
+	} else if (emptycount > 1) {
+		let oneEmptySaved = false
+		let index = config[guild.id].autoVoiceFirstChannel
+		for (let channel of voiceChannels) {
+			// channel empty
+			if (channel.members.firstKey() == undefined) {
+				// leave one empty channel
+				if (!oneEmptySaved) {
+					oneEmptySaved = true
+					channel.setName(`${index++}`)
+					continue
+				}
+				channel.delete({ reason: 'autovoice activity' }).catch(err => {})
+			}
+			// channel full
+			else {
+				channel.setName(`${index++}`)
+			}
+		}
+	}
+}
 
 module.exports = {
 	name: 'autovoice',
@@ -14,7 +76,7 @@ module.exports = {
 		}
 
 		var command = msg.content.split(' ').filter(arg => arg != '')
-		var channel = command[1] ? msg.guild.channels.cache.get(command[1]) : msg.member.voiceChannel && msg.member.voiceChannel.parent ? msg.member.voiceChannel.parent : null
+		var channel = command[1] ? msg.guild.channels.cache.get(command[1]) : (msg.member.voice && msg.member.voice.channel && msg.member.voice.channel.parent) || null
 		if (channel) {
 			if (channel.type == 'category') {
 				if (!channel.permissionsFor(msg.guild.me).has('MANAGE_CHANNELS')) {
@@ -26,12 +88,10 @@ module.exports = {
 				console.log('autovoice enabled')
 				msg.channel.send(`autovoice enabled for category: ${channel.name}`)
 
+				autovoiceActivity(msg.guild)
 				let vChannel = channel.children.find(ch => ch.type == 'voice' && ch.permissionsFor(msg.guild.me).has('CONNECT'))
 				if (vChannel) {
-					vChannel
-						.join()
-						.then(con => vChannel.leave())
-						.catch(err => console.log('failed to join channel '))
+					vChannel.name = config[msg.guild.id].autoVoiceFirstChannel
 				}
 			} else {
 				console.log('wrong channel')
