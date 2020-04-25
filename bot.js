@@ -43,7 +43,7 @@ try {
 }
 // #endregion
 
-const { fetchCommands, saveConfig, ignisID } = require('./res/Helpers.js')
+const { fetchCommands, saveConfig, botOwnerID } = require('./res/Helpers.js')
 
 // #region importing commands
 const commands = fetchCommands()
@@ -52,7 +52,7 @@ const commands = fetchCommands()
 client.on('ready', () => {
 	client.user.setActivity('anthropomorphized minors', { type: 'WATCHING' })
 	if (client.user.username == 'ignisBot - debug version') client.user.setActivity('Might be unstable', { type: 'PLAYING' })
-	client.users.fetch(ignisID).then(ignis => {
+	client.users.fetch(botOwnerID).then(ignis => {
 		ignis.send("I'm alive!")
 	})
 	console.log("I'm alive!".rainbow)
@@ -62,7 +62,7 @@ client.on('guildCreate', guild => {
 	if (guild.available) {
 		const defaultChannel = guild.channels.find(channel => channel.permissionsFor(guild.me).has('SEND_MESSAGES') && channel.type == 'text')
 		defaultChannel.send('use `!help`')
-		client.users.fetch(ignisID).then(ignis => {
+		client.users.fetch(botOwnerID).then(ignis => {
 			ignis.send(`${ignis} - bot was just activated on new guild ${guild.name}`)
 		})
 		if (!config[guild.id]) {
@@ -106,7 +106,7 @@ client.on('message', async msg => {
 
 	// if bot is not enabled on this guild
 	if (!config[msg.guild.id]) {
-		client.users.fetch(ignisID).then(ignis => {
+		client.users.fetch(botOwnerID).then(ignis => {
 			ignis.send(`${ignis} - bot was just activated on new guild ${msg.guild.name}`)
 		})
 		config[msg.guild.id] = configTemplate(msg.guild.name)
@@ -114,7 +114,7 @@ client.on('message', async msg => {
 	}
 
 	// blacklist check (with override for admins)
-	if (config[msg.guild.id].bannedChannels.includes(msg.channel.id) && !msg.member.hasPermission('ADMINISTRATOR') && msg.author.id != ignisID) return
+	if (config[msg.guild.id].bannedChannels.includes(msg.channel.id) && !msg.member.hasPermission('ADMINISTRATOR') && msg.author.id != botOwnerID) return
 
 	// validate prefix and trigger function
 	if (msg.content.charAt(0) == config[msg.guild.id].prefix) {

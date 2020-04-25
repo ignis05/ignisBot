@@ -1,4 +1,4 @@
-var { config, ignisID, saveConfig } = require('../../res/Helpers.js')
+var { config, botOwnerID, saveConfig } = require('../../res/Helpers.js')
 const client = require('../../res/client')
 const { MessageAttachment } = require('discord.js')
 const _ = require('lodash')
@@ -22,7 +22,7 @@ module.exports = {
 	desc: `manages utility functions on guild`,
 	help: '`utils (enable | disable) <name>` - turns utilities on or off\n\nAvailable utilities:\n**jpglarge** - bot will automatically convert and send back any ".jpglarge" attachment',
 	run: msg => {
-		if (!msg.member.hasPermission('ADMINISTRATOR') && msg.author.id != ignisID) {
+		if (!msg.member.hasPermission('ADMINISTRATOR') && msg.author.id != botOwnerID) {
 			msg.reply("You don't have permission to use this command")
 			return
 		}

@@ -176,5 +176,5 @@ module.exports = {
 		return commands
 	},
 	config: config,
-	ignisID: '226032144856776704',
+	botOwnerID: '226032144856776704',
 }

@@ -1,4 +1,4 @@
-var { saveConfig, config, ignisID } = require('../../res/Helpers.js')
+var { saveConfig, config, botOwnerID } = require('../../res/Helpers.js')
 const client = require('../../res/client')
 
 client.on('voiceStateUpdate', (oldState, newState) => {
@@ -67,7 +67,7 @@ module.exports = {
 	desc: `enables automatic voice channel managment`,
 	help: "`autovoice <category_id>` - enables automatic management of voice channels in given category\n\n-bot will automatically create and delete voice channels in that category to make sure that there is **exactly one empty voice channel at all times**\n\n-category ID number can be copied using discord's developer mode, if no id is given bot will set up autovoice based on the voicechannel that user is currently in.\nIf command is used without parameter and being in voice channel, autovoice is disabled.\nYou can use `autovoice first <number>` to change number of first autovoice channel",
 	run: msg => {
-		if (!msg.member.hasPermission('MANAGE_CHANNELS') && msg.author.id != ignisID) {
+		if (!msg.member.hasPermission('MANAGE_CHANNELS') && msg.author.id != botOwnerID) {
 			msg.reply("You don't have permission to use this command")
 			return
 		}

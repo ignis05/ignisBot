@@ -1,4 +1,4 @@
-var { saveConfig, config, ignisID } = require('../../res/Helpers.js')
+var { saveConfig, config, botOwnerID } = require('../../res/Helpers.js')
 
 module.exports = {
 	name: 'autorole',
@@ -6,7 +6,7 @@ module.exports = {
 	desc: `set up role automatically given to new members`,
 	help: "`autorole [@mention]` - changes autorole to mentioned role. If no role is mentioned disables autorole.\nMake sure mentioned role is lower in hierarchy and bot has 'manage roles' permission.",
 	run: msg => {
-		if (!msg.member.hasPermission('ADMINISTRATOR') && msg.author.id != ignisID) {
+		if (!msg.member.hasPermission('ADMINISTRATOR') && msg.author.id != botOwnerID) {
 			msg.reply("You don't have permission to use this command")
 			return
 		}

@@ -1,11 +1,11 @@
-var { config, ignisID, saveConfig } = require('../../res/Helpers.js')
+var { config, botOwnerID, saveConfig } = require('../../res/Helpers.js')
 
 module.exports = {
 	name: 'blacklist',
 	desc: `disables bot in current channel for non-admin users`,
 	help: '`blacklist` - disables bot in current channel for non-admin users, if channel is already disabled, re-enables it',
 	run: msg => {
-		if (!msg.member.hasPermission('ADMINISTRATOR') && msg.author.id != ignisID) {
+		if (!msg.member.hasPermission('ADMINISTRATOR') && msg.author.id != botOwnerID) {
 			msg.reply("You don't have permission to use this command")
 			return
 		}
