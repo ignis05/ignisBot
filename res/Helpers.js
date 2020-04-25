@@ -84,6 +84,7 @@ module.exports = {
 	fetchCommands: function (log) {
 		if (log === undefined) log = true
 		const commands = {}
+		var errors = false
 		if (log) console.log('Loading commands from files:'.accent)
 		let groups = fs
 			.readdirSync(__dirname + '/../commands/', { withFileTypes: true })
@@ -102,7 +103,9 @@ module.exports = {
 			try {
 				let temp = require(__dirname + `/../commands/${cmd}`)
 				// validate module.exports
-				if (!temp.name || typeof temp.run != 'function' || temp.categories.length < 1) throw 'wrong arguments'
+				if (typeof temp.run != 'function') throw 'module.run is not a function'
+				if (!temp.name) throw 'module.name is undefined'
+				if (temp.categories.length < 1) throw 'module.categories is empty or undefined'
 				// set default properties
 				if (!temp.aliases) temp.aliases = []
 
@@ -121,6 +124,7 @@ module.exports = {
 					commands[group].push(temp)
 				}
 			} catch (err) {
+				errors = true
 				if (log) console.log(`${cmd} - not loaded, file is invalid`.error)
 				if (log) console.log(err)
 			}
@@ -135,7 +139,8 @@ module.exports = {
 				try {
 					let temp = require(__dirname + `/../commands/${group}/${filename}`)
 					// validate module.exports
-					if (!temp.name || typeof temp.run != 'function') throw 'wrong arguments'
+					if (typeof temp.run != 'function') throw 'module.run is not a function'
+					if (!temp.name) throw 'module.name is undefined'
 					if (log) {
 						if (!Object.keys(temp).every(el => ['name', 'aliases', 'run', 'desc', 'help'].includes(el))) {
 							console.log(`${group}/${temp.name} - loaded, but has some invalid properties`.warn)
@@ -150,12 +155,16 @@ module.exports = {
 
 					commands[group].push(temp)
 				} catch (err) {
+					errors = true
 					if (log) console.log(`${filename} - not loaded, file is invalid`.error)
 					if (log) console.log(err)
 				}
 			}
 		}
-
+		if (log) {
+			if (errors) console.log("Some files weren't loaded - check errors above for details".redRev)
+			else console.log('Everything loaded correctly'.greenRev)
+		}
 		return commands
 	},
 	config: config,
