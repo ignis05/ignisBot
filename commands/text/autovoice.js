@@ -19,18 +19,25 @@ client.on('voiceStateUpdate', (oldState, newState) => {
 async function autovoiceActivity(guild) {
 	let categoryChannel = guild.channels.cache.get(config[guild.id].autoVoice)
 
-	if (!categoryChannel.manageable) {
+	if (!categoryChannel || !categoryChannel.manageable || categoryChannel.deleted) {
 		const defaultChannel = guild.channels.find(channel => channel.permissionsFor(guild.me).has('SEND_MESSAGES') && channel.type == 'text')
-		defaultChannel.send(`Unable to manage voice activity - permission 'MANAGE_CHANNEL' might have been revoked\nAutovoice disabled`)
+		defaultChannel.send(`Unable to manage voice channels - permission 'MANAGE_CHANNEL' might have been revoked or category has been deleted\nAutovoice disabled`)
 		config[msg.guild.id].autoVoice = false
 		saveConfig()
 	}
-	let catChannels = categoryChannel.children
-	let voiceChannels = catChannels.filter(channel => channel.type == 'voice').array()
+	let voiceChannels = categoryChannel.children
+		.filter(channel => channel.type == 'voice')
+		.array()
+		.sort((a, b) => a.position - b.position)
+	console.log('voiceChannels:')
+	for (let vc of voiceChannels) {
+		console.log(vc.name)
+		console.log(vc.position)
+		console.log(vc.rawPosition)
+	}
+	console.log('-----------')
 
-	let emptyChannels = voiceChannels.filter(channel => channel.members.firstKey() == undefined)
-	emptyChannels.reverse()
-	let emptycount = emptyChannels.length
+	let emptycount = voiceChannels.filter(channel => channel.members.size == 0).length
 
 	if (emptycount == 0) {
 		await guild.channels
@@ -40,15 +47,25 @@ async function autovoiceActivity(guild) {
 				reason: 'autovoice activity',
 			})
 			.catch(err => {})
+	} else if (emptycount === 1) {
+		let emptyIndex = voiceChannels.findIndex(ch => ch.members.size == 0)
+		if (emptyIndex == voiceChannels.length - 1) return // all good
+		voiceChannels.push(voiceChannels.splice(emptyIndex, 1)[0])
+		let index = config[guild.id].autoVoiceFirstChannel
+		for (let channel of voiceChannels) {
+			channel.setPosition(index)
+			channel.setName(`${index++}`)
+		}
 	} else if (emptycount > 1) {
 		let oneEmptySaved = false
 		let index = config[guild.id].autoVoiceFirstChannel
 		for (let channel of voiceChannels) {
 			// channel empty
-			if (channel.members.firstKey() == undefined) {
+			if (channel.members.size == 0) {
 				// leave one empty channel
 				if (!oneEmptySaved) {
 					oneEmptySaved = true
+					channel.setPosition(index)
 					channel.setName(`${index++}`)
 					continue
 				}
@@ -56,6 +73,7 @@ async function autovoiceActivity(guild) {
 			}
 			// channel full
 			else {
+				channel.setPosition(index)
 				channel.setName(`${index++}`)
 			}
 		}
