@@ -43,10 +43,19 @@ async function autovoiceActivity(guild) {
 				reason: 'autovoice activity',
 			})
 			.catch(err => {})
+		autovoiceActivity(guild)
 	} else if (emptycount === 1) {
 		let emptyIndex = voiceChannels.findIndex(ch => ch.members.size == 0)
-		if (emptyIndex == voiceChannels.length - 1) return // all good
-		voiceChannels.push(voiceChannels.splice(emptyIndex, 1)[0])
+		//emptyfirst
+		if (config[guild.id].autoVoice.emptyFirst) {
+			if (emptyIndex == 0) return // all good
+			voiceChannels.unshift(voiceChannels.splice(emptyIndex, 1)[0])
+		}
+		//empty last
+		else {
+			if (emptyIndex == voiceChannels.length - 1) return // all good
+			voiceChannels.push(voiceChannels.splice(emptyIndex, 1)[0])
+		}
 
 		let index = 0
 		for (let channel of voiceChannels) {
@@ -84,7 +93,7 @@ async function autovoiceActivity(guild) {
 module.exports = {
 	name: 'autovoice',
 	desc: `enables automatic voice channel managment`,
-	help: "`autovoice <category_id>` - enables automatic management of voice channels in given category\n\n-bot will automatically create and delete voice channels in that category to make sure that there is **exactly one empty voice channel at all times**\n\n-category ID number can be copied using discord's developer mode, if no id is given bot will set up autovoice based on the voicechannel that user is currently in.\nIf command is used without parameter and being in voice channel, autovoice is disabled.\nYou can use `autovoice first <number>` to change number of first autovoice channel",
+	help: "`autovoice <category_id>` - enables automatic management of voice channels in given category\n\n-bot will automatically create and delete voice channels in that category to make sure that there is **exactly one empty voice channel at all times**\n\n-category ID number can be copied using discord's developer mode, if no id is given bot will set up autovoice based on the voicechannel that user is currently in.\nIf command is used without parameter and being in voice channel, autovoice is disabled.\nYou can use `autovoice first <number>` to change number of first autovoice channel\n`autovoice empty (first | last)` - by default empty voicechannel is always last, this command can change that",
 	run: msg => {
 		if (!msg.member.hasPermission('MANAGE_CHANNELS') && msg.author.id != botOwnerID) {
 			msg.reply("You don't have permission to use this command")
@@ -106,6 +115,20 @@ module.exports = {
 				autovoiceActivity(msg.guild)
 			} else {
 				msg.reply('Given value is NaN')
+			}
+			return
+		}
+
+		if (command[1] === 'empty') {
+			switch (command[2]) {
+				case 'first':
+				case 'last':
+					config[msg.guild.id].autoVoice.emptyFirst = command[2] === 'first'
+					saveConfig(msg.channel, `Empty channel will now be ${command[2] === 'first' ? 'first' : 'last'}`)
+					autovoiceActivity(msg.guild)
+					break
+				default:
+					msg.channel.send('Value must be either "first" or "last"')
 			}
 			return
 		}
