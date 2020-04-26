@@ -5,45 +5,41 @@ client.on('voiceStateUpdate', (oldState, newState) => {
 	if (oldState.channelID && newState.channelID) {
 		if (oldState.channelID != newState.channelID) {
 			// change
-			if (config[newState.guild.id].autoVoice) autovoiceActivity(newState.guild)
+			let guildId = newState.guild.id
+			if (config[guildId].autoVoice && config[guildId].autoVoice.categoryID) autovoiceActivity(newState.guild)
 		}
 	} else if (newState.channelID) {
 		//join
-		if (config[newState.guild.id].autoVoice) autovoiceActivity(newState.guild)
+		let guildId = newState.guild.id
+		if (config[guildId].autoVoice && config[guildId].autoVoice.categoryID) autovoiceActivity(newState.guild)
 	} else if (oldState.channelID) {
 		//leave
-		if (config[newState.guild.id].autoVoice) autovoiceActivity(oldState.guild)
+		let guildId = oldState.guild.id
+		if (config[guildId].autoVoice && config[guildId].autoVoice.categoryID) autovoiceActivity(oldState.guild)
 	}
 })
 
 async function autovoiceActivity(guild) {
-	let categoryChannel = guild.channels.cache.get(config[guild.id].autoVoice)
+	let categoryChannel = guild.channels.cache.get(config[guild.id].autoVoice.categoryID)
 
 	if (!categoryChannel || !categoryChannel.manageable || categoryChannel.deleted) {
 		const defaultChannel = guild.channels.find(channel => channel.permissionsFor(guild.me).has('SEND_MESSAGES') && channel.type == 'text')
 		defaultChannel.send(`Unable to manage voice channels - permission 'MANAGE_CHANNEL' might have been revoked or category has been deleted\nAutovoice disabled`)
-		config[msg.guild.id].autoVoice = false
+		config[guild.id].autoVoice.categoryID = null
 		saveConfig()
 	}
 	let voiceChannels = categoryChannel.children
 		.filter(channel => channel.type == 'voice')
 		.array()
 		.sort((a, b) => a.position - b.position)
-	console.log('voiceChannels:')
-	for (let vc of voiceChannels) {
-		console.log(vc.name)
-		console.log(vc.position)
-		console.log(vc.rawPosition)
-	}
-	console.log('-----------')
 
 	let emptycount = voiceChannels.filter(channel => channel.members.size == 0).length
 
 	if (emptycount == 0) {
 		await guild.channels
-			.create((voiceChannels.length + config[guild.id].autoVoiceFirstChannel).toString(), {
+			.create((voiceChannels.length + config[guild.id].autoVoice.first).toString(), {
 				type: 'voice',
-				parent: config[guild.id].autoVoice,
+				parent: config[guild.id].autoVoice.categoryID,
 				reason: 'autovoice activity',
 			})
 			.catch(err => {})
@@ -51,32 +47,37 @@ async function autovoiceActivity(guild) {
 		let emptyIndex = voiceChannels.findIndex(ch => ch.members.size == 0)
 		if (emptyIndex == voiceChannels.length - 1) return // all good
 		voiceChannels.push(voiceChannels.splice(emptyIndex, 1)[0])
-		let index = config[guild.id].autoVoiceFirstChannel
+
+		let index = 0
 		for (let channel of voiceChannels) {
-			channel.setPosition(index)
-			channel.setName(`${index++}`)
+			await channel.setName(`${index + config[guild.id].autoVoice.first}`)
+			await channel.setPosition(index)
+			index++
 		}
 	} else if (emptycount > 1) {
 		let oneEmptySaved = false
-		let index = config[guild.id].autoVoiceFirstChannel
+		let index = 0
 		for (let channel of voiceChannels) {
 			// channel empty
 			if (channel.members.size == 0) {
 				// leave one empty channel
 				if (!oneEmptySaved) {
 					oneEmptySaved = true
-					channel.setPosition(index)
-					channel.setName(`${index++}`)
+					await channel.setName(`${index + config[guild.id].autoVoice.first}`)
+					await channel.setPosition(index)
+					index++
 					continue
 				}
-				channel.delete({ reason: 'autovoice activity' }).catch(err => {})
+				await channel.delete({ reason: 'autovoice activity' }).catch(err => {})
 			}
 			// channel full
 			else {
-				channel.setPosition(index)
-				channel.setName(`${index++}`)
+				await channel.setName(`${index + config[guild.id].autoVoice.first}`)
+				await channel.setPosition(index)
+				index++
 			}
 		}
+		autovoiceActivity(guild)
 	}
 }
 
@@ -89,8 +90,9 @@ module.exports = {
 			msg.reply("You don't have permission to use this command")
 			return
 		}
-		if (isNaN(config[msg.guild.id].autoVoiceFirstChannel)) {
-			config[msg.guild.id].autoVoiceFirstChannel = 0
+		if (typeof config[msg.guild.id].autoVoice !== 'object') {
+			config[msg.guild.id].autoVoice = { categoryID: null, first: 0, emptyFirst: false }
+			saveConfig()
 		}
 
 		var command = msg.content.split(' ').filter(arg => arg != '')
@@ -99,13 +101,9 @@ module.exports = {
 		if (command[1] === 'first') {
 			let nr = command[2]
 			if (!isNaN(nr)) {
-				config[msg.guild.id].autoVoiceFirstChannel = parseInt(nr)
+				config[msg.guild.id].autoVoice.first = parseInt(nr)
 				saveConfig(msg.channel, `First autovoice channel set to ${nr}`)
-				// set names
-				var voiceChannels = msg.guild.channels.cache.filter(channel => channel.type == 'voice' && channel.parentID == config[msg.guild.id].autoVoice).array()
-				voiceChannels.forEach((channel, iterator) => {
-					channel.setName((iterator + parseInt(nr)).toString())
-				})
+				autovoiceActivity(msg.guild)
 			} else {
 				msg.reply('Given value is NaN')
 			}
@@ -120,21 +118,21 @@ module.exports = {
 					msg.channel.send("I don't have permission 'manage channel' in this category")
 					return
 				}
-				config[msg.guild.id].autoVoice = channel.id
+				config[msg.guild.id].autoVoice.categoryID = channel.id
 				console.log('autovoice enabled')
 				msg.channel.send(`autovoice enabled for category: ${channel.name}`)
 
 				autovoiceActivity(msg.guild)
 				let vChannel = channel.children.find(ch => ch.type == 'voice')
 				if (vChannel) {
-					vChannel.name = config[msg.guild.id].autoVoiceFirstChannel
+					vChannel.name = config[msg.guild.id].autoVoice.first
 				}
 			} else {
 				console.log('wrong channel')
 				msg.channel.send("id doesn't belong to category")
 			}
 		} else {
-			config[msg.guild.id].autoVoice = false
+			config[msg.guild.id].autoVoice.categoryID = null
 			//console.log("autovoice disabled");
 			msg.channel.send('autovoice disabled')
 		}
