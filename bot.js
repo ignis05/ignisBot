@@ -89,6 +89,16 @@ client.on('message', async msg => {
 	//ignore bots
 	if (msg.author.bot) return
 
+	// owner category
+	if (msg.author.id === botOwnerID) {
+		// cant reply
+		if (msg.guild && !msg.channel.permissionsFor(msg.guild.me).has('SEND_MESSAGES')) return
+
+		var command = msg.content.slice(1).split(' ')[0].toLowerCase()
+		let cmd = commands.owner.find(cmd => cmd.name == command || cmd.aliases.includes(command))
+		if (cmd) return cmd.run(msg)
+	}
+
 	//priv msgs
 	if (!msg.guild && commands.dm && commands.dm.length > 0) {
 		let cont = msg.content.toLowerCase()

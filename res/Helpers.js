@@ -18,12 +18,14 @@ module.exports = {
 						})
 				})
 			}
+			// manually load files
 			var count = await countLines(path.resolve(__dirname + '/../bot.js'))
 			count += await countLines(path.resolve(__dirname + '/Helpers.js'))
-			var files_count = 2
+			count += await countLines(path.resolve(__dirname + '/client.js'))
+			var files_count = 3
 
+			// auto load commands
 			const cmdDir = path.join(__dirname + '/../commands')
-
 			let cmds = fs
 				.readdirSync(cmdDir, { withFileTypes: true })
 				.filter(dirent => dirent.isFile())
@@ -149,7 +151,7 @@ module.exports = {
 						if (!Object.keys(temp).every(el => ['name', 'aliases', 'run', 'desc', 'help'].includes(el))) {
 							console.log(`${group}/${temp.name} - loaded, but has some invalid properties`.warn)
 						} else {
-							if ((temp.desc && temp.help) || group == 'absolute') console.log(`${group}/${temp.name} - loaded`.green)
+							if ((temp.desc && temp.help) || group == 'owner') console.log(`${group}/${temp.name} - loaded`.green)
 							else {
 								noHelp = true
 								console.log(`${group}/${temp.name} - loaded, but is missing help info`.warn)
