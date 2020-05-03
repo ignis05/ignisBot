@@ -1,4 +1,4 @@
-var { config } = require('../res/Helpers.js')
+var { config, saveConfig } = require('../res/Helpers.js')
 
 module.exports = {
 	name: 'random',
@@ -15,8 +15,8 @@ module.exports = {
 		let tmp_arr = msg.content.split(' ').filter(arg => arg != '')
 
 		if (tmp_arr[1] === 'set') {
-			let min = parseInt(msg_arr[2])
-			let max = parseInt(msg_arr[3])
+			let min = parseInt(tmp_arr[2])
+			let max = parseInt(tmp_arr[3])
 			if (isNaN(min) || isNaN(max)) return msg.channel.send('Invalid values')
 			config[msg.guild.id].random = { min: min, max: max }
 			saveConfig(msg.channel, `Random number generator was set to: <${min}, ${max}>`)
