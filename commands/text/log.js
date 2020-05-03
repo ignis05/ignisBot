@@ -37,7 +37,7 @@ client.on('voiceStateUpdate', (oldState, newState) => {
 			.setColor(0x0000ff)
 			// .setDescription()
 			.addField('User', newState.member.toString(), true)
-			.setFooter(new Date().toLocaleString('en-GB'))
+			.setTimestamp()
 		if (vchannel.old && vchannel.new) {
 			embed.addField('Old Channel', vchannel.old.toString(), true).addField('New Channel', vchannel.new.toString(), true)
 		} else {
@@ -73,7 +73,7 @@ client.on('messageDelete', msg => {
 				.addField('Created', msg.createdAt.toLocaleString('en-GB'), true)
 				.addField('Last edited', msg.editedAt ? msg.editedAt.toLocaleString('en-GB') : 'never', true)
 				.addField('Content', msg.content, true)
-				.setFooter(new Date().toLocaleString('en-GB'))
+				.setTimestamp()
 			for (let { proxyURL } of msg.attachments.array()) {
 				embed.addField('Attachment', proxyURL, true)
 			}
@@ -98,7 +98,7 @@ client.on('messageDeleteBulk', col => {
 				channel.send(`Turn on embed links permission for better messages\nChannel: ${msg.channel.name}\nCount: ${col.size}`).catch(err => console.error(err))
 				continue
 			}
-			var embed = new MessageEmbed().setTitle('Messages Deleted In Bulk').setColor(0xff0000).setDescription(`${col.size} messages were deleted`).setFooter(new Date().toLocaleString('en-GB'))
+			var embed = new MessageEmbed().setTitle('Messages Deleted In Bulk').setColor(0xff0000).setDescription(`${col.size} messages were deleted`).setTimestamp()
 			if (col.size > 10) {
 				embed.addField(`Content can't be shown`, 'Only up to 10 messages can be logged from bulk delete').addField('\u200b', '\u200b')
 			} else {
@@ -134,7 +134,7 @@ client.on('messageUpdate', (oldmsg, msg) => {
 				.addField('Created', msg.createdAt.toLocaleString('en-GB'), true)
 				.addField('Old content', oldmsg.content || 'unknown', true)
 				.addField('New content', msg.content || 'unknown', true)
-				.setFooter(new Date().toLocaleString('en-GB'))
+				.setTimestamp()
 			channel.send(embed).catch(err => console.error(err))
 		}
 	}
@@ -163,7 +163,7 @@ client.on('guildMemberAdd', member => {
 				// .setDescription()
 				.addField('User', member.toString(), true)
 				.addField('Tag', member.user.tag, true)
-				.setFooter(new Date().toLocaleString('en-GB'))
+				.setTimestamp()
 			channel.send(embed).catch(err => console.error(err))
 		}
 	}
@@ -210,7 +210,7 @@ client.on('guildMemberRemove', async member => {
 				// .setDescription()
 				.addField('User', member.toString(), true)
 				.addField('Tag', member.user.tag, true)
-				.setFooter(new Date().toLocaleString('en-GB'))
+				.setTimestamp()
 
 			const data = await member.guild.fetchAuditLogs({ type: 'MEMBER_KICK', limit: 1 }).catch(err => console.log(err))
 
@@ -254,7 +254,7 @@ client.on('guildBanAdd', async (guild, user) => {
 				// .setDescription()
 				.addField('User', user.toString(), true)
 				.addField('Tag', user.tag, true)
-				.setFooter(new Date().toLocaleString('en-GB'))
+				.setTimestamp()
 
 			if (!data) {
 				embed.addField('Info', '**VIEW_AUDIT_LOG** permission is required to fetch ban details', true)
@@ -295,7 +295,7 @@ client.on('guildBanRemove', async (guild, user) => {
 				// .setDescription()
 				.addField('User', user.toString(), true)
 				.addField('Tag', user.tag, true)
-				.setFooter(new Date().toLocaleString('en-GB'))
+				.setTimestamp()
 
 			if (!data) {
 				embed.addField('Info', '**VIEW_AUDIT_LOG** permission is required to fetch unban details', true)
