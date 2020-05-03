@@ -12,8 +12,12 @@ client.on('message', msg => {
 	if (msg.attachments.size < 1) return
 	for (let attachment of msg.attachments.array()) {
 		if (!attachment.name.endsWith('.jpglarge')) continue
+		if(attachment.size > 8000000){
+			msg.channel.send(`Failed to convert jpglarge from ${msg.author}'s message - file is larger than 8MB`)
+			continue
+		}
 		let converted = new MessageAttachment(attachment.attachment, attachment.name.substring(0, attachment.name.length - 5))
-		msg.channel.send(`Converted jpglarge from ${msg.author.toString()}'s message:`, { files: [converted], allowedMentions: { users: [] } }) // mention without pinging
+		msg.channel.send(`Converted jpglarge from ${msg.author}'s message:`, { files: [converted], allowedMentions: { users: [] } }) // mention without pinging
 	}
 })
 
