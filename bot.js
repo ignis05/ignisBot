@@ -91,7 +91,11 @@ client.on('message', async msg => {
 
 	// owner category
 	if (msg.author.id === botOwnerID) {
-		if (msg.content.startsWith('!') && (!msg.guild || msg.channel.permissionsFor(msg.guild.me).has('SEND_MESSAGES'))) {
+		var valid = false
+		if (msg.guild) {
+			if (msg.channel.permissionsFor(msg.guild.me).has('SEND_MESSAGES') && config[msg.guild.id] && msg.content.startsWith(config[msg.guild.id].prefix)) valid = true
+		} else if (msg.content.startsWith('!')) valid = true
+		if (valid) {
 			var command = msg.content.slice(1).split(' ')[0].toLowerCase()
 			let cmd = commands.owner.find(cmd => cmd.name == command || cmd.aliases.includes(command))
 			if (cmd) return cmd.run(msg)
