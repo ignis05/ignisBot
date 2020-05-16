@@ -1,5 +1,4 @@
 let _ = require('lodash')
-let config = require('../../data/config.json')
 let Helpers = require('../../res/Helpers')
 const fetch = require('node-fetch')
 
@@ -23,9 +22,9 @@ module.exports = {
 			if (command.startsWith('js')) command = command.slice(2)
 		}
 		console.log('executing:\n', command)
-		const func = Function('msg', '_', 'config', 'Helpers', command)
+		const func = Function('msg', '_', 'Helpers', command)
 		try {
-			func(msg, _, config, Helpers)
+			func(msg, _, Helpers)
 		} catch (err) {
 			msg.channel.send(`error:\n${err}`)
 		}

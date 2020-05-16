@@ -1,4 +1,4 @@
-let config = require('../../data/config.json')
+var { config } = require('../../res/Helpers.js')
 
 module.exports = {
 	name: 'guildconfig',

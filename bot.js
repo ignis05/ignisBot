@@ -38,7 +38,7 @@ try {
 try {
 	config = require('./data/config.json')
 } catch (err) {
-	fs.writeFileSync('./data/config.json', '{}')
+	fs.writeFileSync('./data/config.json', JSON.stringify({ presence: { activity: { name: '!help', type: 'PLAYING', url: null }, status: 'online' } }, null, 4))
 	config = require('./data/config.json')
 }
 // #endregion
@@ -50,8 +50,7 @@ const commands = fetchCommands()
 // #endregion importing commands
 
 client.on('ready', () => {
-	client.user.setActivity('anthropomorphized minors', { type: 'WATCHING' })
-	if (client.user.username == 'ignisBot - debug version') client.user.setActivity('Might be unstable', { type: 'PLAYING' })
+	client.user.setPresence(config.presence)
 	client.users.fetch(botOwnerID).then(owner => {
 		owner.send("I'm alive!")
 	})
