@@ -1,9 +1,9 @@
 var { formatTime } = require('../../res/Helpers')
 const ytdl = require('ytdl-core')
 const ytsr = require('ytsr')
-const { MessageEmbed } = require('discord.js')
+const { MessageEmbed, Collection } = require('discord.js')
 
-const queue = new Map()
+const queue = new Collection()
 
 async function execute(msg, serverQueue, volume) {
 	var songarg = msg.content
