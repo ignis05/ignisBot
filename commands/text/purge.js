@@ -58,7 +58,7 @@ module.exports = {
 				acc[val.split(':')[0]] = val.split(':').slice(1).join(':')
 				return acc
 			}, {})
-		flags = require('lodash').pick(flags, ['after', 'younger', 'author', 'before'])
+		flags = require('lodash').pick(flags, ['after', 'younger', 'author', 'before', 'older'])
 		console.log(flags)
 
 		// advanced purge - >100 msgs or flags present
@@ -98,6 +98,11 @@ module.exports = {
 				// merge into flags.after - pick bigger number
 				flags.after = flags.after > flags.younger ? flags.after : flags.younger
 			}
+			if (flags.older) {
+				flags.older = timestampFromString(flags.older)
+				if (!flags.older) return msg.channel.send('Invalid time format - purge aborted')
+				if (flags.older < Date.now() - 1000 * 60 * 60 * 24 * 15) return msg.channel.send("Messages older than 14 days can't be deleted")
+			}
 			// #endregion flags
 
 			// fetch msgs in group of 100
@@ -106,10 +111,13 @@ module.exports = {
 				var limit = toDeleteCount <= 100 ? toDeleteCount : 100
 				var messages = await msg.channel.messages.fetch({ limit: 100, before: lastMsgID }, false).catch(console.error)
 				console.log('fetched to delete:', messages.size)
-				if (messages.size < 100) toDeleteCount = 0 // fetched below limit - no valid msgs to fetch
+				if (messages.size < 100) toDeleteCount = 0 // fetched below limit - no more messages in channel
 				lastMsgID = messages.last().id
 				if (messages.last().createdTimestamp < Date.now() - 1000 * 60 * 60 * 24 * 15) toDeleteCount = 0 // messages older than 14 days - cant be deleted anyway
 				// flag filters:
+				if (flags.older) {
+					messages = messages.filter(m => m.createdTimestamp < flags.older)
+				}
 				if (flags.after) {
 					// flags.younger is merged into this
 					let tempSize = messages.size
