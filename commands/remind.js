@@ -11,7 +11,7 @@ module.exports = {
 	run: msg => {
 		let msgArr = msg.content.split(' ').filter(arg => arg != '')
 		if (msgArr[1] == 'list') {
-			let list = REMINDERS.filter(reminder => reminder.channelID == msg.channel.id)
+			let list = REMINDERS.filter(reminder => reminder.channel.id == msg.channel.id)
 			if (!list || list.size == 0) return msg.channel.send('No reminders set in this channel')
 			msg.channel.send(`List:\n${list.map(data => `${data.id} - ${data.date.toLocaleString()} - "${data.msg}"`).join('\n')}`)
 			return
@@ -22,7 +22,7 @@ module.exports = {
 			let reminder = REMINDERS.get(id)
 			if (!reminder) return msg.channel.send('Could not find a reminder with given id')
 			// if reminder in guild : author or owner or moderator
-			if (msg.guild && msg.author.id !== reminder.author.id && msg.author.id !== botOwnerID && !msg.channel.permissionsFor(msg.member).has('MANAGE_MESSAGES')) return msg.channel.send("To delete reminder you need to be it's author or have `manage messages` permission")
+			if (msg.guild && msg.author.id !== reminder.author.id && msg.author.id !== botOwnerID && !reminder.channel.permissionsFor(msg.member).has('MANAGE_MESSAGES')) return msg.channel.send("To delete reminder you need to be it's author or have `manage messages` permission")
 			clearTimeout(reminder.cancel)
 			REMINDERS.delete(reminder.id)
 			msg.channel.send(`Deleted reminder ${reminder.id}`)
@@ -49,6 +49,6 @@ module.exports = {
 			msg.channel.send(`${msg.author} ${remindMessage}`).catch(err => console.log(err.message))
 			REMINDERS.delete(snowflake)
 		}, timeout)
-		REMINDERS.set(snowflake, { channelID: msg.channel.id, cancel: timeoutCancel, msg: remindMessage, date: remindDate, author: msg.author, id: snowflake })
+		REMINDERS.set(snowflake, { channel: msg.channel, cancel: timeoutCancel, msg: remindMessage, date: remindDate, author: msg.author, id: snowflake })
 	},
 }
