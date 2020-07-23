@@ -3,8 +3,8 @@ const { MessageEmbed } = require('discord.js')
 module.exports = {
 	name: 'checkperms',
 	aliases: ['botperms', 'myperms'],
-	desc: `displays bot's permissions as memebr of current guild`,
-	help: "`checkperms` - bot will reposnd with list of it's permissions",
+	desc: `displays bot's permissions as a member of the current guild`,
+	help: "`checkperms` - bot will respond with a list of it's permissions",
 	run: msg => {
 		let canDoEmbed = msg.channel.permissionsFor(msg.guild.me).has('EMBED_LINKS')
 

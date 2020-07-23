@@ -1,6 +1,6 @@
 var { saveConfig, config } = require('../../res/Helpers.js')
 
-const helpmsg = `\`setpresence (a == activity | s == status)\`\n\`setpresence activity (online | idle | invisible | dnd)\`\n\`setpresence status (name | type | url)\`\n\`setpresence status type (PLAYING | STREAMING | LISTENING | WATCHING)\``
+const helpmsg = `\`setpresence (a == activity | s == status | r == reload)\`\n\`setpresence activity (online | idle | invisible | dnd)\`\n\`setpresence status (name | type | url)\`\n\`setpresence status type (PLAYING | STREAMING | LISTENING | WATCHING)\`\n\n\`setpresence reload\``
 
 module.exports = {
 	name: 'setpresence',
@@ -45,6 +45,11 @@ module.exports = {
 				config.presence.status = status
 				saveConfig(msg.channel, `Set status to ${status}`)
 				msg.client.user.setStatus(status)
+				break
+			case 'r':
+			case 'reload':
+			case 'refresh':
+				msg.client.user.setPresence(config.presence)
 				break
 			default:
 				msg.channel.send(helpmsg)

@@ -62,7 +62,7 @@ client.on('guildCreate', guild => {
 		const defaultChannel = guild.channels.cache.find(channel => channel.permissionsFor(guild.me).has('SEND_MESSAGES') && channel.type == 'text')
 		defaultChannel.send('use `!help`')
 		client.users.fetch(botOwnerID).then(owner => {
-			owner.send(`${owner} - bot was just activated on new guild **${guild.name}**`)
+			owner.send(`${owner} - bot was just activated on a new guild: **${guild.name}**`)
 		})
 		if (!config[guild.id]) {
 			config[guild.id] = configTemplate(guild.name)
