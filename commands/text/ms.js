@@ -1,5 +1,5 @@
 var { saveConfig, config } = require('../../res/Helpers.js')
-var request = require('request')
+const { getStatus } = require('mc-server-status')
 const { MessageEmbed, MessageAttachment } = require('discord.js')
 
 module.exports = {
@@ -9,33 +9,34 @@ module.exports = {
 	help: '`ms <url / name>` - Checks status of server using given url or saved name\n\n`ms list` - lists saved servers\n\n`ms add <name> <url>` - saves server url under short name (or updates url of exisitng saved server)\n\n`ms del <name>` - removes saved server',
 	run: async msg => {
 		const urlRegex = /^(\S+\.\S+|\d+\.\d+\.\d+\.\d+)(:\d+)?$/gm
-		function testConn(url) {
-			let tmp = url.split(':')
-			let mcIP = tmp[0]
-			let mcPort = parseInt(tmp[1]) || 25565
-			request('http://mcapi.us/server/status?ip=' + mcIP + '&port=' + mcPort, function (err, response, body) {
-				if (err) {
-					console.log(err)
-					msg.channel.send('Error getting Minecraft server status...')
-					return
+		function mcStringFromat(s) {
+			let out = s.text
+			if (s.extra) out += s.extra.reduce((reducer, a) => reducer + a.text, '')
+			return out
+		}
+		async function testConn(url) {
+			const status = await getStatus(url).catch(err => {
+				if (err.toString().startsWith('Error: getaddrinfo ENOTFOUND')) {
+					// invalid url
+					msg.channel.send('Could not resolve serer address.')
 				}
-				body = JSON.parse(body)
-				var embed = new MessageEmbed().setTitle('**Minecraft Server Status:**').setDescription('This server is currently **offline**').setColor(0xff0000).addField('Address', url)
-				if (body.online) {
-					embed
-						.setColor(0x00ff00)
-						.setDescription('This server is currently **online**')
-						.addField('Status', `${body.motd}`)
-						.addField('Players', `${body.players.now} / ${body.players.max}`)
-						.setFooter(`Online since ${new Date(Date.now() - body.last_online)}`)
-					if (body.favicon) {
-						const imageStream = Buffer.from(body.favicon, 'base64')
-						const attachment = new MessageAttachment(imageStream, 'icon.png')
-						embed.attachFiles([attachment]).setThumbnail('attachment://icon.png')
-					}
-				}
-				msg.channel.send(embed)
 			})
+			var embed = new MessageEmbed().setTitle('**Minecraft Server Status:**').setDescription('This server is currently **offline**').setColor(0xff0000).addField('Address', url)
+			if (status) {
+				embed
+					.setColor(0x00ff00)
+					.setDescription('This server is currently **online**')
+					.addField('Players', `${status.players.online} / ${status.players.max}`)
+					.addField('Status', `${mcStringFromat(status.description)}`)
+					.addField('Version', `${status.version.name}`)
+				if (status.favicon) {
+					var base64Data = status.favicon.replace(/^data:image\/png;base64,/, '')
+					const imageStream = Buffer.from(base64Data, 'base64')
+					const attachment = new MessageAttachment(imageStream, 'icon.png')
+					embed.attachFiles([attachment]).setThumbnail('attachment://icon.png')
+				}
+			}
+			msg.channel.send(embed)
 		}
 
 		if (!config[msg.guild.id].mc_servers) {
@@ -70,6 +71,11 @@ module.exports = {
 				if (!arg) {
 					msg.reply('No arguments. Try `!help ms`')
 					break
+				}
+
+				// no embed
+				if (!msg.channel.permissionsFor(msg.guild.me).has('EMBED_LINKS')) {
+					return msg.channel.send('Enable `embed messages` permission to use this command')
 				}
 
 				// raw url

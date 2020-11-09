@@ -14,18 +14,18 @@
 	"license": "ISC",
 	"dependencies": {
 		"@discordjs/opus": "^0.1.0",
-		"bufferutil": "^4.0.1",
+		"bufferutil": "^4.0.2",
 		"colors": "^1.4.0",
-		"discord.js": "^12.2.0",
+		"discord.js": "^12.4.1",
 		"erlpack": "github:discordapp/erlpack",
-		"ffmpeg-static": "^4.2.6",
+		"ffmpeg-static": "^4.2.7",
 		"fs": "0.0.1-security",
-		"lodash": "^4.17.19",
-		"request": "^2.88.2",
+		"lodash": "^4.17.20",
+		"mc-server-status": "^2.0.2",
 		"sodium": "^3.0.2",
-		"utf-8-validate": "^5.0.2",
+		"utf-8-validate": "^5.0.3",
 		"ytdl-core": "^2.1.7",
-		"ytsr": "^0.1.18",
+		"ytsr": "^0.1.21",
 		"zlib-sync": "^0.1.7"
 	}
 }
