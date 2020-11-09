@@ -10,7 +10,7 @@ client.on('message', msg => {
 	if (!msg.channel.permissionsFor(msg.guild.me).has('SEND_MESSAGES')) return // must be able to reply
 
 	if (msg.attachments.size < 1) return
-	for (let attachment of msg.attachments.array()) {
+	for (let attachment of msg.attachments.values()) {
 		if (!attachment.name.endsWith('.jpglarge') && !attachment.name.endsWith('.pnglarge')) continue
 		let type = attachment.name.slice(-8)
 		if (attachment.size > 8000000) {

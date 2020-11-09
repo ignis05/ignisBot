@@ -72,9 +72,9 @@ client.on('messageDelete', msg => {
 				.addField('Channel', msg.channel.toString(), true)
 				.addField('Created', msg.createdAt.toLocaleString('en-GB'), true)
 				.addField('Last edited', msg.editedAt ? msg.editedAt.toLocaleString('en-GB') : 'never', true)
-				.addField('Content', msg.content, true)
+				.addField('Content', msg.content || '[none]', true)
 				.setTimestamp()
-			for (let { proxyURL } of msg.attachments.array()) {
+			for (let { proxyURL } of msg.attachments.values()) {
 				embed.addField('Attachment', proxyURL, true)
 			}
 			channel.send(embed).catch(err => console.error(err))

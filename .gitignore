@@ -1,3 +1,5 @@
 node_modules
 data/token.json
 data/config.json
+data/tesseract/*
+!data/tesseract/.gitkeep
