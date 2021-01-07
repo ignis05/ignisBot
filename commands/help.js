@@ -39,12 +39,42 @@ module.exports = {
 			.setTitle('**Available commands:**')
 			.setColor(0x00ff00)
 			.setDescription(`Some commands can only be used in server text chat or DM\n${msg.client.user.username} will not try to execute the command unless it can respond to the channel from which it was called`)
-			.addField('\u200b', '\u200b')
-			.addField('**DM and text chat commands:**', multicommands.join('\n'))
-			.addField('\u200b', '\u200b')
-			.addField('**Text chat commands:**', textCommands.join('\n'))
-			.setThumbnail(msg.client.user.displayAvatarURL({ format: 'png' }))
 			.setFooter(`Type '${msg.guild ? config[msg.guild.id].prefix : ''}help command' for detailed help with 'command'`)
+			.setThumbnail(msg.client.user.displayAvatarURL({ format: 'png' }))
+			.addField('\u200b', '\u200b')
+
+		if (multicommands.join('\n').length < 1024) {
+			embed.addField('**DM and text chat commands:**', multicommands.join('\n'))
+		} else {
+			let string = ''
+			var i = 1
+			for (let command of multicommands) {
+				if ((string + '\n' + command).length < 1024) string += '\n' + command
+				else {
+					embed.addField(`**DM and text chat commands ${i++}:**`, string)
+					string = command
+				}
+			}
+			if (string.length > 0) embed.addField(`**DM and text chat commands ${i++}:**`, string)
+		}
+
+		embed.addField('\u200b', '\u200b')
+
+		if (textCommands.join('\n').length < 1024) {
+			embed.addField('**Text chat commands:**', textCommands.join('\n'))
+		} else {
+			let string = ''
+			var i = 1
+			for (let command of textCommands) {
+				if ((string + '\n' + command).length < 1024) string += '\n' + command
+				else {
+					embed.addField(`**Text chat commands ${i++}:**`, string)
+					string = command
+				}
+			}
+			if (string.length > 0) embed.addField(`**Text chat commands ${i++}:**`, string)
+		}
+
 		if (canDoEmbed) msg.channel.send(embed)
 		else msg.channel.send('__**Allowing bot to send Embed links is recommended for better formatting of messages**__' + '**Available commands:**\n' + `Some commands can only be used in server text chat or DM\n${msg.client.user.username} will not try to execute the command unless it can respond to the channel from which it was called\n\n` + '**DM and text chat commands:\n**' + multicommands.join('\n') + '**\nText chat commands:**\n' + textCommands.join('\n') + `\nType '${msg.guild ? config[msg.guild.id].prefix : ''}help command' for detailed help with 'command'`)
 	},
