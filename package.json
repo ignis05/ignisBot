@@ -14,9 +14,9 @@
 	"license": "ISC",
 	"dependencies": {
 		"@discordjs/opus": "^0.1.0",
-		"bufferutil": "^4.0.2",
+		"bufferutil": "^4.0.3",
 		"colors": "^1.4.0",
-		"discord.js": "^12.4.1",
+		"discord.js": "^12.5.1",
 		"erlpack": "github:discordapp/erlpack",
 		"ffmpeg-static": "^4.2.7",
 		"fs": "0.0.1-security",
@@ -24,9 +24,9 @@
 		"mc-server-status": "^2.0.2",
 		"sodium": "^3.0.2",
 		"tesseract.js": "^2.1.4",
-		"utf-8-validate": "^5.0.3",
-		"ytdl-core": "^2.1.7",
-		"ytsr": "^0.1.21",
+		"utf-8-validate": "^5.0.4",
+		"ytdl-core-discord": "^1.2.5",
+		"ytsr": "^3.2.1",
 		"zlib-sync": "^0.1.7"
 	}
 }

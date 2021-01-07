@@ -1,5 +1,5 @@
 var { formatTime } = require('../../res/Helpers')
-const ytdl = require('ytdl-core')
+const ytdl = require('ytdl-core-discord')
 const ytsr = require('ytsr')
 const { MessageEmbed, Collection } = require('discord.js')
 
@@ -74,37 +74,36 @@ function fetchYT(resolvable) {
 
 		if (!songInfo) {
 			const filters = await ytsr.getFilters(resolvable)
-			var filter = filters.get('Type').find(o => o.name === 'Video')
-			const search = await ytsr(resolvable, { limit: 1, nextpageRef: filter.ref }).catch(err => {})
+			var filter = filters.get('Type').get('Video')
+			const search = await ytsr(filter.url, { limit: 1 }).catch(err => {})
 			if (!search || search.items.length < 1) {
 				console.log('YT search failed')
 				return resolve(null)
 			}
 
 			const item = search.items[0]
-			console.log(item)
+			// console.log(item)
 
 			song = {
 				title: item.title,
-				url: item.link,
+				url: item.url,
 				length: item.duration,
-				thumbnail: item.thumbnail.split('?')[0],
+				thumbnail: `https://i.ytimg.com/vi/${item.id}/hqdefault.jpg`,
 			}
 		} else {
 			song = {
-				title: songInfo.title,
-				url: songInfo.video_url,
-				length: formatTime(songInfo.length_seconds),
-				thumbnail: `https://i.ytimg.com/vi/${songInfo.video_id}/hqdefault.jpg`,
+				title: songInfo.videoDetails.title,
+				url: songInfo.videoDetails.video_url,
+				length: formatTime(songInfo.videoDetails.lengthSeconds),
+				thumbnail: `https://i.ytimg.com/vi/${songInfo.videoDetails.videoId}/hqdefault.jpg`,
 			}
 		}
-
 		console.log(song)
 		resolve(song)
 	})
 }
 
-function play(guild, song) {
+async function play(guild, song) {
 	const serverQueue = queue.get(guild.id)
 	if (!song) {
 		serverQueue.textChannel.send('Queue finished. Disconnecting.')
@@ -114,7 +113,7 @@ function play(guild, song) {
 	}
 
 	const dispatcher = serverQueue.connection
-		.play(ytdl(song.url))
+		.play(await ytdl(song.url))
 		.on('finish', () => {
 			serverQueue.songs.shift()
 			play(guild, serverQueue.songs[0])
