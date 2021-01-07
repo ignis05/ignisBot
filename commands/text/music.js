@@ -1,5 +1,5 @@
 var { formatTime } = require('../../res/Helpers')
-const ytdl = require('ytdl-core-discord')
+const ytdl = require('ytdl-core')
 const ytsr = require('ytsr')
 const { MessageEmbed, Collection } = require('discord.js')
 
@@ -113,7 +113,7 @@ async function play(guild, song) {
 	}
 
 	const dispatcher = serverQueue.connection
-		.play(await ytdl(song.url))
+		.play(ytdl(song.url))
 		.on('finish', () => {
 			serverQueue.songs.shift()
 			play(guild, serverQueue.songs[0])
