@@ -174,7 +174,7 @@ module.exports = {
 	name: 'music',
 	aliases: ['voice', 'song', 'm'],
 	desc: `used to play music from youtube`,
-	help: '`music play <link / url>` - plays music from specified url or fetches first search result\nIf music is already playing adds it to queue instead.\n`music queue` - shows current song queue\n`music skip [n]` - skips n-th song from playlist. If no valid n is given skips currently playing song\n`music stop` - leaves voice channel and deletes queue\n`music playnow <link / url>` - Adds song to the front of the queue and skips current song\n`music shuffle` - radomly shuffles songs in playlist\n`music switch` - Updates selected voice channel and text channel\n`music earrape <link / url>` - like "voice playnow" but louder\n\nBot will automatically leave channel once queue is emptied.',
+	help: '`music play <link / url>` - plays music from specified url or fetches first search result\nIf music is already playing adds it to queue instead.\n`music playlist` - adds songs from youtube playlist to queue\n`music queue` - shows current song queue\n`music skip [n]` - skips n-th song from playlist. If no valid n is given skips currently playing song\n`music stop` - leaves voice channel and deletes queue\n`music playnow <link / url>` - Adds song to the front of the queue and skips current song\n`music shuffle` - radomly shuffles songs in playlist\n`music switch` - Updates selected voice channel and text channel\n`music earrape <link / url>` - like "voice playnow" but louder\n\nBot will automatically leave channel once queue is emptied.',
 	run: async msg => {
 		let args = msg.content.split(' ').filter(arg => arg != '')
 		args.shift()
