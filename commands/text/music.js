@@ -60,8 +60,8 @@ async function execute(msg, serverQueue, volume) {
 		if (!msg.channel.permissionsFor(msg.guild.me).has('EMBED_LINKS')) {
 			msg.channel.send(`${song.title} has been added to the queue!`)
 		} else {
-			let totalLength = serverQueue.songs.reduce((reducer, song) => (reducer += parseFloat(song.length)), 0)
-			var embed = new MessageEmbed().setTitle('**Song added to queue**').setColor(0x00ff00).setImage(song.thumbnail).addField('Title', song.title, true).addField('Url', song.url, true).addField('Length', song.length, true).addField('Total playlist length', totalLength, true)
+			let totalLength = serverQueue.songs.reduce((reducer, song) => (reducer += song.length), 0)
+			var embed = new MessageEmbed().setTitle('**Song added to queue**').setColor(0x00ff00).setImage(song.thumbnail).addField('Title', song.title, true).addField('Url', song.url, true).addField('Length', formatTime(song.length), true).addField('Total playlist length', formatTime(totalLength), true)
 			msg.channel.send(embed)
 		}
 	}
@@ -90,14 +90,14 @@ function fetchYT(resolvable) {
 			song = {
 				title: item.title,
 				url: item.url,
-				length: item.duration,
+				length: parseFloat(item.duration),
 				thumbnail: `https://i.ytimg.com/vi/${item.id}/hqdefault.jpg`,
 			}
 		} else {
 			song = {
 				title: songInfo.videoDetails.title,
 				url: songInfo.videoDetails.video_url,
-				length: formatTime(songInfo.videoDetails.lengthSeconds),
+				length: parseFloat(songInfo.videoDetails.lengthSeconds),
 				thumbnail: `https://i.ytimg.com/vi/${songInfo.videoDetails.videoId}/hqdefault.jpg`,
 			}
 		}
@@ -140,11 +140,33 @@ function list(serverQueue, msg) {
 		msg.channel.send('```' + JSON.stringify(serverQueue.songs, null, 4) + '```')
 	} else {
 		var embed = new MessageEmbed().setTitle('**Song queue**').setColor(0x0000ff)
-		var str = serverQueue.songs.reduce((acc, song, i) => acc + `${i} - [${song.title}](${song.url}) [${song.length}] - requested by ${song.user}\n`, '')
+
+		var reduceFunc = (acc, song, i) => acc + `${i} - [${song.title}](${song.url}) [${formatTime(song.length)}] - requested by ${song.user}\n`
+
+		var str = serverQueue.songs.reduce(reduceFunc, '')
 		embed.addField('Queue', str)
-		let totalLength = serverQueue.song.reduce((reducer, song) => (reducer += parseFloat(song.length)), 0)
-		embed.addField('Total queue length', totalLength)
-		msg.channel.send(embed)
+		let totalLength = serverQueue.songs.reduce((reducer, song) => (reducer += song.length), 0)
+		embed.addField('Total queue length', formatTime(totalLength))
+		msg.channel.send(embed).catch(err => {
+			if (err.code == 50035) {
+				console.log('queue too long - sending short version')
+				var embed2 = new MessageEmbed().setTitle('**Song queue**').setColor(0x0000ff)
+
+				var length = 1024
+				var i = 0
+				var firstFew = ''
+				for (let song of serverQueue.songs) {
+					let s = reduceFunc('', song, i)
+					length -= s.length
+					i++
+					if (length <= 0) break
+					firstFew += s
+				}
+
+				embed2.addField(`Queue too long`, `Queue is too long to send in one message - logging first ${i} songs instead`).addField('Queue', firstFew).addField('Total queue length', formatTime(totalLength)).addField(`Total songs in queue`, `${serverQueue.songs.length}`)
+				msg.channel.send(embed2).catch(err => console.error(err))
+			} else console.error(err)
+		})
 	}
 }
 
@@ -284,7 +306,7 @@ module.exports = {
 					.slice(2)
 					.join(' ')
 
-				var playlist = await ytpl(playlisturl, { limit: serverQueue ? PLAYLIST_LIMIT - serverQueue.songs.length : 20 }).catch(err => msg.channel.send('Failed to resolve queue'))
+				var playlist = await ytpl(playlisturl, { limit: serverQueue ? PLAYLIST_LIMIT - serverQueue.songs.length : PLAYLIST_LIMIT }).catch(err => console.log('Failed to resolve queue'))
 				if (!playlist || !playlist.items || playlist.items.length < 2) return msg.channel.send('Failed to resolve queue')
 
 				var s1 = playlist.items.shift()
@@ -292,7 +314,7 @@ module.exports = {
 				var song1 = {
 					title: s1.title,
 					url: s1.shortUrl,
-					length: formatTime(s1.durationSec),
+					length: parseFloat(s1.durationSec),
 					thumbnail: `https://i.ytimg.com/vi/${s1.id}/hqdefault.jpg`,
 					user: msg.author,
 				}
@@ -341,7 +363,7 @@ module.exports = {
 					var song = {
 						title: s0.title,
 						url: s0.shortUrl,
-						length: formatTime(s0.durationSec),
+						length: parseFloat(s0.durationSec),
 						thumbnail: `https://i.ytimg.com/vi/${s0.id}/hqdefault.jpg`,
 						user: msg.author,
 					}
@@ -352,8 +374,8 @@ module.exports = {
 				if (!msg.channel.permissionsFor(msg.guild.me).has('EMBED_LINKS')) {
 					msg.channel.send(`${playlist.title} has been added to the queue!`)
 				} else {
-					let totalLength = newServerQueue.songs.reduce((reducer, song) => (reducer += parseFloat(song.length)), 0)
-					var embed = new MessageEmbed().setTitle('**Playlist added to queue**').setColor(0x00ff00).setImage(song1.thumbnail).addField('Title', song1.title, true).addField('Url', playlist.url, true).addField('Total playlist length', totalLength, true)
+					let totalLength = newServerQueue.songs.reduce((reducer, song) => (reducer += song.length), 0)
+					var embed = new MessageEmbed().setTitle('**Playlist added to queue**').setColor(0x00ff00).setImage(song1.thumbnail).addField('Title', playlist.title, true).addField('Url', playlist.url, true).addField('Total playlist length', formatTime(totalLength), true)
 					msg.channel.send(embed)
 				}
 
