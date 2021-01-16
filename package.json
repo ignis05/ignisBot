@@ -25,7 +25,8 @@
 		"sodium": "^3.0.2",
 		"tesseract.js": "^2.1.4",
 		"utf-8-validate": "^5.0.4",
-		"ytdl-core": "^4.4.1",
+		"ytdl-core": "^4.4.3",
+		"ytpl": "^2.0.4",
 		"ytsr": "^3.2.1",
 		"zlib-sync": "^0.1.7"
 	}

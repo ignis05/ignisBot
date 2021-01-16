@@ -1,7 +1,9 @@
 var { formatTime } = require('../../res/Helpers')
 const ytdl = require('ytdl-core')
 const ytsr = require('ytsr')
+const ytpl = require('ytpl')
 const { MessageEmbed, Collection } = require('discord.js')
+const PLAYLIST_LIMIT = 50
 
 const queue = new Collection()
 
@@ -37,7 +39,7 @@ async function execute(msg, serverQueue, volume) {
 
 		queue.set(msg.guild.id, queueContruct)
 
-		if (queueContruct.songs.length > 20) {
+		if (queueContruct.songs.length > PLAYLIST_LIMIT) {
 			msg.channel.send('Queue is full')
 			return
 		}
@@ -58,7 +60,8 @@ async function execute(msg, serverQueue, volume) {
 		if (!msg.channel.permissionsFor(msg.guild.me).has('EMBED_LINKS')) {
 			msg.channel.send(`${song.title} has been added to the queue!`)
 		} else {
-			var embed = new MessageEmbed().setTitle('**Song added to queue**').setColor(0x00ff00).setImage(song.thumbnail).addField('Title', song.title, true).addField('Url', song.url, true).addField('Length', song.length, true)
+			let totalLength = serverQueue.songs.reduce((reducer, song) => (reducer += parseFloat(song.length)), 0)
+			var embed = new MessageEmbed().setTitle('**Song added to queue**').setColor(0x00ff00).setImage(song.thumbnail).addField('Title', song.title, true).addField('Url', song.url, true).addField('Length', song.length, true).addField('Total playlist length', totalLength, true)
 			msg.channel.send(embed)
 		}
 	}
@@ -139,13 +142,15 @@ function list(serverQueue, msg) {
 		var embed = new MessageEmbed().setTitle('**Song queue**').setColor(0x0000ff)
 		var str = serverQueue.songs.reduce((acc, song, i) => acc + `${i} - [${song.title}](${song.url}) [${song.length}] - requested by ${song.user}\n`, '')
 		embed.addField('Queue', str)
+		let totalLength = serverQueue.song.reduce((reducer, song) => (reducer += parseFloat(song.length)), 0)
+		embed.addField('Total queue length', totalLength)
 		msg.channel.send(embed)
 	}
 }
 
 module.exports = {
 	name: 'music',
-	aliases: ['voice', 'song'],
+	aliases: ['voice', 'song', 'm'],
 	desc: `used to play music from youtube`,
 	help: '`music play <link / url>` - plays music from specified url or fetches first search result\nIf music is already playing adds it to queue instead.\n`music queue` - shows current song queue\n`music skip [n]` - skips n-th song from playlist. If no valid n is given skips currently playing song\n`music stop` - leaves voice channel and deletes queue\n`music playnow <link / url>` - Adds song to the front of the queue and skips current song\n`music shuffle` - radomly shuffles songs in playlist\n`music switch` - Updates selected voice channel and text channel\n`music earrape <link / url>` - like "voice playnow" but louder\n\nBot will automatically leave channel once queue is emptied.',
 	run: async msg => {
@@ -191,8 +196,6 @@ module.exports = {
 
 				break
 			case 'queue':
-			case 'list':
-			case 'playlist':
 				list(serverQueue, msg)
 				break
 			case 'playnow':
@@ -273,6 +276,89 @@ module.exports = {
 					})
 				}
 				break
+			case 'list':
+			case 'playlist':
+				let playlisturl = msg.content
+					.split(' ')
+					.filter(arg => arg != '')
+					.slice(2)
+					.join(' ')
+
+				var playlist = await ytpl(playlisturl, { limit: serverQueue ? PLAYLIST_LIMIT - serverQueue.songs.length : 20 }).catch(err => msg.channel.send('Failed to resolve queue'))
+				if (!playlist || !playlist.items || playlist.items.length < 2) return msg.channel.send('Failed to resolve queue')
+
+				var s1 = playlist.items.shift()
+
+				var song1 = {
+					title: s1.title,
+					url: s1.shortUrl,
+					length: formatTime(s1.durationSec),
+					thumbnail: `https://i.ytimg.com/vi/${s1.id}/hqdefault.jpg`,
+					user: msg.author,
+				}
+
+				if (!serverQueue) {
+					var song = song1
+
+					const voiceChannel = msg.member.voice.channel
+					if (!voiceChannel) return msg.channel.send('You need to be in a voice channel to play music')
+					const permissions = voiceChannel.permissionsFor(msg.client.user)
+					if (!permissions.has('CONNECT') || !permissions.has('SPEAK')) {
+						return msg.channel.send("I don't have permissions CONNECT and SPEAK in this voice channel")
+					}
+
+					const queueContruct = {
+						textChannel: msg.channel,
+						voiceChannel: voiceChannel,
+						connection: null,
+						songs: [],
+						playing: true,
+					}
+
+					queue.set(msg.guild.id, queueContruct)
+
+					if (queueContruct.songs.length > PLAYLIST_LIMIT) {
+						msg.channel.send('Queue is full')
+						return
+					}
+
+					queueContruct.songs.push(song)
+
+					try {
+						var connection = await voiceChannel.join()
+						queueContruct.connection = connection
+						play(msg.guild, queueContruct.songs[0])
+					} catch (err) {
+						console.log(err)
+						queue.delete(msg.guild.id)
+						return msg.channel.send(err)
+					}
+				}
+
+				var newServerQueue = queue.get(msg.guild.id)
+
+				for (let s0 of playlist.items) {
+					var song = {
+						title: s0.title,
+						url: s0.shortUrl,
+						length: formatTime(s0.durationSec),
+						thumbnail: `https://i.ytimg.com/vi/${s0.id}/hqdefault.jpg`,
+						user: msg.author,
+					}
+
+					newServerQueue.songs.push(song)
+				}
+
+				if (!msg.channel.permissionsFor(msg.guild.me).has('EMBED_LINKS')) {
+					msg.channel.send(`${playlist.title} has been added to the queue!`)
+				} else {
+					let totalLength = newServerQueue.songs.reduce((reducer, song) => (reducer += parseFloat(song.length)), 0)
+					var embed = new MessageEmbed().setTitle('**Playlist added to queue**').setColor(0x00ff00).setImage(song1.thumbnail).addField('Title', song1.title, true).addField('Url', playlist.url, true).addField('Total playlist length', totalLength, true)
+					msg.channel.send(embed)
+				}
+
+				break
+
 			default:
 				msg.channel.send('Command unknown - use `!help voice` to see available commands')
 				break
