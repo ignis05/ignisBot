@@ -3,10 +3,10 @@ const { getStatus } = require('mc-server-status')
 const { MessageEmbed, MessageAttachment } = require('discord.js')
 
 module.exports = {
-	name: 'ms',
-	aliases: ['mc', 'minecraft'],
+	name: 'mc',
+	aliases: ['ms', 'minecraft'],
 	desc: `Allows to check minecraft server status`,
-	help: '`ms <url / name>` - Checks status of server using given url or saved name\n\n`ms list` - lists saved servers\n\n`ms add <name> <url>` - saves server url under short name (or updates url of exisitng saved server)\n\n`ms del <name>` - removes saved server',
+	help: '`mc <url / name>` - Checks status of server using given url or saved name\n\n`mc list` - lists saved servers\n\n`mc add <name> <url>` - saves server url under short name (or updates url of exisitng saved server)\n\n`mc del <name>` - removes saved server',
 	run: async msg => {
 		const urlRegex = /^(\S+\.\S+|\d+\.\d+\.\d+\.\d+)(:\d+)?$/gm
 		function mcStringFromat(s) {
