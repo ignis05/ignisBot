@@ -1,13 +1,19 @@
 var { botOwnerID } = require('../res/Helpers')
 const { Collection } = require('discord.js')
+const ms = require('ms')
+const moment = require('moment')
 const REMINDERS = new Collection()
+
+const fullTimeFormat = 'DD/MM/YYYY HH:mm'
+
+//TODO reminders persist between restarts
 
 module.exports = {
 	name: 'remind',
 	aliases: ['remindme', 'reminder'],
 	categories: ['text', 'dm'],
 	desc: `sends a delayed message with a reminder`,
-	help: '`remind <time> <msg>` - bot will reposnd with <msg> after <time> has passed\n-time can be passed as minutes (ex: 30) or hours (ex: 0.5h) or as [epoh timestamp](https://www.epochconverter.com/)\n`remind list` - lists all pending reminders set in current channel\n`remind del <reminder_ID>` - cancels specific reminder. ID can be obtained from reminders list',
+	help: '`remind <time> <msg>` - bot will reposnd with <msg> after <time> has passed\n-time can be passed as minutes (ex: 30m) or hours (ex: 0.5h), or as `h:mm` format\n`remind <time>\\n<msg>` - same, but time can now have spaces and accepts `DD/MM h:mm` format\n`remind list` - lists all pending reminders set in current channel\n`remind del <reminder_ID>` - cancels specific reminder. ID can be obtained from reminders list',
 	run: msg => {
 		let msgArr = msg.content.split(' ').filter(arg => arg != '')
 		if (msgArr[1] == 'list') {
@@ -28,27 +34,55 @@ module.exports = {
 			msg.channel.send(`Deleted reminder ${reminder.id}`)
 			return
 		}
-		let time = msgArr[1].replace(',', '.')
-		let pureTime = time.endsWith('h') ? parseFloat(time.slice(0, -1)) * 60 : parseFloat(time)
-		if (isNaN(pureTime)) {
-			console.log('NaN')
-			msg.reply(`Invalid argument - NaN`)
-			return
+
+		// parse reminder content and date checking if newline format is used
+		var reminderContent, dateString
+		if (msg.content.includes('\n')) {
+			let msgArr2 = msg.content.split('\n')
+			dateString = msgArr2[0].split(' ')
+			dateString.shift()
+			dateString = dateString.join(' ')
+			reminderContent = msgArr2[1]
+		} else {
+			msgArr.shift()
+			dateString = msgArr.shift()
+			reminderContent = msgArr.join(' ')
 		}
-		var timeout = pureTime * 60000
-		// 25.04.2020 - epoch timestamp
-		if (pureTime > 1587823909) {
-			timeout = pureTime * 1000 - Date.now()
+
+		console.log(reminderContent, dateString)
+
+		let parsedBy = 'ms'
+		let timeout = ms(dateString)
+		let date = moment(Date.now() + timeout)
+		if (!date.isValid()) {
+			date = moment(dateString, 'DD/MM H:mm')
+			parsedBy = 'DD/MM H:mm'
+			if (!date.isValid()) {
+				date = moment(dateString, 'H:mm')
+				parsedBy = 'H:mm'
+				if (!date.isValid()) return msg.channel.send('Invalid date')
+				// add 1 day if date already passed
+				if (moment().diff(date) > 0) {
+					date.add(1, 'd')
+					parsedBy = 'H:mm + 1d'
+				}
+			}
+			timeout = date.diff(moment())
 		}
-		var remindDate = new Date(Date.now() + timeout)
+
+		// larger than 32 bit int - wont work with timeout
+		if (timeout > 2147483647) {
+			console.log('timeout too big')
+			return msg.channel.send("Can't set reminder this far away")
+		}
+
 		let snowflake = Date.now().toString(32)
-		console.log(`Set reminder on ${remindDate.toLocaleString()}`)
-		msg.reply(`Set reminder on ${remindDate.toLocaleString()}\nReminder id: **${snowflake}**`)
-		var remindMessage = msgArr.slice(2).join(' ')
+		console.log(`Set reminder on ${date.format(fullTimeFormat)} - time parsed by ${parsedBy}`)
+		msg.reply(`Set reminder on ${date.format(fullTimeFormat)}\nReminder id: **${snowflake}**`)
 		let timeoutCancel = msg.client.setTimeout(() => {
-			msg.channel.send(`${msg.author} ${remindMessage}`).catch(err => console.log(err.message))
+			msg.channel.send(`${msg.author} ${reminderContent}`).catch(err => console.log(err.message))
 			REMINDERS.delete(snowflake)
 		}, timeout)
-		REMINDERS.set(snowflake, { channel: msg.channel, cancel: timeoutCancel, msg: remindMessage, date: remindDate, author: msg.author, id: snowflake })
+		REMINDERS.set(snowflake, { channel: msg.channel, cancel: timeoutCancel, msg: reminderContent, date: date.toDate(), author: msg.author, id: snowflake })
 	},
 }
