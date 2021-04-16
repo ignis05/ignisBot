@@ -3,6 +3,7 @@ const client = require('../../res/client')
 const { MessageAttachment } = require('discord.js')
 const _ = require('lodash')
 
+// jpglarge and pnglarge
 client.on('message', msg => {
 	if (msg.author.bot || !msg.guild || !config[msg.guild.id]) return // no bots, enabled guild only
 	if (!config[msg.guild.id].utils || !config[msg.guild.id].utils.jpglarge) return // if jpglarge enabled on guild
@@ -22,6 +23,23 @@ client.on('message', msg => {
 	}
 })
 
+// tenor fix
+client.on('message', msg => {
+	if (msg.author.bot || !msg.guild || !config[msg.guild.id]) return // no bots, enabled guild only
+	if (!config[msg.guild.id].utils || !config[msg.guild.id].utils.tenorfix) return // if tenorfix enabled on guild
+	if (config[msg.guild.id].bannedChannels.includes(msg.channel.id)) return // no blacklist and admin override
+	if (!msg.channel.permissionsFor(msg.guild.me).has('SEND_MESSAGES')) return // must be able to reply
+	if (/^https:\/\/media\.tenor\.co\/videos\/.*\/mp4$/i.test(msg.content) && msg.embeds.length == 0) {
+		console.log('tenor link')
+		let attachment = new MessageAttachment(msg.cleanContent, 'fixed.mp4')
+		if (attachment.size > 8000000) {
+			msg.channel.send(`Failed to fix tenor embed from ${msg.author}'s message - file is larger than 8MB`)
+			return
+		}
+		msg.channel.send(`Fixed tenor embed from ${msg.author}'s message:`, { files: [attachment], allowedMentions: { users: [] } }) // mention without pinging
+	}
+})
+
 module.exports = {
 	name: 'utils',
 	desc: `manages utility functions on guild`,
@@ -37,8 +55,9 @@ module.exports = {
 			saveConfig()
 		}
 
-		var args = msg.content.toLowerCase().replace('pnglarge', 'jpglarge').split(' ').slice(1)
-		var argsClean = args.filter(arg => ['jpglarge'].includes(arg))
+		var args = msg.content.toLowerCase().replace('pnglarge', 'jpglarge').split(' ').slice(1) // replace pnglarge with jpglarge since its the same
+
+		var argsClean = args.filter(arg => ['jpglarge', 'tenorfix'].includes(arg))
 		var enable = args.includes('enable') || args.includes('on')
 
 		for (let arg of argsClean) {
