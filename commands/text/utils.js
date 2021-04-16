@@ -43,7 +43,7 @@ client.on('message', msg => {
 module.exports = {
 	name: 'utils',
 	desc: `manages utility functions on guild`,
-	help: '`utils (enable | disable) <name>` - turns utilities on or off\n\nAvailable utilities:\n**jpglarge** - bot will automatically convert and send back any ".jpglarge" or ".pnglarge" attachments',
+	help: '`utils (enable | disable) <name>` - turns utilities on or off\n\nAvailable utilities:\n**jpglarge** - bot will automatically convert and send back any ".jpglarge" or ".pnglarge" attachments\n**tenorfix** - bot will reupload media.tenor links that failed to embed properly',
 	run: msg => {
 		if (!msg.member.hasPermission('ADMINISTRATOR') && msg.author.id != botOwnerID) {
 			msg.reply("You don't have permission to use this command")
