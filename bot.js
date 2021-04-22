@@ -43,10 +43,11 @@ try {
 }
 // #endregion
 
-const { fetchCommands, saveConfig, botOwnerID } = require('./res/Helpers.js')
+const { fetchCommands, fetchInteractions, saveConfig, botOwnerID } = require('./res/Helpers.js')
 
 // #region importing commands
 const commands = fetchCommands()
+const interactions = fetchInteractions()
 // #endregion importing commands
 
 client.on('ready', () => {
@@ -55,6 +56,28 @@ client.on('ready', () => {
 		owner.send("I'm alive!")
 	})
 	console.log("I'm alive!".rainbow)
+})
+
+// one time lauch - register interactions
+client.once('ready', async () => {
+	console.log('Registering interactions:')
+	// register global commands on test guild so they are instantly available
+	let testGuild = await client.guilds.fetch('467313439413501983')
+	for (let interaction of interactions) {
+		console.log(`Registering inteaction: ${interaction.commandData.name}`.green)
+		testGuild.commands.create(interaction.commandData)
+		client.application.commands.create(interaction.commandData)
+	}
+})
+
+// interaction handler
+client.on('interaction', interaction => {
+	if (!interaction.isCommand()) return
+	// use correct command
+	let inter = interactions.find(i => i.commandData.name == interaction.commandName)
+	// unknown command
+	if (!inter) return console.log(`Received invalid interaction ${interaction.commandName}`.yellow)
+	else inter.run(interaction)
 })
 
 client.on('guildCreate', guild => {

@@ -177,6 +177,38 @@ module.exports = {
 		}
 		return commands
 	},
+	fetchInteractions: log => {
+		const interactions = []
+		let inter_files = fs
+			.readdirSync(__dirname + '/../interactions/', { withFileTypes: true })
+			.filter(dirent => dirent.isFile())
+			.map(dirent => dirent.name)
+		var noDesc = false
+		var errors = false
+		for (let cmd of inter_files) {
+			try {
+				let temp = require(__dirname + `/../interactions/${cmd}`)
+				// validate module.exports
+				if (!temp.commandData) throw 'no commandData found'
+				if (!temp.commandData.name) throw 'no name found'
+				if (!temp.commandData.description) {
+					noDesc = true
+					console.log(`${cmd} - loaded, but is missing description`.warn)
+				}
+				// set default properties
+				interactions.push(temp)
+			} catch (err) {
+				errors = true
+				if (log) console.log(`${cmd} - not loaded, file is invalid`.error)
+				if (log) console.log(err)
+			}
+		}
+		if (errors) console.log("Some files weren't loaded - check errors above for details".redRev)
+		else console.log('Everything loaded correctly'.greenRev)
+		if (noDesc) console.log('Some files are missing description'.warn)
+
+		return interactions
+	},
 	config: config,
 	botOwnerID: '226032144856776704',
 }
