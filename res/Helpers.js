@@ -177,7 +177,7 @@ module.exports = {
 		}
 		return commands
 	},
-	fetchInteractions: log => {
+	fetchInteractions: () => {
 		const interactions = []
 		let inter_files = fs
 			.readdirSync(__dirname + '/../interactions/', { withFileTypes: true })
@@ -199,8 +199,8 @@ module.exports = {
 				interactions.push(temp)
 			} catch (err) {
 				errors = true
-				if (log) console.log(`${cmd} - not loaded, file is invalid`.error)
-				if (log) console.log(err)
+				console.log(`${cmd} - not loaded, file is invalid`.error)
+				console.log(err)
 			}
 		}
 		if (errors) console.log("Some files weren't loaded - check errors above for details".redRev)
