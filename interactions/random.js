@@ -51,8 +51,8 @@ module.exports = {
 
 			for (let option of inter.options) {
 				if (option.name === 'repeat') {
-					if (option.value < 1) return inter.reply(`"repeat" must be a positive integer`, { emphereal: true })
-					if (option.value > 100) return inter.reply(`"repeat" cant be larger than 100`, { emphereal: true })
+					if (option.value < 1) return inter.reply(`"repeat" must be a positive integer`, { ephemeral: true })
+					if (option.value > 100) return inter.reply(`"repeat" cant be larger than 100`, { ephemeral: true })
 				}
 				config[inter.guild.id].random[option.name] = option.value
 			}
@@ -62,8 +62,8 @@ module.exports = {
 
 		for (let option of inter.options) {
 			if (option.name === 'repeat') {
-				if (option.value < 1) return inter.reply(`"repeat" must be a positive integer`, { emphereal: true })
-				if (option.value > 100) return inter.reply(`"repeat" cant be larger than 100`, { emphereal: true })
+				if (option.value < 1) return inter.reply(`"repeat" must be a positive integer`, { ephemeral: true })
+				if (option.value > 100) return inter.reply(`"repeat" cant be larger than 100`, { ephemeral: true })
 			}
 			options[option.name] = option.value
 		}
