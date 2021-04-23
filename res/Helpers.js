@@ -91,7 +91,7 @@ module.exports = {
 	 * Saves config object to ./data/config.json
 	 * @param {Discord.TextChannel} channel Channel to send reply to
 	 * @param {String} reply If truthy, sends this string in to the channel after saing changes
-	 * @returns
+	 * @returns {Promise} that is resolved after succesfully saving
 	 */
 	saveConfig: function (channel, reply) {
 		return new Promise((res, rej) => {

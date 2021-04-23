@@ -25,6 +25,7 @@ module.exports = {
 		description: `Displays bot statistics`,
 	},
 	run: async inter => {
+		inter.defer()
 		var code = await countLines()
 		var guilds = inter.client.guilds.cache.array().map(guild => guild.name)
 		if (!inter.guild || inter.channel.permissionsFor(inter.guild.me).has('EMBED_LINKS')) {
@@ -35,9 +36,9 @@ module.exports = {
 				.addField('Code', `My code currently consinsts of **${code.lines}** lines,\nand is divided between **${code.files}** files.`)
 				.addField('Guilds', `I am currently in **${guilds.length}** guilds:\n${guilds.join(', ')}`)
 				.addField('Uptime', `I've been running for ${msToString(inter.client.uptime)}`)
-			inter.reply(embed)
+			inter.editReply(embed)
 		} else {
-			inter.reply(`Allow embeds for prettier outputs.\nMy code currently consinsts of **${code.lines}** lines,\nand is divided between **${code.files}** files.\nI am currently in **${guilds.length}** guilds:\n${guilds.join(', ')}\nI've been running for ${msToString(inter.client.uptime)}`)
+			inter.editReply(`Allow embeds for prettier outputs.\nMy code currently consinsts of **${code.lines}** lines,\nand is divided between **${code.files}** files.\nI am currently in **${guilds.length}** guilds:\n${guilds.join(', ')}\nI've been running for ${msToString(inter.client.uptime)}`)
 		}
 	},
 }
