@@ -23,14 +23,14 @@ module.exports = {
 			},
 		],
 	},
-	run: interaction => {
+	run: inter => {
 		var min = 0
 		var max = 9
 		var repeat = 1
 
-		if (interaction.guild && config[interaction.guild.id].random) {
-			min = config[interaction.guild.id].random.min
-			max = config[interaction.guild.id].random.max
+		if (inter.guild && config[inter.guild.id].random) {
+			min = config[inter.guild.id].random.min
+			max = config[inter.guild.id].random.max
 		}
 
 		/* if (tmp_arr[1] === 'set') {
@@ -42,20 +42,23 @@ module.exports = {
 			return
 		} */
 
-		for (let option of interaction.options) {
+		for (let option of inter.options) {
 			let tmp
 			switch (option.name) {
 				case 'min':
 					tmp = parseInt(option.value)
 					if (!isNaN(tmp) && isFinite(tmp)) min = tmp
+					else return inter.reply(`Error: Invalid "min" parameter`, { ephemeral: true })
 					break
 				case 'max':
 					tmp = parseInt(option.value)
 					if (!isNaN(tmp) && isFinite(tmp)) max = tmp
+					else return inter.reply(`Error: Invalid "max" parameter`, { ephemeral: true })
 					break
 				case 'repeat':
 					tmp = parseInt(option.value)
 					if (!isNaN(tmp) && isFinite(tmp) && repeat >= 1) repeat = tmp
+					else return inter.reply(`Error: Invalid "repeat" parameter`, { ephemeral: true })
 					break
 			}
 		}
@@ -66,6 +69,6 @@ module.exports = {
 			str += `\n${rand}`
 		}
 
-		interaction.reply(`Here are your random numbers picked from: **< ${min}, ${max} >**:` + str)
+		inter.reply(`Here are your random numbers picked from: **< ${min}, ${max} >**:` + str)
 	},
 }

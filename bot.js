@@ -43,7 +43,7 @@ try {
 }
 // #endregion
 
-const { fetchCommands, fetchInteractions, saveConfig, botOwnerID } = require('./res/Helpers.js')
+const { fetchCommands, fetchInteractions, saveConfig, botOwnerID, testGuildID } = require('./res/Helpers.js')
 
 // #region importing commands
 const commands = fetchCommands()
@@ -60,11 +60,9 @@ client.on('ready', () => {
 
 // one time lauch - register interactions
 client.once('ready', async () => {
-	console.log('Registering interactions:')
 	// register global commands on test guild so they are instantly available
-	let testGuild = await client.guilds.fetch('467313439413501983')
+	let testGuild = await client.guilds.fetch(testGuildID)
 	for (let interaction of interactions) {
-		console.log(`Registering inteaction: ${interaction.commandData.name}`.green)
 		testGuild.commands.create(interaction.commandData)
 		client.application.commands.create(interaction.commandData)
 	}
@@ -72,7 +70,24 @@ client.once('ready', async () => {
 
 // interaction handler
 client.on('interaction', interaction => {
+	// dont handle pings
 	if (!interaction.isCommand()) return
+
+	// for guilds
+	if (interaction.guild) {
+		// if bot is not enabled on this guild
+		if (!config[interaction.guild.id]) {
+			client.users.fetch(botOwnerID).then(owner => {
+				owner.send(`${owner} - bot was just activated on new guild ${interaction.guild.name}`)
+			})
+			config[interaction.guild.id] = configTemplate(interaction.guild.name)
+			saveConfig()
+		}
+
+		// blacklist check (with override for admins)
+		if (config[interaction.guild.id].bannedChannels.includes(interaction.channel.id) && !interaction.member.hasPermission('ADMINISTRATOR') && interaction.author.id != botOwnerID) return
+	}
+
 	// use correct command
 	let inter = interactions.find(i => i.commandData.name == interaction.commandName)
 	// unknown command
@@ -192,6 +207,11 @@ client.on('guildMemberRemove', async member => {
 // #endregion auto aunban / invite
 
 // #region functions
+/**
+ * Generates default guild config objects
+ * @param {String} guildName
+ * @returns {Object} Object with default guild config
+ */
 function configTemplate(guildName) {
 	return {
 		name: guildName,

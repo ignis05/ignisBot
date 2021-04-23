@@ -3,9 +3,9 @@ module.exports = {
 		name: 'ping',
 		description: 'Replies and measures latency',
 	},
-	run: interaction => {
-		let lat = Date.now() - interaction.createdTimestamp
+	run: inter => {
+		let lat = Date.now() - inter.createdTimestamp
 		console.log('Pong!'.rainbow, lat)
-		interaction.reply(`Pong! **${lat}ms**`)
+		inter.reply(`Pong! **${lat}ms**`)
 	},
 }

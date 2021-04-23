@@ -6,7 +6,7 @@
 	"repository": "github:ignis05/ignisBot",
 	"scripts": {
 		"start": "pm2 start ecosystem.config.js",
-		"stop": "pm2 delete DiscordBot",
+		"stop": "pm2 delete ecosystem.config.js",
 		"log": "pm2 log",
 		"monit": "pm2 monit"
 	},

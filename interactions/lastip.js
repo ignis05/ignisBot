@@ -3,9 +3,9 @@ module.exports = {
 		name: 'lastip',
 		description: 'If bot can find a valid ip address within last 100 messages, it will repost it',
 	},
-	run: async interaction => {
+	run: async inter => {
         const urlRegex = /(\S+\.\S+|\d+\.\d+\.\d+\.\d+)(:\d+)?/
-        var messages = await interaction.channel.messages.fetch({ limit: 100 },false).catch(console.error)
+        var messages = await inter.channel.messages.fetch({ limit: 100 },false).catch(console.error)
         var validIP = null
         for (let content of messages.map(ms => ms.cleanContent)){
             let res = urlRegex.exec(content)
@@ -16,6 +16,6 @@ module.exports = {
                 break
             }
         }
-        interaction.reply(validIP || `No valid ip addresses were found in last 100 messages`)
+        inter.reply(validIP || `No valid ip addresses were found in last 100 messages`)
 	},
 }

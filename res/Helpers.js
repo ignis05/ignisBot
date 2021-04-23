@@ -1,8 +1,13 @@
 config = require('../data/config.json')
 const fs = require('fs')
 const path = require('path')
+const Discord = require('discord.js')
 
 module.exports = {
+	/**
+	 * Returns number of files and code lines fore this project
+	 * @returns {Promise} Promise with object: { lines, files }
+	 */
 	countLines: function () {
 		return new Promise(async res => {
 			function countLines(filepath) {
@@ -23,6 +28,17 @@ module.exports = {
 			count += await countLines(path.resolve(__dirname + '/Helpers.js'))
 			count += await countLines(path.resolve(__dirname + '/client.js'))
 			var files_count = 3
+
+			// auto load interactions
+			const intDir = path.join(__dirname + '/../interactions')
+			let integrs = fs
+				.readdirSync(intDir, { withFileTypes: true })
+				.filter(dirent => dirent.isFile())
+				.map(dirent => dirent.name)
+			for (let int of integrs) {
+				count += await countLines(intDir + `/${int}`)
+				files_count++
+			}
 
 			// auto load commands
 			const cmdDir = path.join(__dirname + '/../commands')
@@ -53,6 +69,11 @@ module.exports = {
 			res({ lines: count, files: files_count })
 		})
 	},
+	/**
+	 * Converts time in seconds to time in string format
+	 * @param {number} time Time in seconds
+	 * @returns {String} Time in mm:ss or hh:mm:ss format (if hh>0)
+	 */
 	formatTime: function (time) {
 		var hrs = ~~(time / 3600)
 		var mins = ~~((time % 3600) / 60)
@@ -66,6 +87,12 @@ module.exports = {
 		ret += '' + secs
 		return ret
 	},
+	/**
+	 * Saves config object to ./data/config.json
+	 * @param {Discord.TextChannel} channel Channel to send reply to
+	 * @param {String} reply If truthy, sends this string in to the channel after saing changes
+	 * @returns
+	 */
 	saveConfig: function (channel, reply) {
 		return new Promise((res, rej) => {
 			console.log('saving config')
@@ -83,6 +110,11 @@ module.exports = {
 			})
 		})
 	},
+	/**
+	 * Fetches commands from files in "commands" dir
+	 * @param {boolean} log If explicitly set to false, the function won't write to console
+	 * @returns {Object} Object with commands, grouped by categories
+	 */
 	fetchCommands: function (log) {
 		if (log === undefined) log = true
 		const commands = {}
@@ -177,6 +209,10 @@ module.exports = {
 		}
 		return commands
 	},
+	/**
+	 * Fetches interactions from files in "interactions" dir
+	 * @returns {Array} Array of objects with "commandData" property and run() method
+	 */
 	fetchInteractions: () => {
 		const interactions = []
 		let inter_files = fs
@@ -194,7 +230,7 @@ module.exports = {
 				if (!temp.commandData.description) {
 					noDesc = true
 					console.log(`${cmd} - loaded, but is missing description`.warn)
-				}
+				} else console.log(`interaction|${temp.commandData.name} - loaded`.green)
 				// set default properties
 				interactions.push(temp)
 			} catch (err) {
@@ -204,11 +240,12 @@ module.exports = {
 			}
 		}
 		if (errors) console.log("Some files weren't loaded - check errors above for details".redRev)
-		else console.log('Everything loaded correctly'.greenRev)
+		else console.log('All interactions loaded correctly'.greenRev)
 		if (noDesc) console.log('Some files are missing description'.warn)
 
 		return interactions
 	},
 	config: config,
 	botOwnerID: '226032144856776704',
+	testGuildID: '467313439413501983',
 }
