@@ -1,3 +1,5 @@
+const { saveConfig } = require('../res/Helpers')
+
 module.exports = {
 	commandData: {
 		name: 'random',
@@ -5,70 +7,76 @@ module.exports = {
 		options: [
 			{
 				name: 'min',
-				type: 'STRING',
+				type: 'INTEGER',
 				description: 'Lower limit of rng range',
 				required: false,
 			},
 			{
 				name: 'max',
-				type: 'STRING',
+				type: 'INTEGER',
 				description: 'Upper limit of rng range',
 				required: false,
 			},
 			{
 				name: 'repeat',
-				type: 'STRING',
+				type: 'INTEGER',
 				description: 'How many random numbers from that range you need',
+				required: false,
+			},
+			{
+				name: 'save',
+				type: 'BOOLEAN',
+				description: 'Works for guilds only: save parameters as guild default instead of generating numbers',
 				required: false,
 			},
 		],
 	},
-	run: inter => {
-		var min = 0
-		var max = 9
-		var repeat = 1
-
-		if (inter.guild && config[inter.guild.id].random) {
-			min = config[inter.guild.id].random.min
-			max = config[inter.guild.id].random.max
+	run: async inter => {
+		var options = {
+			min: 1,
+			max: 10,
+			repeat: 1,
 		}
 
-		/* if (tmp_arr[1] === 'set') {
-			let min = parseInt(tmp_arr[2])
-			let max = parseInt(tmp_arr[3])
-			if (isNaN(min) || isNaN(max)) return msg.channel.send('Invalid values')
-			config[msg.guild.id].random = { min: min, max: max }
-			saveConfig(msg.channel, `Random number generator was set to: <${min}, ${max}>`)
-			return
-		} */
+		if (inter.guild && config[inter.guild.id].random) {
+			options.min = config[inter.guild.id].random.min
+			options.max = config[inter.guild.id].random.max
+			options.repeat = config[inter.guild.id].random.repeat || 1 // or 1 to support older configs
+		}
+
+		// save = true - save parameters insted of generating numbers
+		let save = inter.options.find(o => o.name == 'save')
+		if (inter.guild && save && save.value === true) {
+			if (!config[inter.guild.id].random) config[inter.guild.id].random = { min: 1, max: 10, repeat: 10 } // create object of not there
+
+			for (let option of inter.options) {
+				if (option.name === 'repeat') {
+					if (option.value < 1) return inter.reply(`"repeat" must be a positive integer`, { emphereal: true })
+					if (option.value > 100) return inter.reply(`"repeat" cant be larger than 100`, { emphereal: true })
+				}
+				config[inter.guild.id].random[option.name] = option.value
+			}
+			await saveConfig()
+			return inter.reply(`Random number generator was set to: <${config[inter.guild.id].random.min}, ${config[inter.guild.id].random.max}> with ${config[inter.guild.id].random.repeat} repeats.`)
+		}
 
 		for (let option of inter.options) {
-			let tmp
-			switch (option.name) {
-				case 'min':
-					tmp = parseInt(option.value)
-					if (!isNaN(tmp) && isFinite(tmp)) min = tmp
-					else return inter.reply(`Error: Invalid "min" parameter`, { ephemeral: true })
-					break
-				case 'max':
-					tmp = parseInt(option.value)
-					if (!isNaN(tmp) && isFinite(tmp)) max = tmp
-					else return inter.reply(`Error: Invalid "max" parameter`, { ephemeral: true })
-					break
-				case 'repeat':
-					tmp = parseInt(option.value)
-					if (!isNaN(tmp) && isFinite(tmp) && repeat >= 1) repeat = tmp
-					else return inter.reply(`Error: Invalid "repeat" parameter`, { ephemeral: true })
-					break
+			if (option.name === 'repeat') {
+				if (option.value < 1) return inter.reply(`"repeat" must be a positive integer`, { emphereal: true })
+				if (option.value > 100) return inter.reply(`"repeat" cant be larger than 100`, { emphereal: true })
 			}
+			options[option.name] = option.value
 		}
 
 		let str = ''
-		for (let i = 0; i < repeat; i++) {
-			let rand = Math.floor(Math.random() * (max + 1 - min)) + min
+		for (let i = 0; i < options.repeat; i++) {
+			let rand = Math.floor(Math.random() * (options.max + 1 - options.min)) + options.min
 			str += `\n${rand}`
 		}
 
-		inter.reply(`Here are your random numbers picked from: **< ${min}, ${max} >**:` + str)
+		let response = `${options.repeat > 1 ? `Your random numbers picked from:` : `Your random number picked from:`} **[${options.min}, ${options.max}]**:` + str
+		if (response.length > 2000) return inter.reply(`Generated message was larger than 2000 characters.\nTry with smaller numbers or less repeats`, { emphereal: true })
+
+		inter.reply(response)
 	},
 }
