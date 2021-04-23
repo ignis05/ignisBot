@@ -1,4 +1,4 @@
-var { saveConfig, config } = require('../res/Helpers.js')
+// var { saveConfig, config } = require('../res/Helpers.js')
 const { getStatus } = require('mc-server-status')
 const { MessageEmbed, MessageAttachment } = require('discord.js')
 
@@ -27,9 +27,10 @@ module.exports = {
 		],
 	},
 	run: async inter => {
-		var url = ''
+		let canDoEmbed = !inter.guild || inter.channel.permissionsFor(inter.guild.me).has('EMBED_LINKS')
 
 		// read command args
+		var url = ''
 		for (let option of inter.options) {
 			if (option.name === 'url') url = option.value
 		}
@@ -43,6 +44,8 @@ module.exports = {
 				return inter.reply('Could not resolve server address. Make sure the url argument is correct', { ephemeral: true })
 			}
 		}
+
+		if (!canDoEmbed) inter.reply(`${status ? 'Server online' : 'Server offline'}\nEnable embed messages permission to get more details`)
 
 		var embed = new MessageEmbed().setTitle('**Minecraft Server Status:**').setDescription('This server is currently **offline**').setColor(0xff0000).addField('Address', url)
 		if (status) {
