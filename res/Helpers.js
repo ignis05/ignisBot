@@ -65,7 +65,6 @@ module.exports = {
 					files_count++
 				}
 			}
-			console.log(count, files_count)
 			res({ lines: count, files: files_count })
 		})
 	},
