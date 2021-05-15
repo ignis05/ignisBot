@@ -16,7 +16,7 @@
 		"@discordjs/opus": "^0.1.0",
 		"bufferutil": "^4.0.3",
 		"colors": "^1.4.0",
-		"discord.js": "github:vaporox/discord.js#feat-interactions",
+		"discord.js": "github:discordjs/discord.js",
 		"erlpack": "github:discordapp/erlpack",
 		"ffmpeg-static": "^4.2.7",
 		"fs": "0.0.1-security",

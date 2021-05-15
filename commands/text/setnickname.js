@@ -6,12 +6,12 @@ module.exports = {
 	desc: `changes bot nickname on current guild`,
 	help: "`setnickname <nickname>` - sets bot' nickname on current guild to specified one\n- if specified nickname is invalid (ex. empty), bot nickname is removed",
 	run: msg => {
-		if (!msg.member.hasPermission('MANAGE_NICKNAMES') && msg.author.id != botOwnerID) {
+		if (!msg.member.permissions.has('MANAGE_NICKNAMES') && msg.author.id != botOwnerID) {
 			msg.reply("You don't have permission to use this command")
 			return
 		}
 
-		if (msg.guild.me.hasPermission('CHANGE_NICKNAME')) {
+		if (msg.guild.me.permissions.has('CHANGE_NICKNAME')) {
 			let nickname = msg.content
 				.split(' ')
 				.slice(1)

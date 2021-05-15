@@ -6,7 +6,7 @@ module.exports = {
 	desc: `set up role automatically given to new members`,
 	help: "`autorole [@mention]` - changes autorole to mentioned role. If no role is mentioned disables autorole.\nMake sure mentioned role is lower in hierarchy and bot has 'manage roles' permission.",
 	run: msg => {
-		if (!msg.member.hasPermission('ADMINISTRATOR') && msg.author.id != botOwnerID) {
+		if (!msg.member.permissions.has(interaction.channel).has('ADMINISTRATOR') && msg.author.id != botOwnerID) {
 			msg.reply("You don't have permission to use this command")
 			return
 		}
@@ -18,7 +18,7 @@ module.exports = {
 				saveConfig()
 				return
 			}
-			if (!msg.guild.me.hasPermission('MANAGE_ROLES')) {
+			if (!msg.guild.me.permissions.has('MANAGE_ROLES')) {
 				msg.channel.send('I need MANAGE_ROLES permission to do that.\nAutorole disabled.')
 				config[msg.guild.id].autorole = null
 				saveConfig()

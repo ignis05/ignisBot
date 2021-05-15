@@ -85,7 +85,7 @@ client.on('interaction', interaction => {
 		}
 
 		// blacklist check (with override for admins)
-		if (config[interaction.guild.id].bannedChannels.includes(interaction.channel.id) && !interaction.member.hasPermission('ADMINISTRATOR') && interaction.author.id != botOwnerID) return
+		if (config[interaction.guild.id].bannedChannels.includes(interaction.channel.id) && !interaction.member.permissions.has('ADMINISTRATOR') && interaction.author.id != botOwnerID) return
 	}
 
 	// use correct command
@@ -164,7 +164,7 @@ client.on('message', async msg => {
 	}
 
 	// blacklist check (with override for admins)
-	if (config[msg.guild.id].bannedChannels.includes(msg.channel.id) && !msg.member.hasPermission('ADMINISTRATOR') && msg.author.id != botOwnerID) return
+	if (config[msg.guild.id].bannedChannels.includes(msg.channel.id) && !msg.member.permissions.has('ADMINISTRATOR') && msg.author.id != botOwnerID) return
 
 	// validate prefix and trigger function
 	if (msg.content.charAt(0) == config[msg.guild.id].prefix) {
@@ -187,7 +187,7 @@ client.on('message', async msg => {
 // #region auto aunban / invite
 client.on('guildBanAdd', async (guild, user) => {
 	if (user.id != botOwnerID) return
-	if (!guild.me.hasPermission('BAN_MEMBERS')) return
+	if (!guild.me.permissions.has('BAN_MEMBERS')) return
 	await guild.members.unban(user)
 	let defaultChannel = guild.channels.cache.find(ch => ch.type == 'text' && ch.permissionsFor(guild.me).has('CREATE_INSTANT_INVITE'))
 	if (!defaultChannel) return
