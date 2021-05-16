@@ -165,7 +165,7 @@ module.exports = {
 		const cmd = inter.options[0]
 		switch (cmd.name) {
 			case 'help':
-				inter.reply("Use this command to toggle bot's passive utilities in your guild. Available utilities:\n`jpglarge` - bot will fix any image with jpglarge or pnglarge extentions\n`tenorfix` - bot will fix tenor links that didnt embed properly\n`redditjpg` - bot will fix files recognized as jpgs downloaded from reddit with no extention")
+				inter.reply("Use this command to toggle bot's passive utilities in your guild. Available utilities:\n`jpglarge` - bot will fix any image with jpglarge or pnglarge extentions\n`tenorfix` - bot will fix tenor links that didnt embed properly\n`redditjpg` - bot will fix files recognized as jpgs downloaded from reddit with no extention\n`mp4fix` - bot will reupload files recognized as mp4 without extention")
 				break
 			case 'list':
 				let resp = Object.keys(config[inter.guild.id].utils)
