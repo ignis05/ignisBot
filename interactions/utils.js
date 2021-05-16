@@ -17,23 +17,36 @@ client.on('message', msg => {
 				if (!attachment.name.endsWith('.jpglarge') && !attachment.name.endsWith('.pnglarge')) continue
 				let type = attachment.name.slice(-8)
 				if (attachment.size > 8000000) {
-					msg.channel.send(`Failed to convert ${type} from ${msg.author}'s message - file is larger than 8MB`)
+					msg.reply(`Failed to convert ${type} - file is larger than 8MB`)
 					continue
 				}
 				let converted = new MessageAttachment(attachment.attachment, attachment.name.substring(0, attachment.name.length - 5))
-				msg.channel.send(`Converted ${type} from ${msg.author}'s message:`, { files: [converted], allowedMentions: { users: [] } }) // mention without pinging
+				msg.reply(`Converted ${type}:`, { files: [converted], allowedMentions: { users: [] } }) 
 			}
 		}
 		// --- redditjpg (jpg with no extention) ---
 		if (config[msg.guild.id].utils?.redditjpg) {
 			for (let attachment of msg.attachments.values()) {
-				if (!/^^RDT_.*jpg$$/.test(attachment.name)) continue
+				if (!/^RDT_.*jpg$/.test(attachment.name)) continue
 				if (attachment.size > 8000000) {
-					msg.channel.send(`Failed to convert reddit jpg from ${msg.author}'s message - file is larger than 8MB`)
+					msg.reply(`Failed to convert reddit jpg - file is larger than 8MB`)
 					continue
 				}
 				let converted = new MessageAttachment(attachment.attachment, `${attachment.name.slice(0, -3)}.jpg`)
-				msg.channel.send(`Converted reddit jpg from ${msg.author}'s message:`, { files: [converted], allowedMentions: { users: [] } }) // mention without pinging
+				msg.reply(`Fixed reddit jpg:`, { files: [converted], allowedMentions: { users: [] } }) 
+			}
+		}
+
+		// --- mp4fix (mp4 files with no extention) ---
+		if (config[msg.guild.id].utils?.mp4fix) {
+			for (let attachment of msg.attachments.values()) {
+				if (!/^mp4-\d+$/.test(attachment.name)) continue
+				if (attachment.size > 8000000) {
+					msg.reply(`Failed to convert mp4 - file is larger than 8MB`)
+					continue
+				}
+				let converted = new MessageAttachment(attachment.attachment, `${attachment.name}.mp4`)
+				msg.reply(`Fixed mp4 file:`, { files: [converted], allowedMentions: { users: [] } }) 
 			}
 		}
 	}
@@ -44,10 +57,8 @@ client.on('message', msg => {
 			console.log('tenor link')
 			let attachment = new MessageAttachment(msg.cleanContent, 'fixed.mp4')
 			if (attachment.size > 8000000) {
-				msg.channel.send(`Failed to fix tenor embed from ${msg.author}'s message - file is larger than 8MB`)
-				return
-			}
-			msg.channel.send(`Fixed tenor embed from ${msg.author}'s message:`, { files: [attachment], allowedMentions: { users: [] } }) // mention without pinging
+				msg.channel.send(`Failed to fix tenor embed - file is larger than 8MB`)
+			} else msg.channel.send(`Fixed tenor embed:`, { files: [attachment], allowedMentions: { users: [] } }) 
 		}
 	}
 })
@@ -90,6 +101,10 @@ module.exports = {
 								name: 'redditjpg',
 								value: 'redditjpg',
 							},
+							{
+								name: 'mp4fix',
+								value: 'mp4fix',
+							},
 						],
 					},
 				],
@@ -116,6 +131,10 @@ module.exports = {
 							{
 								name: 'redditjpg',
 								value: 'redditjpg',
+							},
+							{
+								name: 'mp4fix',
+								value: 'mp4fix',
 							},
 						],
 					},
@@ -165,7 +184,7 @@ module.exports = {
 				config[inter.guild.id].utils[arg] = enable
 				inter.defer()
 				await saveConfig()
-				inter.editReply(`Utility "${arg}" has been ${enable ? 'enabled' : 'disabled'} succesfully.`)
+				inter.editReply(`Utility "${arg}" has been succesfully ${enable ? 'enabled' : 'disabled'}.`)
 		}
 	},
 }
