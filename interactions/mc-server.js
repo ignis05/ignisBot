@@ -1,6 +1,6 @@
 // var { saveConfig, config } = require('../res/Helpers.js')
 const { getStatus } = require('mc-server-status')
-const { MessageEmbed, MessageAttachment } = require('discord.js')
+const { MessageEmbed, MessageAttachment, CommandInteraction } = require('discord.js')
 
 /**
  * Strips formatting from strings used by minecraft servers to make them readable
@@ -26,6 +26,9 @@ module.exports = {
 			},
 		],
 	},
+	/**
+	 * @param inter {CommandInteraction}
+	 **/
 	run: async inter => {
 		let canDoEmbed = !inter.guild || inter.channel.permissionsFor(inter.guild.me).has('EMBED_LINKS')
 

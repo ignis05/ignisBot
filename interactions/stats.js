@@ -1,5 +1,5 @@
 const path = require('path')
-const { MessageEmbed } = require('discord.js')
+const { MessageEmbed, CommandInteraction } = require('discord.js')
 var { countLines } = require('../res/Helpers')
 
 /**
@@ -24,6 +24,9 @@ module.exports = {
 		name: 'stats',
 		description: `Displays bot statistics`,
 	},
+	/**
+	 * @param inter {CommandInteraction}
+	 **/
 	run: async inter => {
 		inter.defer()
 		var code = await countLines()

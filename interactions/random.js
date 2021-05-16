@@ -1,3 +1,4 @@
+const { CommandInteraction } = require('discord.js')
 const { saveConfig } = require('../res/Helpers')
 
 module.exports = {
@@ -31,6 +32,9 @@ module.exports = {
 			},
 		],
 	},
+	/**
+	 * @param inter {CommandInteraction}
+	 **/
 	run: async inter => {
 		var options = {
 			min: 1,

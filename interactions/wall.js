@@ -1,3 +1,5 @@
+const { CommandInteraction } = require('discord.js')
+
 module.exports = {
 	commandData: {
 		name: 'wall',
@@ -11,6 +13,9 @@ module.exports = {
 			},
 		],
 	},
+	/**
+	 * @param inter {CommandInteraction}
+	 **/
 	run: inter => {
 		var ephemeral = ''
 		for (let option of inter.options) {
