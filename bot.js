@@ -58,16 +58,6 @@ client.on('ready', () => {
 	console.log("I'm alive!".rainbow)
 })
 
-// one time lauch - register interactions
-client.once('ready', async () => {
-	// register global commands on test guild so they are instantly available
-	let testGuild = await client.guilds.fetch(testGuildID)
-	for (let interaction of interactions) {
-		testGuild.commands.create(interaction.commandData)
-		client.application.commands.create(interaction.commandData)
-	}
-})
-
 // interaction handler
 client.on('interaction', interaction => {
 	// dont handle pings
