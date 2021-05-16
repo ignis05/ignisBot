@@ -1,3 +1,4 @@
+const ownerData = require('../data/owner.json')
 config = require('../data/config.json')
 const fs = require('fs')
 const path = require('path')
@@ -245,6 +246,6 @@ module.exports = {
 		return interactions
 	},
 	config: config,
-	botOwnerID: '226032144856776704',
-	testGuildID: '467313439413501983',
+	botOwnerID: ownerData.botOwnerID,
+	testGuildID: ownerData.testGuildID,
 }
