@@ -1,10 +1,13 @@
-const { MessageEmbed } = require('discord.js')
+const { MessageEmbed, CommandInteraction } = require('discord.js')
 
 module.exports = {
 	commandData: {
 		name: 'invite',
 		description: 'Generates invite link for adding this bot to your servers',
 	},
+	/**
+	 * @param inter {CommandInteraction}
+	 **/
 	run: async inter => {
 		console.log('sending invite link'.success)
 		let canDoEmbed = !inter.guild || inter.channel.permissionsFor(inter.guild.me).has('EMBED_LINKS')
