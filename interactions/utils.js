@@ -27,7 +27,7 @@ client.on('message', msg => {
 		// --- redditjpg (jpg with no extention) ---
 		if (config[msg.guild.id].utils?.redditjpg) {
 			for (let attachment of msg.attachments.values()) {
-				if (!/^RDT_.*jpg$/.test(attachment.name)) continue
+				if (!/^RDT_.*\djpg$/.test(attachment.name)) continue
 				if (attachment.size > 8000000) {
 					msg.reply(`Failed to convert reddit jpg - file is larger than 8MB`)
 					continue
