@@ -1,8 +1,19 @@
-const { StreamDispatcher, VoiceChannel, VoiceConnection, TextChannel, MessageEmbed } = require('discord.js')
-
+const { StreamDispatcher, VoiceChannel, VoiceConnection, TextChannel, MessageEmbed, GuildMember } = require('discord.js')
+const { formatTime } = require('./Helpers')
 const ytdl = require('ytdl-core')
 const ytsr = require('ytsr')
 const ytpl = require('ytpl')
+
+const PLAYLIST_LIMIT = 50
+
+/**
+ * @typedef {Object} Song
+ * @property {String} title
+ * @property {String} url
+ * @property {Number} length
+ * @property {String} thumbnail
+ * @property {GuildMember} user
+ */
 
 class SongQueue {
     /**
@@ -11,6 +22,7 @@ class SongQueue {
      * @param {TextChannel} textChannel 
      */
     constructor(voiceChannel, textChannel) {
+        console.log('creating new SongQueue')
         this.textChannel = textChannel
         this.voiceChannel = voiceChannel
         this.guild = voiceChannel.guild
@@ -30,17 +42,62 @@ class SongQueue {
     /**
      * Adds song to queue
      * @param {String} query - yt link or serach query
-     * @returns {Promise} after its done
+     * @param {GuildMember} member - user who requested the song
+     * @returns {Promise<Song>} song data
      */
-    addToQueue(query) {
+    addToQueue(query, member) {
         return new Promise(async (resolve, reject) => {
+            /**
+            * @type {Song}
+            */
             var song = await this.fetchSongData(query)
             if (!song) return reject('failed to fetch song')
+            song.user = member
             this.songs.push(song)
             resolve(song)
         })
     }
 
+    /**
+     * Adds playlist songs to queue
+     * @param {String} query - yt playlist link
+     * @param {GuildMember} member - user who requested the song
+     * @returns {Promise<Object>} playlist data
+     */
+    addPlaylistToQueue(playlisturl, member) {
+        return new Promise(async (resolve, reject) => {
+            var playlist = await ytpl(playlisturl, { limit: serverQueue ? PLAYLIST_LIMIT - serverQueue.songs.length : PLAYLIST_LIMIT }).catch(err => console.log('Failed to resolve queue'))
+            if (playlist?.items?.length < 2) return reject('Failed to resolve queue')
+
+            for (let s0 of playlist.items) {
+                /**
+                 * @type {Song}
+                 */
+                var song = {
+                    title: s0.title,
+                    url: s0.shortUrl,
+                    length: parseFloat(s0.durationSec),
+                    thumbnail: `https://i.ytimg.com/vi/${s0.id}/hqdefault.jpg`,
+                    user: member,
+                }
+                this.songs.push(song)
+            }
+            resolve(playlist)
+        })
+    }
+
+    /** 
+     * Gets summed lenghts of all songs in queue
+     * @returns {Number} total length of all songs in the queue
+     */
+    get totalPlayTime() {
+        return this.songs.reduce((acc, song) => (acc += song.length), 0)
+    }
+
+    /**
+     * Destroys queue. 
+     * Launches this.onDestroy(this.guild) if that function is registered.
+     */
     destroy() {
         console.log('destroying queue')
         if (this.dispatcher) this.dispatcher.off('finish')
@@ -49,9 +106,16 @@ class SongQueue {
         this.onDestroy?.(this.guild)
     }
 
+    /**
+     * Removes fist song from the queue and plays it through StreamDispatcher. 
+     * If queue is empty calling this will kill voiceConnection and launch onDestroy
+     */
     async playNext() {
         this.isPlaying = true
 
+        /**
+        * @type {Song}
+        */
         var song = this.songs.shift()
         if (!song) {
             this.textChannel.send('Queue finished. Disconnecting.')
@@ -70,7 +134,7 @@ class SongQueue {
         if (!this.textChannel.permissionsFor(this.guild.me).has('EMBED_LINKS')) {
             this.textChannel.send(`Now playing: **${song.title}**`)
         } else {
-            var embed = new MessageEmbed().setTitle('**Now playing**').setColor(0x00ffff).setImage(song.thumbnail).addField('Title', song.title, true).addField('Url', song.url, true).addField('Length', song.length, true).addField('Requested by', 'todo:fix this'/* song.user.toString() */, true)
+            var embed = new MessageEmbed().setTitle('**Now playing**').setColor(0x00ffff).setImage(song.thumbnail).addField('Title', song.title, true).addField('Url', song.url, true).addField('Length', song.length, true).addField('Requested by', song.user?.toString(), true)
             this.textChannel.send(embed)
         }
 
@@ -87,10 +151,11 @@ class SongQueue {
             }).catch(reject)
         })
     }
+
     /**
      * Fetches song from youtube
      * @param {String} resolvable search query or direct link
-     * @returns {Object} with song data
+     * @returns {Song} with song data (without member property)
      */
     fetchSongData(resolvable) {
         return new Promise(async (resolve, reject) => {
@@ -126,9 +191,43 @@ class SongQueue {
                     thumbnail: `https://i.ytimg.com/vi/${songInfo.videoDetails.videoId}/hqdefault.jpg`,
                 }
             }
-            console.log(song)
+            // console.log(song)
             resolve(song)
         })
+    }
+
+
+    /**
+     * Creates embed object from song object
+     * @param {Song} song 
+     * @returns {MessageEmbed} embed with song data
+     */
+    static createSongEmbed(song) {
+        var embed = new MessageEmbed()
+            .setTitle('**Song added to queue**')
+            .setColor(0x00ff00).setImage(song.thumbnail)
+            .addField('Title', song.title, true)
+            .addField('Url', song.url, true)
+            .addField('Length', formatTime(song.length), true)
+            .addField('Total queue length', formatTime(this.totalPlayTime), true)
+        return embed
+    }
+
+    /**
+     * Creates embed object from playlist object
+     * @param {Object} playlist 
+     * @returns {MessageEmbed} embed with playlist data
+     */
+    static createPlaylistEmbed(playlist) {
+        var song1 = playlist.items[0]
+        var embed = new MessageEmbed()
+            .setTitle('**Playlist added to queue**')
+            .setColor(0x00ff00)
+            .setImage(`https://i.ytimg.com/vi/${song1.id}/hqdefault.jpg`)
+            .addField('Title', playlist.title, true)
+            .addField('Url', playlist.url, true)
+            .addField('Total queue length', formatTime(this.totalPlayTime), true)
+        return embed
     }
 
 }
