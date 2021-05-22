@@ -196,6 +196,43 @@ class SongQueue {
         })
     }
 
+    getQueueEmbed(canDoEmbed = true, shortEmbed = false) {
+        if (!this.songs.length) {
+            return 'Queue is empty'
+        }
+        if (!canDoEmbed) {
+            return '```' + JSON.stringify(serverQueue.songs, null, 4) + '```'
+        } else {
+            var reduceFunc = (acc, song, i) => acc + `${i} - [${song.title}](${song.url}) [${formatTime(song.length)}] - requested by ${song.user}\n`
+
+            // shorter embed that will fit in messages
+            if (shortEmbed) {
+                var embed = new MessageEmbed().setTitle('**Song queue**').setColor(0x0000ff)
+
+                var length = 1024
+                var i = 0
+                var firstFew = ''
+                for (let song of this.songs) {
+                    let s = reduceFunc('', song, i)
+                    length -= s.length
+                    i++
+                    if (length <= 0) break
+                    firstFew += s
+                }
+
+                embed.addField(`Queue too long`, `Queue is too long to send in one message - logging first ${i} songs instead`).addField('Queue', firstFew).addField('Total queue length', formatTime(this.totalPlayTime)).addField(`Total songs in queue`, `${this.songs.length}`)
+                return embed
+            }
+            else {
+                var embed = new MessageEmbed().setTitle('**Song queue**').setColor(0x0000ff)
+                var str = this.songs.reduce(reduceFunc, '')
+                embed.addField('Queue', str)
+                embed.addField('Total queue length', formatTime(this.totalPlayTime))
+                return embed
+            }
+        }
+    }
+
 
     /**
      * Creates embed object from song object

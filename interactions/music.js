@@ -183,6 +183,23 @@ module.exports = {
                 queue.destroy()
                 inter.editReply(`Finished playing`)
                 break
+            case 'queue':
+                var res = queue.getQueueEmbed(canDoEmbed)
+                try {
+                    await inter.editReply(res)
+                }
+                catch (err) {
+                    if (err.code == 50035) {
+                        console.log('queue too long - sending short version')
+                        res = queue.getQueueEmbed(canDoEmbed, true)
+                        inter.editReply(res).catch(err => {
+                            inter.editReply(`Failed to fetch queue:\n${err}`)
+                        })
+
+                    }
+                    else inter.editReply(`Failed to fetch queue:\n${err}`)
+                }
+                break
             case 'set_music_channel':
                 let channel
                 try {
@@ -199,6 +216,7 @@ module.exports = {
                 config[inter.guildID].guildMusicChannel = channel.id
                 await saveConfig()
                 inter.editReply(`Set ${channel} as music bot channel.`)
+                break
 
         }
     },
