@@ -10,7 +10,7 @@ const PLAYLIST_LIMIT = 50
  * @typedef {Object} Song
  * @property {String} title
  * @property {String} url
- * @property {Number} length
+ * @property {String} length
  * @property {String} thumbnail
  * @property {GuildMember} user
  */
@@ -82,10 +82,22 @@ class SongQueue {
 
     /** 
      * Gets summed lenghts of all songs in queue
-     * @returns {Number} total length of all songs in the queue
+     * @returns {String} total length of all songs in the queue, in hh:mm:ss format
      */
     get totalPlayTime() {
-        return this.songs.reduce((acc, song) => (acc += song.length), 0)
+        let totaltime = 0
+        for (let song of this.mergedQueue) {
+            var sLenSec = 0
+            let durArr = song.length.split(':').reverse()
+            for (let i in durArr) {
+                i = parseInt(i)
+                sLenSec += parseInt(durArr[i]) * (60 ** i)
+            }
+            console.log(sLenSec)
+            totaltime += sLenSec
+        }
+        console.log(totaltime)
+        return formatTime(totaltime)
     }
 
     /** 
@@ -136,7 +148,7 @@ class SongQueue {
                 var song = {
                     title: s0.title,
                     url: s0.shortUrl,
-                    length: parseFloat(s0.durationSec),
+                    length: formatTime(s0.durationSec),
                     thumbnail: `https://i.ytimg.com/vi/${s0.id}/hqdefault.jpg`,
                     user: member,
                 }
@@ -222,12 +234,13 @@ class SongQueue {
         let copy = JSON.parse(JSON.stringify(this.musicGuildCommand))
         let choices = copy.options[2].options[0].choices
 
-        this.mergedQueue.forEach((song, i) => {
+        for (let i in this.mergedQueue) {
+            if (parseInt(i) >= 25) break
             choices.push({
-                name: `${i} - ${song.title}`,
-                value: i
+                name: `${i} - ${this.mergedQueue[i].title}`,
+                value: parseInt(i)
             })
-        })
+        }
 
         await this.guild.commands.create(copy)
     }
@@ -273,14 +286,15 @@ class SongQueue {
                 song = {
                     title: item.title,
                     url: item.url,
-                    length: parseFloat(item.duration),
+                    length: item.duration,
                     thumbnail: `https://i.ytimg.com/vi/${item.id}/hqdefault.jpg`,
                 }
             } else {
+                // console.log(songInfo)
                 song = {
                     title: songInfo.videoDetails.title,
                     url: songInfo.videoDetails.video_url,
-                    length: parseFloat(songInfo.videoDetails.lengthSeconds),
+                    length: formatTime(songInfo.videoDetails.lengthSeconds),
                     thumbnail: `https://i.ytimg.com/vi/${songInfo.videoDetails.videoId}/hqdefault.jpg`,
                 }
             }
@@ -319,14 +333,14 @@ class SongQueue {
                     firstFew += s
                 }
 
-                embed.addField(`Queue too long`, `Queue is too long to send in one message - logging first ${i} songs instead`).addField('Queue', firstFew).addField('Total queue length', formatTime(this.totalPlayTime)).addField(`Total songs in queue`, `${this.songs.length}`)
+                embed.addField(`Queue too long`, `Queue is too long to send in one message - logging first ${i} songs instead`).addField('Queue', firstFew).addField('Total queue length', this.totalPlayTime).addField(`Total songs in queue`, `${this.songs.length}`)
                 return embed
             }
             else {
                 var embed = new MessageEmbed().setTitle('**Song queue**').setColor(0x0000ff)
                 var str = this.mergedQueue.reduce(reduceFunc, '')
                 embed.addField('Queue', str)
-                embed.addField('Total queue length', formatTime(this.totalPlayTime))
+                embed.addField('Total queue length', this.totalPlayTime)
                 return embed
             }
         }
@@ -337,15 +351,15 @@ class SongQueue {
      * @param {Song} song 
      * @returns {MessageEmbed} embed with song data
      */
-    static createSongEmbed(song) {
+    createSongEmbed(song) {
         var embed = new MessageEmbed()
             .setTitle('**Song added to queue**')
             .setColor(0x00ff00)
             //.setImage(song.thumbnail)
             .addField('Title', song.title, true)
             .addField('Url', song.url, true)
-            .addField('Length', formatTime(song.length), true)
-            .addField('Total queue length', formatTime(this.totalPlayTime), true)
+            .addField('Length', song.length, true)
+            .addField('Total queue length', this.totalPlayTime, true)
         return embed
     }
 
@@ -354,7 +368,7 @@ class SongQueue {
      * @param {Object} playlist 
      * @returns {MessageEmbed} embed with playlist data
      */
-    static createPlaylistEmbed(playlist) {
+    createPlaylistEmbed(playlist) {
         var song1 = playlist.items[0]
         var embed = new MessageEmbed()
             .setTitle('**Playlist added to queue**')
@@ -362,7 +376,7 @@ class SongQueue {
             // .setImage(`https://i.ytimg.com/vi/${song1.id}/hqdefault.jpg`)
             .addField('Title', playlist.title, true)
             .addField('Url', playlist.url, true)
-            .addField('Total queue length', formatTime(this.totalPlayTime), true)
+            .addField('Total queue length', this.totalPlayTime, true)
         return embed
     }
 

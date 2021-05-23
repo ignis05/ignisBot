@@ -125,7 +125,7 @@ module.exports = {
                     return inter.editReply(`Failed to download song data`)
                 }
 
-                if (canDoEmbed) inter.editReply(SongQueue.createSongEmbed(song))
+                if (canDoEmbed) inter.editReply(queue.createSongEmbed(song))
                 else inter.editReply(`Added ${song.title} to the queue.`)
 
                 // if not playing - start it
@@ -139,7 +139,7 @@ module.exports = {
                     return inter.editReply(`Failed to download playlist data`)
                 }
 
-                if (canDoEmbed) inter.editReply(SongQueue.createPlaylistEmbed(playlist))
+                if (canDoEmbed) inter.editReply(queue.createPlaylistEmbed(playlist))
                 else inter.editReply(`Added ${playlist.title} to the queue.`)
 
                 // if not playing - start it
