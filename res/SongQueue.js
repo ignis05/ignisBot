@@ -1,4 +1,4 @@
-const { StreamDispatcher, VoiceChannel, VoiceConnection, TextChannel, MessageEmbed, GuildMember } = require('discord.js')
+const { StreamDispatcher, VoiceChannel, VoiceConnection, TextChannel, MessageEmbed, GuildMember, ApplicationCommandOptionChoice } = require('discord.js')
 const { formatTime } = require('./Helpers')
 const ytdl = require('ytdl-core')
 const ytsr = require('ytsr')
@@ -16,6 +16,38 @@ const PLAYLIST_LIMIT = 50
  */
 
 class SongQueue {
+    // commands registered on guild when the queue is initialised
+    musicGuildCommand = {
+        name: 'music',
+        description: 'Manages youtube playback functions - guild version',
+        options: [
+            {
+                name: 'stop',
+                type: 'SUB_COMMAND',
+                description: 'Leaves the voice channel and deletes the queue.',
+            },
+            {
+                name: 'queue',
+                type: 'SUB_COMMAND',
+                description: 'Displays current song queue.',
+            },
+            {
+                name: 'skip',
+                type: 'SUB_COMMAND',
+                description: 'Removes song from playlist',
+                options: [
+                    {
+                        name: 'position',
+                        type: 'INTEGER',
+                        description: "Which song to skip.",
+                        required: true,
+                        choices: []
+                    }
+                ]
+            },
+        ]
+    }
+
     /**
      * Initializes queue and binds it to voice channel and guild
      * @param {VoiceChannel} voiceChannel 
@@ -38,7 +70,34 @@ class SongQueue {
          * @type {StreamDispatcher} dispatcher
          */
         this.dispatcher = null
+
+        /**
+         * @type {Song} currentSong
+         */
+        this.currentSong = null
+
+        this.registerQueueCommands()
     }
+
+
+    /** 
+     * Gets summed lenghts of all songs in queue
+     * @returns {Number} total length of all songs in the queue
+     */
+    get totalPlayTime() {
+        return this.songs.reduce((acc, song) => (acc += song.length), 0)
+    }
+
+    /** 
+     * Returns queue with currently played song in position 0
+     * @returns {Song[]}
+     */
+    get mergedQueue() {
+        let copy = [...this.songs]
+        if (this.currentSong) copy.unshift(this.currentSong)
+        return copy
+    }
+
     /**
      * Adds song to queue
      * @param {String} query - yt link or serach query
@@ -55,6 +114,7 @@ class SongQueue {
             song.user = member
             this.songs.push(song)
             resolve(song)
+            this.registerQueueCommands() // update skip choices
         })
     }
 
@@ -66,7 +126,7 @@ class SongQueue {
      */
     addPlaylistToQueue(playlisturl, member) {
         return new Promise(async (resolve, reject) => {
-            var playlist = await ytpl(playlisturl, { limit: serverQueue ? PLAYLIST_LIMIT - serverQueue.songs.length : PLAYLIST_LIMIT }).catch(err => console.log('Failed to resolve queue'))
+            var playlist = await ytpl(playlisturl, { limit: PLAYLIST_LIMIT - this.songs.length }).catch(err => console.log('Failed to resolve queue'))
             if (playlist?.items?.length < 2) return reject('Failed to resolve queue')
 
             for (let s0 of playlist.items) {
@@ -83,32 +143,30 @@ class SongQueue {
                 this.songs.push(song)
             }
             resolve(playlist)
+            this.registerQueueCommands() // update skip choices
         })
-    }
-
-    /** 
-     * Gets summed lenghts of all songs in queue
-     * @returns {Number} total length of all songs in the queue
-     */
-    get totalPlayTime() {
-        return this.songs.reduce((acc, song) => (acc += song.length), 0)
     }
 
     /**
      * Destroys queue. 
      * Launches this.onDestroy(this.guild) if that function is registered.
      */
-    destroy() {
+    async destroy() {
         console.log('destroying queue')
-        if (this.dispatcher) this.dispatcher.off('finish')
-        if (this.isPlaying) this.dispatcher.end()
         if (this.voiceConnection) this.voiceChannel.leave()
+
+        // call onDestroy function if its registered
         this.onDestroy?.(this.guild)
+
+        // unregister commands
+        let commands = await this.guild.commands.fetch()
+        let musicCMD = commands.find(c => c.name == 'music')
+        musicCMD.delete()
     }
 
     /**
      * Removes fist song from the queue and plays it through StreamDispatcher. 
-     * If queue is empty calling this will kill voiceConnection and launch onDestroy
+     * If queue is empty calling this will launch this.destroy()
      */
     async playNext() {
         this.isPlaying = true
@@ -117,10 +175,10 @@ class SongQueue {
         * @type {Song}
         */
         var song = this.songs.shift()
+        this.currentSong = song
         if (!song) {
             this.textChannel.send('Queue finished. Disconnecting.')
-            this.voiceChannel.leave()
-            this.onDestroy?.(this.guild)
+            this.destroy()
             return
         }
 
@@ -137,8 +195,43 @@ class SongQueue {
             var embed = new MessageEmbed().setTitle('**Now playing**').setColor(0x00ffff).setImage(song.thumbnail).addField('Title', song.title, true).addField('Url', song.url, true).addField('Length', song.length, true).addField('Requested by', song.user?.toString(), true)
             this.textChannel.send(embed)
         }
+        this.registerQueueCommands() // update skip choices
 
     }
+
+    /**
+     * 
+     * @param {Number} nr - integer with position in this.mergedQueue
+     */
+    skipSong(nr) {
+        // skip current song
+        if (nr == 0) {
+            this.dispatcher.end()
+        }
+        // skip songs in queue
+        else {
+            this.songs.splice(nr - 1, 1)
+            this.registerQueueCommands() // update skip choices
+        }
+    }
+
+    /**
+     * Registers commands for queue
+     */
+    async registerQueueCommands() {
+        let copy = JSON.parse(JSON.stringify(this.musicGuildCommand))
+        let choices = copy.options[2].options[0].choices
+
+        this.mergedQueue.forEach((song, i) => {
+            choices.push({
+                name: `${i} - ${song.title}`,
+                value: i
+            })
+        })
+
+        await this.guild.commands.create(copy)
+    }
+
     /**
      * Joins voice channel and sets SongQueue#voiceConnection
      * @returns {Promise} error object if promise rejects
@@ -160,7 +253,7 @@ class SongQueue {
     fetchSongData(resolvable) {
         return new Promise(async (resolve, reject) => {
             const songInfo = await ytdl.getBasicInfo(resolvable).catch(err => {
-                console.log('Url fetch failed')
+                // console.log('Url fetch failed')
             })
 
             var song
@@ -196,12 +289,18 @@ class SongQueue {
         })
     }
 
+    /**
+     * Creates embed object from song queue
+     * @param {boolean} canDoEmbed if false, return primitive JSON.stringify() version
+     * @param {boolean} shortEmbed  if true, checks length and returns only those songs that fit
+     * @returns {MessageEmbed} embed with playlist data
+     */
     getQueueEmbed(canDoEmbed = true, shortEmbed = false) {
-        if (!this.songs.length) {
+        if (!this.songs.length && !this.currentSong) {
             return 'Queue is empty'
         }
         if (!canDoEmbed) {
-            return '```' + JSON.stringify(serverQueue.songs, null, 4) + '```'
+            return '```' + JSON.stringify(this.mergedQueue, null, 4) + '```'
         } else {
             var reduceFunc = (acc, song, i) => acc + `${i} - [${song.title}](${song.url}) [${formatTime(song.length)}] - requested by ${song.user}\n`
 
@@ -212,7 +311,7 @@ class SongQueue {
                 var length = 1024
                 var i = 0
                 var firstFew = ''
-                for (let song of this.songs) {
+                for (let song of this.mergedQueue) {
                     let s = reduceFunc('', song, i)
                     length -= s.length
                     i++
@@ -225,14 +324,13 @@ class SongQueue {
             }
             else {
                 var embed = new MessageEmbed().setTitle('**Song queue**').setColor(0x0000ff)
-                var str = this.songs.reduce(reduceFunc, '')
+                var str = this.mergedQueue.reduce(reduceFunc, '')
                 embed.addField('Queue', str)
                 embed.addField('Total queue length', formatTime(this.totalPlayTime))
                 return embed
             }
         }
     }
-
 
     /**
      * Creates embed object from song object
@@ -242,7 +340,8 @@ class SongQueue {
     static createSongEmbed(song) {
         var embed = new MessageEmbed()
             .setTitle('**Song added to queue**')
-            .setColor(0x00ff00).setImage(song.thumbnail)
+            .setColor(0x00ff00)
+            //.setImage(song.thumbnail)
             .addField('Title', song.title, true)
             .addField('Url', song.url, true)
             .addField('Length', formatTime(song.length), true)
@@ -260,7 +359,7 @@ class SongQueue {
         var embed = new MessageEmbed()
             .setTitle('**Playlist added to queue**')
             .setColor(0x00ff00)
-            .setImage(`https://i.ytimg.com/vi/${song1.id}/hqdefault.jpg`)
+            // .setImage(`https://i.ytimg.com/vi/${song1.id}/hqdefault.jpg`)
             .addField('Title', playlist.title, true)
             .addField('Url', playlist.url, true)
             .addField('Total queue length', formatTime(this.totalPlayTime), true)

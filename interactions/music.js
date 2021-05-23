@@ -1,9 +1,7 @@
 const { CommandInteraction, MessageEmbed, Collection, Guild, GuildChannel } = require('discord.js')
 const SongQueue = require('../res/SongQueue')
-const { formatTime, config, saveConfig } = require('../res/Helpers')
-const ytdl = require('ytdl-core')
-const ytsr = require('ytsr')
-const ytpl = require('ytpl')
+const { config, saveConfig } = require('../res/Helpers')
+
 
 const songQueuesCol = new Collection()
 
@@ -14,39 +12,8 @@ const songQueuesCol = new Collection()
 async function destroyQueueHandler(guild) {
     console.log('unregistering commands')
     songQueuesCol.delete(guild.id)
-    let commands = await guild.commands.fetch()
-    let musicCMD = commands.find(c => c.name == 'music')
-    musicCMD.delete()
 }
 
-
-/**
- * 
- * @param {Guild} guild 
- */
-async function registerQueueCommands(guild) {
-    console.log(`Registering extra commands`)
-    await guild.commands.create(musicGuildCommand)
-
-}
-
-// commands registered on guild when the queue is initialised
-const musicGuildCommand = {
-    name: 'music',
-    description: 'Manages youtube playback functions - guild version',
-    options: [
-        {
-            name: 'stop',
-            type: 'SUB_COMMAND',
-            description: 'Leaves the voice channel and deletes the queue.',
-        },
-        {
-            name: 'queue',
-            type: 'SUB_COMMAND',
-            description: 'Displays current song queue.',
-        },
-    ]
-}
 
 module.exports = {
     commandData: {
@@ -146,7 +113,6 @@ module.exports = {
                 }
                 queue.onDestroy = destroyQueueHandler
                 songQueuesCol.set(inter.guildID, queue) // push to collection of queues
-                registerQueueCommands(inter.guild)
             }
         }
 
@@ -198,6 +164,32 @@ module.exports = {
 
                     }
                     else inter.editReply(`Failed to fetch queue:\n${err}`)
+                }
+                break
+            case 'skip':
+                var num = command.options[0].value
+                queue.skipSong(num)
+
+                // send embed
+                if (!canDoEmbed) {
+                    msg.channel.send('```Skipped song ' + num + '\n' + JSON.stringify(queue.songs, null, 4) + '```')
+                } else {
+                    var res = queue.getQueueEmbed(true)
+                    res.setTitle(`**Skipped song ${num}**`)
+                    try {
+                        await inter.editReply(res)
+                    }
+                    catch (err) {
+                        if (err.code == 50035) {
+                            console.log('queue too long - sending short version')
+                            res = queue.getQueueEmbed(true, true)
+                            res.setTitle(`**Skipped song ${num}**`)
+                            inter.editReply(res).catch(err => {
+                                inter.editReply(`Failed to fetch queue:\n${err}`)
+                            })
+                        }
+                        else inter.editReply(`Failed to fetch queue:\n${err}`)
+                    }
                 }
                 break
             case 'set_music_channel':
