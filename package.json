@@ -13,7 +13,7 @@
 		"test_register": "node scripts/register_test.js",
 		"test_unregister": "node scripts/unregister_test.js"
 	},
-	"author": "\"Grzegorz Mikołajczyk\"",
+	"author": "ignis05",
 	"license": "ISC",
 	"dependencies": {
 		"@discordjs/opus": "^0.5.0",

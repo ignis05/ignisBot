@@ -187,7 +187,7 @@ module.exports = {
             switch (command.name) {
                 // image url
                 case 'url':
-                    res = await ocrSpace(command.options[0].value)
+                    res = await ocrSpace(command.options[0].value, { language: lang, scale: true })
                     break
 
                 // message id or link
@@ -206,11 +206,11 @@ module.exports = {
                     }
                     var msg = await channel.messages.fetch(msgID)
                     if (msg.attachments.size < 1) return inter.editReply(`Message has no attachments`)
-                    res = await ocrSpace(msg.attachments.first().url)
+                    res = await ocrSpace(msg.attachments.first().url, { language: lang })
 
             }
             var resmsg = res?.ParsedResults[0]?.ParsedText
-            if (resmsg) inter.editReply(`Result:\n\`\`\`${res?.ParsedResults[0]?.ParsedText}\`\`\``)
+            if (resmsg) inter.editReply(`Result:\n\`\`\`${resmsg}\`\`\``)
             else {
                 console.log(res)
                 inter.editReply(`OCR failed`)
