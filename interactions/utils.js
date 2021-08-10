@@ -24,6 +24,19 @@ client.on('messageCreate', msg => {
 				msg.reply(`Converted ${type}:`, { files: [converted], allowedMentions: { users: [] } }) 
 			}
 		}
+		// --- jpgorig ---
+		if (config[msg.guild.id].utils?.jpglarge) {
+			for (let attachment of msg.attachments.values()) {
+				if (!attachment.name.endsWith('.jpgorig') && !attachment.name.endsWith('.pngorig')) continue
+				let type = attachment.name.slice(-7)
+				if (attachment.size > 8000000) {
+					msg.reply(`Failed to convert ${type} - file is larger than 8MB`)
+					continue
+				}
+				let converted = new MessageAttachment(attachment.attachment, attachment.name.substring(0, attachment.name.length - 4))
+				msg.reply(`Converted ${type}:`, { files: [converted], allowedMentions: { users: [] } }) 
+			}
+		}
 		// --- redditjpg (jpg with no extention) ---
 		if (config[msg.guild.id].utils?.redditjpg) {
 			for (let attachment of msg.attachments.values()) {
@@ -165,7 +178,7 @@ module.exports = {
 		const cmd = inter.options[0]
 		switch (cmd.name) {
 			case 'help':
-				inter.reply("Use this command to toggle bot's passive utilities in your guild. Available utilities:\n`jpglarge` - bot will fix any image with jpglarge or pnglarge extentions\n`tenorfix` - bot will fix tenor links that didnt embed properly\n`redditjpg` - bot will fix files recognized as jpgs downloaded from reddit with no extention\n`mp4fix` - bot will reupload files recognized as mp4 without extention")
+				inter.reply("Use this command to toggle bot's passive utilities in your guild. Available utilities:\n`jpglarge` - bot will fix any image with jpglarge/jpgorig or pnglarge/pngorig extentions\n`tenorfix` - bot will fix tenor links that didnt embed properly\n`redditjpg` - bot will fix files recognized as jpgs downloaded from reddit with no extention\n`mp4fix` - bot will reupload files recognized as mp4 without extention")
 				break
 			case 'list':
 				let resp = Object.keys(config[inter.guild.id].utils)
