@@ -1,4 +1,4 @@
-var { saveConfig, config, botOwnerID } = require('../../res/Helpers.js')
+var { saveConfig, config, botOwnerId } = require('../../res/Helpers.js')
 const client = require('../../res/client.js')
 const { MessageEmbed } = require('discord.js')
 
@@ -8,23 +8,23 @@ client.on('voiceStateUpdate', (oldState, newState) => {
 	var guild = newState.guild
 	var activity = 'unknown'
 	var vchannel = 'unknown'
-	if (oldState.channelID && newState.channelID && oldState.channelID != newState.channelID) {
+	if (oldState.channelId && newState.channelId && oldState.channelId != newState.channelId) {
 		activity = 'switch'
 		vchannel = {
 			old: oldState.channel,
 			new: newState.channel,
 		}
-	} else if (newState.channelID) {
+	} else if (newState.channelId) {
 		activity = 'join'
 		vchannel = newState.channel
-	} else if (oldState.channelID) {
+	} else if (oldState.channelId) {
 		activity = 'leave'
 		vchannel = oldState.channel
 	}
-	for (channelID of config[guild.id].log.voice) {
-		let channel = client.channels.cache.get(channelID)
+	for (channelId of config[guild.id].log.voice) {
+		let channel = client.channels.cache.get(channelId)
 		if (!channel || !channel.permissionsFor(guild.me).has('SEND_MESSAGES')) {
-			config[guild.id].log.voice.splice(config[guild.id].log.voice.indexOf(channelID), 1)
+			config[guild.id].log.voice.splice(config[guild.id].log.voice.indexOf(channelId), 1)
 			saveConfig()
 			continue
 		}
@@ -43,7 +43,7 @@ client.on('voiceStateUpdate', (oldState, newState) => {
 		} else {
 			embed.addField('Channel', vchannel.toString(), true)
 		}
-		channel.send(embed).catch(err => console.error(err))
+		channel.send({ embeds: [embed] }).catch(err => console.error(err))
 	}
 })
 // #endregion voice log
@@ -53,10 +53,10 @@ client.on('messageDelete', msg => {
 	if (!msg.guild) return
 	if (!config[msg.guild.id]) return
 	if (config[msg.guild.id].log && config[msg.guild.id].log.msg && config[msg.guild.id].log.msg.length > 0) {
-		for (channelID of config[msg.guild.id].log.msg) {
-			let channel = client.channels.cache.get(channelID)
+		for (channelId of config[msg.guild.id].log.msg) {
+			let channel = client.channels.cache.get(channelId)
 			if (!channel || !channel.permissionsFor(msg.guild.me).has('SEND_MESSAGES')) {
-				config[msg.guild.id].log.msg.splice(config[msg.guild.id].log.msg.indexOf(channelID), 1)
+				config[msg.guild.id].log.msg.splice(config[msg.guild.id].log.msg.indexOf(channelId), 1)
 				saveConfig()
 				continue
 			}
@@ -77,7 +77,7 @@ client.on('messageDelete', msg => {
 			for (let { proxyURL } of msg.attachments.values()) {
 				embed.addField('Attachment', proxyURL, true)
 			}
-			channel.send(embed).catch(err => console.error(err))
+			channel.send({ embeds: [embed] }).catch(err => console.error(err))
 		}
 	}
 })
@@ -87,10 +87,10 @@ client.on('messageDeleteBulk', col => {
 	if (!msg.guild) return
 	if (!config[msg.guild.id]) return
 	if (config[msg.guild.id].log && config[msg.guild.id].log.msg && config[msg.guild.id].log.msg.length > 0) {
-		for (channelID of config[msg.guild.id].log.msg) {
-			let channel = client.channels.cache.get(channelID)
+		for (channelId of config[msg.guild.id].log.msg) {
+			let channel = client.channels.cache.get(channelId)
 			if (!channel || !channel.permissionsFor(msg.guild.me).has('SEND_MESSAGES')) {
-				config[msg.guild.id].log.msg.splice(config[msg.guild.id].log.msg.indexOf(channelID), 1)
+				config[msg.guild.id].log.msg.splice(config[msg.guild.id].log.msg.indexOf(channelId), 1)
 				saveConfig()
 				continue
 			}
@@ -105,7 +105,7 @@ client.on('messageDeleteBulk', col => {
 				embed.addField('Channel', msg.channel.toString())
 				col.map(msg => embed.addField(`${msg.createdAt.toLocaleString('en-GB') || '<unknown>'}:`, `${msg.author || '<unknown>'} : ${msg.content || '<unknown>'}`))
 			}
-			channel.send(embed).catch(err => console.error(err))
+			channel.send({ embeds: [embed] }).catch(err => console.error(err))
 		}
 	}
 })
@@ -114,10 +114,10 @@ client.on('messageUpdate', (oldmsg, msg) => {
 	if (msg.author.bot) return
 	if (!config[msg.guild.id]) return
 	if (config[msg.guild.id].log && config[msg.guild.id].log.msg && config[msg.guild.id].log.msg.length > 0) {
-		for (channelID of config[msg.guild.id].log.msg) {
-			let channel = client.channels.cache.get(channelID)
+		for (channelId of config[msg.guild.id].log.msg) {
+			let channel = client.channels.cache.get(channelId)
 			if (!channel || !channel.permissionsFor(msg.guild.me).has('SEND_MESSAGES')) {
-				config[msg.guild.id].log.msg.splice(config[msg.guild.id].log.msg.indexOf(channelID), 1)
+				config[msg.guild.id].log.msg.splice(config[msg.guild.id].log.msg.indexOf(channelId), 1)
 				saveConfig()
 				continue
 			}
@@ -135,7 +135,7 @@ client.on('messageUpdate', (oldmsg, msg) => {
 				.addField('Old content', oldmsg.content || 'unknown', true)
 				.addField('New content', msg.content || 'unknown', true)
 				.setTimestamp()
-			channel.send(embed).catch(err => console.error(err))
+			channel.send({ embeds: [embed] }).catch(err => console.error(err))
 		}
 	}
 })
@@ -143,13 +143,13 @@ client.on('messageUpdate', (oldmsg, msg) => {
 
 // #region mod log
 client.on('guildMemberAdd', member => {
-	const guildID = member.guild.id
-	if (!config[guildID]) return
-	if (config[guildID].log && config[guildID].log.mod && config[guildID].log.mod.length > 0) {
-		for (channelID of config[guildID].log.mod) {
-			let channel = client.channels.cache.get(channelID)
+	const guildId = member.guild.id
+	if (!config[guildId]) return
+	if (config[guildId].log && config[guildId].log.mod && config[guildId].log.mod.length > 0) {
+		for (channelId of config[guildId].log.mod) {
+			let channel = client.channels.cache.get(channelId)
 			if (!channel || !channel.permissionsFor(member.guild.me).has('SEND_MESSAGES')) {
-				config[guildID].log.mod.splice(config[guildID].log.mod.indexOf(channelID), 1)
+				config[guildId].log.mod.splice(config[guildId].log.mod.indexOf(channelId), 1)
 				saveConfig()
 				continue
 			}
@@ -164,13 +164,13 @@ client.on('guildMemberAdd', member => {
 				.addField('User', member.toString(), true)
 				.addField('Tag', member.user.tag, true)
 				.setTimestamp()
-			channel.send(embed).catch(err => console.error(err))
+			channel.send({ embeds: [embed] }).catch(err => console.error(err))
 		}
 	}
 	// autorole
-	if (config[guildID].autorole) {
+	if (config[guildId].autorole) {
 		member.roles
-			.add(config[guildID].autorole)
+			.add(config[guildId].autorole)
 			.catch(err => console.log(err))
 			.then(() => {
 				console.log('added autorole')
@@ -178,13 +178,13 @@ client.on('guildMemberAdd', member => {
 	}
 })
 client.on('guildMemberRemove', async member => {
-	const guildID = member.guild.id
-	if (!config[guildID]) return
-	if (config[guildID].log && config[guildID].log.mod && config[guildID].log.mod.length > 0) {
-		for (channelID of config[guildID].log.mod) {
-			let channel = client.channels.cache.get(channelID)
+	const guildId = member.guild.id
+	if (!config[guildId]) return
+	if (config[guildId].log && config[guildId].log.mod && config[guildId].log.mod.length > 0) {
+		for (channelId of config[guildId].log.mod) {
+			let channel = client.channels.cache.get(channelId)
 			if (!channel || !channel.permissionsFor(member.guild.me).has('SEND_MESSAGES')) {
-				config[guildID].log.mod.splice(config[guildID].log.mod.indexOf(channelID), 1)
+				config[guildId].log.mod.splice(config[guildId].log.mod.indexOf(channelId), 1)
 				saveConfig()
 				continue
 			}
@@ -226,18 +226,18 @@ client.on('guildMemberRemove', async member => {
 				embed.addField('Info', 'User might have been kicked, but I need **VIEW_AUDIT_LOG** permission to check that', true)
 			}
 
-			channel.send(embed).catch(err => console.error(err))
+			channel.send({ embeds: [embed] }).catch(err => console.error(err))
 		}
 	}
 })
 client.on('guildBanAdd', async (guild, user) => {
-	const guildID = guild.id
-	if (!config[guildID]) return
-	if (config[guildID].log && config[guildID].log.mod && config[guildID].log.mod.length > 0) {
-		for (channelID of config[guildID].log.mod) {
-			let channel = client.channels.cache.get(channelID)
+	const guildId = guild.id
+	if (!config[guildId]) return
+	if (config[guildId].log && config[guildId].log.mod && config[guildId].log.mod.length > 0) {
+		for (channelId of config[guildId].log.mod) {
+			let channel = client.channels.cache.get(channelId)
 			if (!channel || !channel.permissionsFor(guild.me).has('SEND_MESSAGES')) {
-				config[guildID].log.mod.splice(config[guildID].log.mod.indexOf(channelID), 1)
+				config[guildId].log.mod.splice(config[guildId].log.mod.indexOf(channelId), 1)
 				saveConfig()
 				continue
 			}
@@ -268,18 +268,18 @@ client.on('guildBanAdd', async (guild, user) => {
 					embed.addField('Info', 'No relevant audit logs were found', true)
 				}
 			}
-			channel.send(embed).catch(err => console.error(err))
+			channel.send({ embeds: [embed] }).catch(err => console.error(err))
 		}
 	}
 })
 client.on('guildBanRemove', async (guild, user) => {
-	const guildID = guild.id
-	if (!config[guildID]) return
-	if (config[guildID].log && config[guildID].log.mod && config[guildID].log.mod.length > 0) {
-		for (channelID of config[guildID].log.mod) {
-			let channel = client.channels.cache.get(channelID)
+	const guildId = guild.id
+	if (!config[guildId]) return
+	if (config[guildId].log && config[guildId].log.mod && config[guildId].log.mod.length > 0) {
+		for (channelId of config[guildId].log.mod) {
+			let channel = client.channels.cache.get(channelId)
 			if (!channel || !channel.permissionsFor(guild.me).has('SEND_MESSAGES')) {
-				config[guildID].log.mod.splice(config[guildID].log.mod.indexOf(channelID), 1)
+				config[guildId].log.mod.splice(config[guildId].log.mod.indexOf(channelId), 1)
 				saveConfig()
 				continue
 			}
@@ -309,7 +309,7 @@ client.on('guildBanRemove', async (guild, user) => {
 					embed.addField('Info', 'No relevant audit logs were found', true)
 				}
 			}
-			channel.send(embed).catch(err => console.error(err))
+			channel.send({ embeds: [embed] }).catch(err => console.error(err))
 		}
 	}
 })
@@ -321,7 +321,7 @@ module.exports = {
 	desc: `Selects channels for moderation logs`,
 	help: '`log list` - shows current log settings\n\n`log <msg / voice / mod>` - enables / disables logs of selected type in current channel\n\nmsg - logs deleted and updated messages\nvoice - logs voice channels activity\nmod - logs guild members joining / leaving / being kicked/banned/unbanned',
 	run: async msg => {
-		if (!msg.member.permissions.has('ADMINISTRATOR') && msg.author.id != botOwnerID) {
+		if (!msg.member.permissions.has('ADMINISTRATOR') && msg.author.id != botOwnerId) {
 			msg.reply("You don't have permission to use this command")
 			return
 		}
@@ -346,8 +346,8 @@ module.exports = {
 						.addField(
 							'Message log:',
 							log.msg.length > 0
-								? log.msg.map(chID => {
-										let channel = msg.channel.guild.channels.cache.get(chID)
+								? log.msg.map(chId => {
+										let channel = msg.channel.guild.channels.cache.get(chId)
 										return channel ? channel.toString() : 'deleted channel - will be cleared on next attempt to send log'
 								  })
 								: 'no channels'
@@ -355,8 +355,8 @@ module.exports = {
 						.addField(
 							'Voice log:',
 							log.voice.length > 0
-								? log.voice.map(chID => {
-										let channel = msg.channel.guild.channels.cache.get(chID)
+								? log.voice.map(chId => {
+										let channel = msg.channel.guild.channels.cache.get(chId)
 										return channel ? channel.toString() : 'deleted channel - will be cleared on next attempt to send log'
 								  })
 								: 'no channels'
@@ -364,34 +364,34 @@ module.exports = {
 						.addField(
 							'Moderation log:',
 							log.mod.length > 0
-								? log.mod.map(chID => {
-										let channel = msg.channel.guild.channels.cache.get(chID)
+								? log.mod.map(chId => {
+										let channel = msg.channel.guild.channels.cache.get(chId)
 										return channel ? channel.toString() : 'deleted channel - will be cleared on next attempt to send log'
 								  })
 								: 'no channels'
 						)
 						.setFooter(`Use \`!log [type]\` in specific channel to enable/disable selected type of logs in that channel`)
-					msg.channel.send(embed)
+					msg.channel.send({ embeds: [embed] })
 				} else {
 					msg.channel.send(
 						`Turn on embed links permission for better messages\nMessage: ${
 							log.msg.length > 0
-								? log.msg.map(chID => {
-										let channel = msg.channel.guild.channels.cache.get(chID)
+								? log.msg.map(chId => {
+										let channel = msg.channel.guild.channels.cache.get(chId)
 										return channel ? channel.toString() : 'deleted channel - will be cleared on next attempt to send log'
 								  })
 								: 'no channels'
 						}\nVoice: ${
 							log.voice.length > 0
-								? log.voice.map(chID => {
-										let channel = voice.channel.guild.channels.cache.get(chID)
+								? log.voice.map(chId => {
+										let channel = voice.channel.guild.channels.cache.get(chId)
 										return channel ? channel.toString() : 'deleted channel - will be cleared on next attempt to send log'
 								  })
 								: 'no channels'
 						}\nModeration: ${
 							log.mod.length > 0
-								? log.mod.map(chID => {
-										let channel = mod.channel.guild.channels.cache.get(chID)
+								? log.mod.map(chId => {
+										let channel = mod.channel.guild.channels.cache.get(chId)
 										return channel ? channel.toString() : 'deleted channel - will be cleared on next attempt to send log'
 								  })
 								: 'no channels'

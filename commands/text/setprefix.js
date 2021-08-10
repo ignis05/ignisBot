@@ -1,4 +1,4 @@
-var { saveConfig, config, botOwnerID } = require('../../res/Helpers.js')
+var { saveConfig, config, botOwnerId } = require('../../res/Helpers.js')
 
 module.exports = {
 	name: 'setprefix',
@@ -7,7 +7,7 @@ module.exports = {
 	help: '`setprefix <prefix>` - changes bot prefix on current guild to specified one\n\n`setprefix` - restores default prefix',
 	run: msg => {
 		var command = msg.content.split(' ').filter(arg => arg != '')
-		if (!msg.member.permissions.has('ADMINISTRATOR') && msg.author.id != botOwnerID) {
+		if (!msg.member.permissions.has('ADMINISTRATOR') && msg.author.id != botOwnerId) {
 			msg.reply("You don't have permission to use this command")
 			return
 		}

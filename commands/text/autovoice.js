@@ -1,37 +1,34 @@
-var { saveConfig, config, botOwnerID } = require('../../res/Helpers.js')
+var { saveConfig, config, botOwnerId } = require('../../res/Helpers.js')
 const client = require('../../res/client')
 
 client.on('voiceStateUpdate', (oldState, newState) => {
-	if (oldState.channelID && newState.channelID) {
-		if (oldState.channelID != newState.channelID) {
+	if (oldState.channelId && newState.channelId) {
+		if (oldState.channelId != newState.channelId) {
 			// change
 			let guildId = newState.guild.id
-			if (config[guildId].autoVoice && config[guildId].autoVoice.categoryID) autovoiceActivity(newState.guild)
+			if (config[guildId].autoVoice && config[guildId].autoVoice.categoryId) autovoiceActivity(newState.guild)
 		}
-	} else if (newState.channelID) {
+	} else if (newState.channelId) {
 		//join
 		let guildId = newState.guild.id
-		if (config[guildId].autoVoice && config[guildId].autoVoice.categoryID) autovoiceActivity(newState.guild)
-	} else if (oldState.channelID) {
+		if (config[guildId].autoVoice && config[guildId].autoVoice.categoryId) autovoiceActivity(newState.guild)
+	} else if (oldState.channelId) {
 		//leave
 		let guildId = oldState.guild.id
-		if (config[guildId].autoVoice && config[guildId].autoVoice.categoryID) autovoiceActivity(oldState.guild)
+		if (config[guildId].autoVoice && config[guildId].autoVoice.categoryId) autovoiceActivity(oldState.guild)
 	}
 })
 
 async function autovoiceActivity(guild) {
-	let categoryChannel = guild.channels.cache.get(config[guild.id].autoVoice.categoryID)
+	let categoryChannel = guild.channels.cache.get(config[guild.id].autoVoice.categoryId)
 
 	if (!categoryChannel || !categoryChannel.manageable || categoryChannel.deleted) {
-		const defaultChannel = guild.channels.find(channel => channel.permissionsFor(guild.me).has('SEND_MESSAGES') && channel.type == 'text')
+		const defaultChannel = guild.channels.find(channel => channel.permissionsFor(guild.me).has('SEND_MESSAGES') && channel.type == 'GUILD_TEXT')
 		defaultChannel.send(`Unable to manage voice channels - permission 'MANAGE_CHANNEL' might have been revoked or category has been deleted\nAutovoice disabled`)
-		config[guild.id].autoVoice.categoryID = null
+		config[guild.id].autoVoice.categoryId = null
 		saveConfig()
 	}
-	let voiceChannels = categoryChannel.children
-		.filter(channel => channel.type == 'voice')
-		.array()
-		.sort((a, b) => a.position - b.position)
+	let voiceChannels = [...categoryChannel.children.filter(channel => channel.type == 'voice').values()].sort((a, b) => a.position - b.position)
 
 	let emptycount = voiceChannels.filter(channel => channel.members.size == 0).length
 
@@ -39,7 +36,7 @@ async function autovoiceActivity(guild) {
 		await guild.channels
 			.create((voiceChannels.length + config[guild.id].autoVoice.first).toString(), {
 				type: 'voice',
-				parent: config[guild.id].autoVoice.categoryID,
+				parent: config[guild.id].autoVoice.categoryId,
 				reason: 'autovoice activity',
 			})
 			.catch(err => {})
@@ -93,14 +90,14 @@ async function autovoiceActivity(guild) {
 module.exports = {
 	name: 'autovoice',
 	desc: `enables automatic voice channel managment`,
-	help: "`autovoice <category_id>` - enables automatic management of voice channels in given category\n\n-bot will automatically create and delete voice channels in that category to make sure that there is **exactly one empty voice channel at all times**\n\n-category ID number can be copied using discord's developer mode, if no id is given bot will set up autovoice based on the voicechannel that user is currently in.\nIf command is used without parameter and being in voice channel, autovoice is disabled.\nYou can use `autovoice first <number>` to change number of first autovoice channel\n`autovoice empty (first | last)` - by default empty voicechannel is always last, this command can change that",
+	help: "`autovoice <category_id>` - enables automatic management of voice channels in given category\n\n-bot will automatically create and delete voice channels in that category to make sure that there is **exactly one empty voice channel at all times**\n\n-category Id number can be copied using discord's developer mode, if no id is given bot will set up autovoice based on the voicechannel that user is currently in.\nIf command is used without parameter and being in voice channel, autovoice is disabled.\nYou can use `autovoice first <number>` to change number of first autovoice channel\n`autovoice empty (first | last)` - by default empty voicechannel is always last, this command can change that",
 	run: msg => {
-		if (!msg.member.permissions.has('MANAGE_CHANNELS') && msg.author.id != botOwnerID) {
+		if (!msg.member.permissions.has('MANAGE_CHANNELS') && msg.author.id != botOwnerId) {
 			msg.reply("You don't have permission to use this command")
 			return
 		}
 		if (typeof config[msg.guild.id].autoVoice !== 'object') {
-			config[msg.guild.id].autoVoice = { categoryID: null, first: 0, emptyFirst: false }
+			config[msg.guild.id].autoVoice = { categoryId: null, first: 0, emptyFirst: false }
 			saveConfig()
 		}
 
@@ -141,7 +138,7 @@ module.exports = {
 					msg.channel.send("I don't have permission 'manage channel' in this category")
 					return
 				}
-				config[msg.guild.id].autoVoice.categoryID = channel.id
+				config[msg.guild.id].autoVoice.categoryId = channel.id
 				console.log('autovoice enabled')
 				msg.channel.send(`autovoice enabled for category: ${channel.name}`)
 
@@ -155,7 +152,7 @@ module.exports = {
 				msg.channel.send("id doesn't belong to category")
 			}
 		} else {
-			config[msg.guild.id].autoVoice.categoryID = null
+			config[msg.guild.id].autoVoice.categoryId = null
 			//console.log("autovoice disabled");
 			msg.channel.send('autovoice disabled')
 		}

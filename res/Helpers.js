@@ -246,6 +246,6 @@ module.exports = {
 		return interactions
 	},
 	config: config,
-	botOwnerID: ownerData.botOwnerID,
-	testGuildID: ownerData.testGuildID,
+	botOwnerId: ownerData.botOwnerId,
+	testGuildId: ownerData.testGuildId,
 }

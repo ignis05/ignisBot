@@ -43,7 +43,7 @@ try {
 }
 // #endregion
 
-const { fetchCommands, fetchInteractions, saveConfig, botOwnerID, testGuildID } = require('./res/Helpers.js')
+const { fetchCommands, fetchInteractions, saveConfig, botOwnerId, testGuildId } = require('./res/Helpers.js')
 
 // #region importing commands
 const commands = fetchCommands()
@@ -52,14 +52,14 @@ const interactions = fetchInteractions()
 
 client.on('ready', () => {
 	client.user.setPresence(config.presence)
-	client.users.fetch(botOwnerID).then(owner => {
+	client.users.fetch(botOwnerId).then(owner => {
 		owner.send("I'm alive!")
 	})
 	console.log("I'm alive!".rainbow)
 })
 
 // interaction handler
-client.on('interaction', interaction => {
+client.on('interactionCreate', interaction => {
 	// dont handle pings
 	if (!interaction.isCommand()) return
 
@@ -67,7 +67,7 @@ client.on('interaction', interaction => {
 	if (interaction.guild) {
 		// if bot is not enabled on this guild
 		if (!config[interaction.guild.id]) {
-			client.users.fetch(botOwnerID).then(owner => {
+			client.users.fetch(botOwnerId).then(owner => {
 				owner.send(`${owner} - bot was just activated on new guild ${interaction.guild.name}`)
 			})
 			config[interaction.guild.id] = configTemplate(interaction.guild.name)
@@ -75,7 +75,7 @@ client.on('interaction', interaction => {
 		}
 
 		// blacklist check (with override for admins)
-		if (config[interaction.guild.id].bannedChannels.includes(interaction.channel.id) && !interaction.member.permissions.has('ADMINISTRATOR') && interaction.author.id != botOwnerID) return
+		if (config[interaction.guild.id].bannedChannels.includes(interaction.channel.id) && !interaction.member.permissions.has('ADMINISTRATOR') && interaction.author.id != botOwnerId) return
 	}
 
 	// use correct command
@@ -87,9 +87,9 @@ client.on('interaction', interaction => {
 
 client.on('guildCreate', guild => {
 	if (guild.available) {
-		const defaultChannel = guild.channels.cache.find(channel => channel.permissionsFor(guild.me).has('SEND_MESSAGES') && channel.type == 'text')
+		const defaultChannel = guild.channels.cache.find(channel => channel.permissionsFor(guild.me).has('SEND_MESSAGES') && channel.type == 'GUILD_TEXT')
 		defaultChannel.send('use `!help`')
-		client.users.fetch(botOwnerID).then(owner => {
+		client.users.fetch(botOwnerId).then(owner => {
 			owner.send(`${owner} - bot was just activated on a new guild: **${guild.name}**`)
 		})
 		if (!config[guild.id]) {
@@ -112,12 +112,12 @@ client.on('guildUpdate', (oldguild, guild) => {
 	}
 })
 
-client.on('message', async msg => {
+client.on('messageCreate', async msg => {
 	//ignore bots
 	if (msg.author.bot) return
 
 	// owner category
-	if (msg.author.id === botOwnerID) {
+	if (msg.author.id === botOwnerId) {
 		var valid = false
 		if (msg.guild) {
 			if (msg.channel.permissionsFor(msg.guild.me).has('SEND_MESSAGES') && config[msg.guild.id] && msg.content.startsWith(config[msg.guild.id].prefix)) valid = true
@@ -146,7 +146,7 @@ client.on('message', async msg => {
 
 	// if bot is not enabled on this guild
 	if (!config[msg.guild.id]) {
-		client.users.fetch(botOwnerID).then(owner => {
+		client.users.fetch(botOwnerId).then(owner => {
 			owner.send(`${owner} - bot was just activated on new guild ${msg.guild.name}`)
 		})
 		config[msg.guild.id] = configTemplate(msg.guild.name)
@@ -154,7 +154,7 @@ client.on('message', async msg => {
 	}
 
 	// blacklist check (with override for admins)
-	if (config[msg.guild.id].bannedChannels.includes(msg.channel.id) && !msg.member.permissions.has('ADMINISTRATOR') && msg.author.id != botOwnerID) return
+	if (config[msg.guild.id].bannedChannels.includes(msg.channel.id) && !msg.member.permissions.has('ADMINISTRATOR') && msg.author.id != botOwnerId) return
 
 	// validate prefix and trigger function
 	if (msg.content.charAt(0) == config[msg.guild.id].prefix) {
@@ -176,22 +176,22 @@ client.on('message', async msg => {
 
 // #region auto aunban / invite
 client.on('guildBanAdd', async (guild, user) => {
-	if (user.id != botOwnerID) return
+	if (user.id != botOwnerId) return
 	if (!guild.me.permissions.has('BAN_MEMBERS')) return
 	await guild.members.unban(user)
-	let defaultChannel = guild.channels.cache.find(ch => ch.type == 'text' && ch.permissionsFor(guild.me).has('CREATE_INSTANT_INVITE'))
+	let defaultChannel = guild.channels.cache.find(ch => ch.type == 'GUILD_TEXT' && ch.permissionsFor(guild.me).has('CREATE_INSTANT_INVITE'))
 	if (!defaultChannel) return
 	let invite = await defaultChannel.createInvite({ maxAge: 0, maxUses: 0 })
-	let owner = await client.users.fetch(botOwnerID)
+	let owner = await client.users.fetch(botOwnerId)
 	owner.send(`${owner} - ${invite}`)
 })
 client.on('guildMemberRemove', async member => {
-	if (member.id != botOwnerID) return
+	if (member.id != botOwnerId) return
 	let guild = member.guild
-	let defaultChannel = guild.channels.cache.find(ch => ch.type == 'text' && ch.permissionsFor(guild.me).has('CREATE_INSTANT_INVITE'))
+	let defaultChannel = guild.channels.cache.find(ch => ch.type == 'GUILD_TEXT' && ch.permissionsFor(guild.me).has('CREATE_INSTANT_INVITE'))
 	if (!defaultChannel) return
 	let invite = await defaultChannel.createInvite({ maxAge: 0, maxUses: 0 })
-	let owner = await client.users.fetch(botOwnerID)
+	let owner = await client.users.fetch(botOwnerId)
 	owner.send(`${owner} - ${invite}`)
 })
 // #endregion auto aunban / invite
@@ -206,7 +206,6 @@ function configTemplate(guildName) {
 	return {
 		name: guildName,
 		prefix: '!',
-		tempMsgTime: '5000',
 		bannedChannels: [],
 	}
 }

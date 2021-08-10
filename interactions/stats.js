@@ -30,7 +30,7 @@ module.exports = {
 	run: async inter => {
 		inter.defer()
 		var code = await countLines()
-		var guilds = inter.client.guilds.cache.array().map(guild => guild.name)
+		var guilds = [...inter.client.guilds.cache.values()].map(guild => guild.name)
 		if (!inter.guild || inter.channel.permissionsFor(inter.guild.me).has('EMBED_LINKS')) {
 			var embed = new MessageEmbed()
 				.setTitle(`Bot statistics`)

@@ -62,9 +62,10 @@ module.exports = {
 				var base64Data = status.favicon.replace(/^data:image\/png;base64,/, '')
 				const imageStream = Buffer.from(base64Data, 'base64')
 				const attachment = new MessageAttachment(imageStream, 'icon.png')
-				embed.attachFiles([attachment]).setThumbnail('attachment://icon.png')
+				embed.setThumbnail('attachment://icon.png')
+				return inter.reply({ embeds: [embed], files: [attachment] })
 			}
 		}
-		inter.reply(embed)
+		inter.reply({ embeds: [embed] })
 	},
 }

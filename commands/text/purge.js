@@ -1,4 +1,4 @@
-const { botOwnerID } = require('../../res/Helpers')
+const { botOwnerId } = require('../../res/Helpers')
 function timestampFromMsg(val, channel) {
 	return new Promise((resolve, reject) => {
 		channel.messages
@@ -37,10 +37,9 @@ function timestampFromString(val) {
 module.exports = {
 	name: 'purge',
 	desc: `deletes messages in bulk`,
-	help:
-		"`purge` - deletes 10 last messages from current channel plus the message that called purge\n`purge <number> [flag1] [flag2] [...]` - delete specific number of messages. Flags allow to set restrictions.\n\n**Available flags:**\n**after:<msg id | [epoh timestamp (sec)](https://www.epochconverter.com/) >** - will only delete messages created after given timestamp or message\n**before:<msg id>** - will only delete messages created before given message\n**younger:<age>** - will only delete messages younger than given time (ex:30min) - accepts time in few different formats - ex: '3.5h', '25min', '120sec', '1:30', '1:20:00'\n**older:<age>** - will only delete messages older than given time (ex:30min) \n**author:<mention | id>**- will only delete messages created by given user \n\n**Example usage with flags:**\n`purge 20 author:@ignisBot younger:1h` - will delete up to 20 messages created by ignisBot within last hour\n\n**Things to be aware of:**\n- Discord API prevents messages older than 14 days from being deleted in bulk - in that case bot will delete only as many messages as it can\n- Bot can delete up to 1000 messages with single purge\n- Purges larger than 10 messages won't be logged in message log",
+	help: "`purge` - deletes 10 last messages from current channel plus the message that called purge\n`purge <number> [flag1] [flag2] [...]` - delete specific number of messages. Flags allow to set restrictions.\n\n**Available flags:**\n**after:<msg id | [epoh timestamp (sec)](https://www.epochconverter.com/) >** - will only delete messages created after given timestamp or message\n**before:<msg id>** - will only delete messages created before given message\n**younger:<age>** - will only delete messages younger than given time (ex:30min) - accepts time in few different formats - ex: '3.5h', '25min', '120sec', '1:30', '1:20:00'\n**older:<age>** - will only delete messages older than given time (ex:30min) \n**author:<mention | id>**- will only delete messages created by given user \n\n**Example usage with flags:**\n`purge 20 author:@ignisBot younger:1h` - will delete up to 20 messages created by ignisBot within last hour\n\n**Things to be aware of:**\n- Discord API prevents messages older than 14 days from being deleted in bulk - in that case bot will delete only as many messages as it can\n- Bot can delete up to 1000 messages with single purge\n- Purges larger than 10 messages won't be logged in message log",
 	run: async msg => {
-		if (!msg.channel.permissionsFor(msg.member).has('MANAGE_MESSAGES') && msg.user.id != botOwnerID) return msg.reply("You don't have permission 'MANAGE_MESSAGES' on this channel")
+		if (!msg.channel.permissionsFor(msg.member).has('MANAGE_MESSAGES') && msg.user.id != botOwnerId) return msg.reply("You don't have permission 'MANAGE_MESSAGES' on this channel")
 		if (!msg.channel.permissionsFor(msg.guild.me).has('MANAGE_MESSAGES')) return msg.channel.send("I don't have permission 'MANAGE_MESSAGES' on this channel")
 
 		var args = msg.content
@@ -65,7 +64,7 @@ module.exports = {
 		if (!require('lodash').isEmpty(flags) || deletecount > 100) {
 			var toDeleteCount = deletecount
 			var deleteQueue = []
-			var lastMsgID = msg.id
+			var lastMsgId = msg.id
 
 			// #region flags
 			if (flags.after) flags.after = await timestampFromMsg(flags.after, msg.channel)
@@ -76,11 +75,11 @@ module.exports = {
 				} catch (err) {
 					if (err.code == 50035) {
 						// Invalid Form Body: Value is not snowflake
-						return msg.channel.send('Invalid message ID')
+						return msg.channel.send('Invalid message Id')
 					}
 					return console.error(err)
 				}
-				lastMsgID = message.id
+				lastMsgId = message.id
 			}
 			if (flags.author) {
 				let temp = flags.author.match(/\d+/g)
@@ -109,10 +108,10 @@ module.exports = {
 			var operationLimit = 20 // stop after 20 fetches
 			while (operationLimit > 0 && toDeleteCount > 0) {
 				var limit = toDeleteCount <= 100 ? toDeleteCount : 100
-				var messages = await msg.channel.messages.fetch({ limit: 100, before: lastMsgID }, false).catch(console.error)
+				var messages = await msg.channel.messages.fetch({ limit: 100, before: lastMsgId }, false).catch(console.error)
 				console.log('fetched to delete:', messages.size)
 				if (messages.size < 100) toDeleteCount = 0 // fetched below limit - no more messages in channel
-				lastMsgID = messages.last().id
+				lastMsgId = messages.last().id
 				if (messages.last().createdTimestamp < Date.now() - 1000 * 60 * 60 * 24 * 15) toDeleteCount = 0 // messages older than 14 days - cant be deleted anyway
 				// flag filters:
 				if (flags.older) {
@@ -162,14 +161,15 @@ module.exports = {
 				})
 				actualDeleteCount += deleted.size
 			}
-			msg.channel.send(`Successfully deleted ${actualDeleteCount} messages.`).then(msg => msg.delete({ timeout: config[msg.guild.id].tempMsgTime, reason: 'Deleted temp message' }))
+			msg.channel.send(`Successfully deleted ${actualDeleteCount} messages.`).then(msg => setTimeout(() => msg.delete(), 5000))
+			setTimeout(() => message.delete(), 10000)
 		} else {
 			// simple purge
 			await msg.delete({ reason: 'Deleted !purge call' })
 			msg.channel
 				.bulkDelete(deletecount, true)
 				.then(deleted => {
-					msg.channel.send(`Deleted ${deleted.size} messages.`).then(msg => msg.delete({ timeout: config[msg.guild.id].tempMsgTime, reason: 'Deleted temp message' }))
+					msg.channel.send(`Deleted ${deleted.size} messages.`).then(msg => setTimeout(() => msg.delete(), 5000))
 				})
 				.catch(err => {
 					console.log(err)

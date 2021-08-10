@@ -23,7 +23,7 @@ client.once('ready', async () => {
 
 	let commands = await client.application.commands.fetch()
 
-	for (let cmd of commands.array()) {
+	for (let cmd of commands.values()) {
 		if (!interactions.find(int => int.commandData.name == cmd.name)) {
 			console.log(`Found registered command ${cmd.name} with no matching interaction - removing it`.yellow)
 			await cmd.delete()

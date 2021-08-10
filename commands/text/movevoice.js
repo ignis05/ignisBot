@@ -1,4 +1,4 @@
-var { botOwnerID } = require('../../res/Helpers')
+var { botOwnerId } = require('../../res/Helpers')
 
 module.exports = {
 	name: 'movevoice',
@@ -9,12 +9,12 @@ module.exports = {
 		if (!voiceChannel) return msg.channel.send('You need to be in a voice channel to use this')
 		var category = voiceChannel.parent
 		if (!category.permissionsFor(msg.guild.me).has('MOVE_MEMBERS')) return msg.channel.send('I need permission MOVE_MEMBERS in this category')
-		if (!category.permissionsFor(msg.member).has('MOVE_MEMBERS') && msg.author.id !== botOwnerID) return msg.channel.send("You don't have permission to use this command")
+		if (!category.permissionsFor(msg.member).has('MOVE_MEMBERS') && msg.author.id !== botOwnerId) return msg.channel.send("You don't have permission to use this command")
 		var emptyVoice = category.children.find(ch => ch.type === 'voice' && ch.members.size == 0)
 		// no empty voice channel in category
 		if (!emptyVoice) return msg.channel.send('Could not find empty voice channel in current category')
 		let arg = msg.content.split(' ').slice(1).join(' ')
-		let presences = voiceChannel.members.map(m => m.user.presence).filter(p => p.activities.length > 0)
+		let presences = voiceChannel.members.map(m => m.presence).filter(p => p.activities.length > 0)
 		let validMembers = []
 		for (let presence of presences) {
 			let valid = presence.activities.find(a => a.name.toLowerCase().includes(arg))

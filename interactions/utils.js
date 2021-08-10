@@ -1,9 +1,9 @@
 const client = require('../res/client')
-var { config, botOwnerID, saveConfig } = require('../res/Helpers.js')
+var { config, botOwnerId, saveConfig } = require('../res/Helpers.js')
 const { MessageAttachment, CommandInteraction } = require('discord.js')
 
 // utils message handler
-client.on('message', msg => {
+client.on('messageCreate', msg => {
 	// jpglarge and pnglarge
 	if (msg.author.bot || !msg.guild || !config[msg.guild.id]) return // no bots, enabled guild only
 	if (config[msg.guild.id].bannedChannels.includes(msg.channel.id)) return // no blacklist
@@ -150,7 +150,7 @@ module.exports = {
 		if (!inter.guild) return inter.reply(`This command can be used only in guilds`, { ephemeral: true })
 
 		// needs admin permissions to use
-		if (!inter.member.permissions.has('ADMINISTRATOR') && inter.author.id != botOwnerID) {
+		if (!inter.member.permissions.has('ADMINISTRATOR') && inter.author.id != botOwnerId) {
 			inter.reply("You don't have permission to use this command")
 			return
 		}

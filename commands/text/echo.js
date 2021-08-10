@@ -1,4 +1,4 @@
-var { botOwnerID } = require('../../res/Helpers')
+var { botOwnerId } = require('../../res/Helpers')
 
 module.exports = {
 	name: 'echo',
@@ -6,7 +6,7 @@ module.exports = {
 	desc: `repeats user's message`,
 	help: "`echo <message>` - bot will send a message that is exact copy of user's message except for the `echo` tag",
 	run: msg => {
-		if (!msg.member.permissions.has('ADMINISTRATOR') && msg.author.id != botOwnerID) {
+		if (!msg.member.permissions.has('ADMINISTRATOR') && msg.author.id != botOwnerId) {
 			msg.reply("You don't have permission to use this command")
 			return
 		}
@@ -15,6 +15,6 @@ module.exports = {
 			.filter(arg => arg != '')
 			.slice(1)
 			.join(' ')
-		msg.channel.send(cnt, { disableMentions: 'everyone', allowedMentions: { users: [] } })
+		msg.channel.send(cnt, { allowedMentions: { parse: [] } })
 	},
 }

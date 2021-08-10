@@ -1,4 +1,4 @@
-var { botOwnerID } = require('../res/Helpers')
+var { botOwnerId } = require('../res/Helpers')
 const { Collection } = require('discord.js')
 const ms = require('ms')
 const moment = require('moment')
@@ -28,7 +28,7 @@ module.exports = {
 			let reminder = REMINDERS.get(id)
 			if (!reminder) return msg.channel.send('Could not find a reminder with given id')
 			// if reminder in guild : author or owner or moderator
-			if (msg.guild && msg.author.id !== reminder.author.id && msg.author.id !== botOwnerID && !reminder.channel.permissionsFor(msg.member).has('MANAGE_MESSAGES')) return msg.channel.send("To delete reminder you need to be it's author or have `manage messages` permission")
+			if (msg.guild && msg.author.id !== reminder.author.id && msg.author.id !== botOwnerId && !reminder.channel.permissionsFor(msg.member).has('MANAGE_MESSAGES')) return msg.channel.send("To delete reminder you need to be it's author or have `manage messages` permission")
 			clearTimeout(reminder.cancel)
 			REMINDERS.delete(reminder.id)
 			msg.channel.send(`Deleted reminder ${reminder.id}`)
@@ -79,7 +79,7 @@ module.exports = {
 		let snowflake = Date.now().toString(32)
 		console.log(`Set reminder on ${date.format(fullTimeFormat)} - time parsed by ${parsedBy}`)
 		msg.reply(`Set reminder on ${date.format(fullTimeFormat)}\nReminder id: **${snowflake}**`)
-		let timeoutCancel = msg.client.setTimeout(() => {
+		let timeoutCancel = setTimeout(() => {
 			msg.channel.send(`${msg.author} ${reminderContent}`).catch(err => console.log(err.message))
 			REMINDERS.delete(snowflake)
 		}, timeout)

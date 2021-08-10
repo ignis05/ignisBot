@@ -13,6 +13,7 @@ module.exports = {
 		let canDoEmbed = !inter.guild || inter.channel.permissionsFor(inter.guild.me).has('EMBED_LINKS')
 
 		let invite = await inter.client.generateInvite({
+			scopes: ['bot', 'applications.commands'],
 			permissions: ['CREATE_INSTANT_INVITE', 'MANAGE_CHANNELS', 'ADD_REACTIONS', 'VIEW_AUDIT_LOG', 'VIEW_CHANNEL', 'SEND_MESSAGES', 'MANAGE_MESSAGES', 'EMBED_LINKS', 'ATTACH_FILES', 'READ_MESSAGE_HISTORY', 'USE_EXTERNAL_EMOJIS', 'CONNECT', 'SPEAK', 'CHANGE_NICKNAME'],
 		})
 

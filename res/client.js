@@ -1,5 +1,4 @@
 const Discord = require('discord.js')
-const intents = new Discord.Intents(Discord.Intents.NON_PRIVILEGED)
-intents.add(Discord.Intents.FLAGS.GUILD_MEMBERS)
-const client = new Discord.Client({intents})
+// all intents, channel partial allows to receive dms
+const client = new Discord.Client({ intents: [...Object.keys(Discord.Intents.FLAGS)], partials: [{ partials: ['CHANNEL'] }] })
 module.exports = client

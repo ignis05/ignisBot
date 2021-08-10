@@ -1,4 +1,4 @@
-var { botOwnerID } = require('../../res/Helpers')
+var { botOwnerId } = require('../../res/Helpers')
 const { MessageEmbed } = require('discord.js')
 
 module.exports = {
@@ -10,7 +10,7 @@ module.exports = {
 		let voiceChannel = msg.member.voice.channel
 		if (!voiceChannel) return msg.channel.send('This command generates invite to voice channel - you need to be in one to use it')
 		if (!voiceChannel.permissionsFor(msg.guild.me).has('CREATE_INSTANT_INVITE')) return msg.channel.send("I can't invite users to this guild")
-		if (!voiceChannel.permissionsFor(msg.author).has('CREATE_INSTANT_INVITE') && msg.author.id != botOwnerID) return msg.reply("You don't have permission to use this command")
+		if (!voiceChannel.permissionsFor(msg.author).has('CREATE_INSTANT_INVITE') && msg.author.id != botOwnerId) return msg.reply("You don't have permission to use this command")
 
 		let time = msg.content
 			.split(' ')
@@ -32,7 +32,7 @@ module.exports = {
 				.addField('Invite', invite.toString())
 				.setThumbnail(msg.guild.iconURL({ format: 'png' }))
 				.setTimestamp()
-			msg.channel.send(embed)
+			msg.channel.send({ embeds: [embed] })
 		} else {
 			msg.channel.send(invite.toString())
 		}

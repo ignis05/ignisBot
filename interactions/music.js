@@ -79,26 +79,26 @@ module.exports = {
             /**
             * @type {SongQueue} voiceConnection
             */
-            var queue = songQueuesCol.get(inter.guildID)
+            var queue = songQueuesCol.get(inter.guildId)
             if (!queue) {
                 // voice channel check
                 if (!inter.member.voice?.channel) return inter.editReply(`You need to be in a voice channel to create song queue.`)
 
                 // use designated guildMusicChannel if set in config
                 let guildMusicChannel = false
-                if (config[inter.guildID].guildMusicChannel) {
+                if (config[inter.guildId].guildMusicChannel) {
                     try {
-                        guildMusicChannel = await inter.client.channels.fetch(config[inter.guildID].guildMusicChannel)
+                        guildMusicChannel = await inter.client.channels.fetch(config[inter.guildId].guildMusicChannel)
                         // perms wont allow sending messages
                         if (!guildMusicChannel.permissionsFor(inter.guild.me).has('SEND_MESSAGES')) {
                             guildMusicChannel = false
-                            console.log(`invalid perms on guildMusicChannel (${config[inter.guildID].guildMusicChannel}) - removing from config`)
-                            config[inter.guildID].guildMusicChannel = false
+                            console.log(`invalid perms on guildMusicChannel (${config[inter.guildId].guildMusicChannel}) - removing from config`)
+                            config[inter.guildId].guildMusicChannel = false
                             saveConfig()
                         }
                     } catch (err) {
-                        console.log(`failed to fetch guildMusicChannel (${config[inter.guildID].guildMusicChannel}) - removing from config`)
-                        config[inter.guildID].guildMusicChannel = false
+                        console.log(`failed to fetch guildMusicChannel (${config[inter.guildId].guildMusicChannel}) - removing from config`)
+                        config[inter.guildId].guildMusicChannel = false
                         saveConfig()
                         guildMusicChannel = false
                     }
@@ -112,7 +112,7 @@ module.exports = {
                     return inter.editReply(`Connecting to voice channel failed:\n${err}`)
                 }
                 queue.onDestroy = destroyQueueHandler
-                songQueuesCol.set(inter.guildID, queue) // push to collection of queues
+                songQueuesCol.set(inter.guildId, queue) // push to collection of queues
             }
         }
 
@@ -202,10 +202,10 @@ module.exports = {
                 } catch (err) {
                     return inter.editReply(`Failed to access channel. Make sure the bot has correct permissions.`)
                 }
-                if (channel.type != 'text') return inter.editReply(`Selected channel needs to be a text channel.`)
+                if (channel.type != 'GUILD_TEXT') return inter.editReply(`Selected channel needs to be a text channel.`)
                 if (!channel.permissionsFor(inter.guild.me).has('SEND_MESSAGES')) return inter.editReply(`I can't send messages is that channel`)
                 // valid channel
-                config[inter.guildID].guildMusicChannel = channel.id
+                config[inter.guildId].guildMusicChannel = channel.id
                 await saveConfig()
                 inter.editReply(`Set ${channel} as music bot channel.`)
                 break

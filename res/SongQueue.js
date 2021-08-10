@@ -205,7 +205,7 @@ class SongQueue {
             this.textChannel.send(`Now playing: **${song.title}**`)
         } else {
             var embed = new MessageEmbed().setTitle('**Now playing**').setColor(0x00ffff).setImage(song.thumbnail).addField('Title', song.title, true).addField('Url', song.url, true).addField('Length', song.length, true).addField('Requested by', song.user?.toString(), true)
-            this.textChannel.send(embed)
+            this.textChannel.send({ embeds: [embed] })
         }
         this.registerQueueCommands() // update skip choices
 

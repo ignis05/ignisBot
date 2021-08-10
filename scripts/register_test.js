@@ -1,7 +1,7 @@
 const auth = require('../data/token.json')
 const Discord = require('discord.js')
 const { exit } = require('process')
-const { fetchInteractions, testGuildID } = require('../res/Helpers.js')
+const { fetchInteractions, testGuildId } = require('../res/Helpers.js')
 const colors = require('colors')
 colors.setTheme({
 	reverse: ['black', 'bgWhite'],
@@ -21,10 +21,10 @@ const client = new Discord.Client({ intents })
 client.once('ready', async () => {
 	console.log('Running testGuild command list update'.green)
 
-	let testGuild = await client.guilds.fetch(testGuildID)
+	let testGuild = await client.guilds.fetch(testGuildId)
 	let commands = await testGuild.commands.fetch()
 
-	for (let cmd of commands.array()) {
+	for (let cmd of commands.values()) {
 		if (!interactions.find(int => int.commandData.name == cmd.name)) {
 			console.log(`Found registered command ${cmd.name} with no matching interaction - removing it`.yellow)
 			await cmd.delete()

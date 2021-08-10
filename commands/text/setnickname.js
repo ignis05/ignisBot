@@ -1,4 +1,4 @@
-var { botOwnerID } = require('../../res/Helpers')
+var { botOwnerId } = require('../../res/Helpers')
 
 module.exports = {
 	name: 'setnickname',
@@ -6,7 +6,7 @@ module.exports = {
 	desc: `changes bot nickname on current guild`,
 	help: "`setnickname <nickname>` - sets bot' nickname on current guild to specified one\n- if specified nickname is invalid (ex. empty), bot nickname is removed",
 	run: msg => {
-		if (!msg.member.permissions.has('MANAGE_NICKNAMES') && msg.author.id != botOwnerID) {
+		if (!msg.member.permissions.has('MANAGE_NICKNAMES') && msg.author.id != botOwnerId) {
 			msg.reply("You don't have permission to use this command")
 			return
 		}

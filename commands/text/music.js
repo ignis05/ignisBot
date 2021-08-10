@@ -62,7 +62,7 @@ async function execute(msg, serverQueue, volume) {
 		} else {
 			let totalLength = serverQueue.songs.reduce((reducer, song) => (reducer += song.length), 0)
 			var embed = new MessageEmbed().setTitle('**Song added to queue**').setColor(0x00ff00).setImage(song.thumbnail).addField('Title', song.title, true).addField('Url', song.url, true).addField('Length', formatTime(song.length), true).addField('Total playlist length', formatTime(totalLength), true)
-			msg.channel.send(embed)
+			msg.channel.send({ embeds: [embed] })
 		}
 	}
 }
@@ -127,7 +127,7 @@ function play(guild, song) {
 		serverQueue.textChannel.send(`Now playing: **${song.title}**`)
 	} else {
 		var embed = new MessageEmbed().setTitle('**Now playing**').setColor(0x00ffff).setImage(song.thumbnail).addField('Title', song.title, true).addField('Url', song.url, true).addField('Length', song.length, true).addField('Requested by', song.user.toString(), true)
-		serverQueue.textChannel.send(embed)
+		serverQueue.textChannel.send({ embeds: [embed] })
 	}
 }
 
@@ -147,7 +147,7 @@ function list(serverQueue, msg) {
 		embed.addField('Queue', str)
 		let totalLength = serverQueue.songs.reduce((reducer, song) => (reducer += song.length), 0)
 		embed.addField('Total queue length', formatTime(totalLength))
-		msg.channel.send(embed).catch(err => {
+		msg.channel.send({ embeds: [embed] }).catch(err => {
 			if (err.code == 50035) {
 				console.log('queue too long - sending short version')
 				var embed2 = new MessageEmbed().setTitle('**Song queue**').setColor(0x0000ff)
@@ -164,7 +164,7 @@ function list(serverQueue, msg) {
 				}
 
 				embed2.addField(`Queue too long`, `Queue is too long to send in one message - logging first ${i} songs instead`).addField('Queue', firstFew).addField('Total queue length', formatTime(totalLength)).addField(`Total songs in queue`, `${serverQueue.songs.length}`)
-				msg.channel.send(embed2).catch(err => console.error(err))
+				msg.channel.send({ embeds: [embed2] }).catch(err => console.error(err))
 			} else console.error(err)
 		})
 	}
@@ -199,7 +199,7 @@ module.exports = {
 							embed.addField(`${i} - '${song.title}' [${song.length}]`, `${song.url}\n`)
 							i++
 						}
-						msg.channel.send(embed)
+						msg.channel.send({ embeds: [embed] })
 					}
 				} else {
 					serverQueue.connection.dispatcher.end()
@@ -252,7 +252,7 @@ module.exports = {
 						msg.channel.send(`Search result: **${song.title}**`)
 					} else {
 						var embed = new MessageEmbed().setTitle('**Search result**').setColor(0x00ffff).setImage(song.thumbnail).addField('Title', song.title, true).addField('Url', song.url, true).addField('Length', song.length, true)
-						msg.channel.send(embed)
+						msg.channel.send({ embeds: [embed] })
 					}
 				})
 				break
@@ -376,7 +376,7 @@ module.exports = {
 				} else {
 					let totalLength = newServerQueue.songs.reduce((reducer, song) => (reducer += song.length), 0)
 					var embed = new MessageEmbed().setTitle('**Playlist added to queue**').setColor(0x00ff00).setImage(song1.thumbnail).addField('Title', playlist.title, true).addField('Url', playlist.url, true).addField('Total playlist length', formatTime(totalLength), true)
-					msg.channel.send(embed)
+					msg.channel.send({ embeds: [embed] })
 				}
 
 				break

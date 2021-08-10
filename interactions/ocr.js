@@ -182,7 +182,7 @@ module.exports = {
 
         try {
             var res
-            var msgID = false
+            var msgId = false
             var channel
             switch (command.name) {
                 // image url
@@ -193,18 +193,18 @@ module.exports = {
                 // message id or link
                 case 'link':
                     try {
-                        msgID = /\d+$/.exec(command.options[0].value)[0]
-                        var channelID = /(\d+)\/\d+$/.exec(command.options[0].value)[1]
+                        msgId = /\d+$/.exec(command.options[0].value)[0]
+                        var channelId = /(\d+)\/\d+$/.exec(command.options[0].value)[1]
                     } catch (err) {
                         return inter.editReply(`Invalid message link.`)
                     }
-                    channel = await inter.client.channels.fetch(channelID)
+                    channel = await inter.client.channels.fetch(channelId)
                 case 'id':
-                    if (!msgID) {
-                        msgID = command.options[0].value
+                    if (!msgId) {
+                        msgId = command.options[0].value
                         channel = inter.channel
                     }
-                    var msg = await channel.messages.fetch(msgID)
+                    var msg = await channel.messages.fetch(msgId)
                     if (msg.attachments.size < 1) return inter.editReply(`Message has no attachments`)
                     res = await ocrSpace(msg.attachments.first().url, { language: lang })
 
